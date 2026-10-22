@@ -19,4 +19,5 @@
 | D‑12 | Pagination לפי Offset + TotalCount; חיפוש `LIKE '%x%'` | פשוט ומתאים ל־UI עם מספרי עמודים; ה־Bottleneck יתועד ב־PERFORMANCE.md | Keyset Pagination, Full‑Text Index (יוצעו כשיפור) |
 | D‑13 | Seed: ‏SqlBulkCopy, ‏Random עם Seed קבוע, 100,000 רשומות, הרצה חוזרת עם `--reset` | מהיר, נתונים זהים בכל הרצה – מדידות ניתנות להשוואה | הכנסה דרך EF (איטי) |
 | D‑14 | תכנון: GitHub Issues + Project Board + Milestones, וגם `docs/WORK_PLAN.md` | הבודקים רואים תכנון אמיתי ומעקב | מסמך בלבד |
-| D‑15 | Repo **פרטי** בשם `requests-management`; לפני ההגשה – הזמנת הבודקים כ־Collaborators (או הפיכה לציבורי) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
+| D‑15 | Repos **פרטיים** (שלושה – ראו D‑16); לפני ההגשה – הזמנת הבודקים כ־Collaborators **לשלושת ה־Repos** (או הפיכתם לציבוריים) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
+| D‑16 | שלושה Repos נפרדים: `requests-management-docs` (תכנון ותיעוד, Issues, Milestones, נקודת הכניסה לבודקים), `requests-management-be` (Backend + CI), `requests-management-fe` (Frontend); כולם מקושרים לאותו Project Board | מחזור חיים ו־CI נפרדים לכל Stack, כמקובל בארגונים | Repo אחד לכל הקוד – מעט נוח יותר לבודקים; החיסרון מטופל ע״י README ב־Repo התיעוד שמפנה לשני ה־Repos האחרים |

@@ -35,8 +35,12 @@
 - Node v24.22.1; ‏Claude Code 2.1.141; ‏Git + GitHub CLI
 - **אין Docker** – הוחלט לא להתקין (ראה D‑09)
 - npm 10.9.1 (ב־PowerShell יש להריץ `npm.cmd` עקב Execution Policy, או לתקן עם `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`)
-- נתיב הפרויקט: `<project-root>` (שורש ה־Repo)
-- `global.json` מקבע SDK ‏10.0.401 (מותקן גם SDK 9)
+- נתיב הפרויקט: `<project-root>` (תיקייה מקומית במחשב הפיתוח) – תיקייה רגילה (**לא** Repo), מכילה רק את `CLAUDE.md`, מסמך המבדק (PDF) ושלושת ה־Repos (D‑16):
+  - `<project-root>/requests-management-docs` ← https://github.com/naomy55978/requests-management-docs (כולל קובץ זה)
+  - `<project-root>/requests-management-be` ← https://github.com/naomy55978/requests-management-be
+  - `<project-root>/requests-management-fe` ← https://github.com/naomy55978/requests-management-fe
+- Claude Code נפתח תמיד ב־`<project-root>`, כדי ש־`CLAUDE.md` ייטען ושלושת ה־Repos יהיו זמינים.
+- `global.json` ב־Repo של ה־Backend מקבע SDK ‏10.0.401 (מותקן גם SDK 9)
 
 ## 5. החלטות
 | # | החלטה | סיבה | חלופות שנשקלו |
@@ -55,23 +59,30 @@
 | D‑12 | Pagination לפי Offset + TotalCount; חיפוש `LIKE '%x%'` | פשוט ומתאים ל־UI עם מספרי עמודים; ה־Bottleneck יתועד ב־PERFORMANCE.md | Keyset Pagination, Full‑Text Index (יוצעו כשיפור) |
 | D‑13 | Seed: ‏SqlBulkCopy, ‏Random עם Seed קבוע, 100,000 רשומות, הרצה חוזרת עם `--reset` | מהיר, נתונים זהים בכל הרצה – מדידות ניתנות להשוואה | הכנסה דרך EF (איטי) |
 | D‑14 | תכנון: GitHub Issues + Project Board + Milestones, וגם `docs/WORK_PLAN.md` | הבודקים רואים תכנון אמיתי ומעקב | מסמך בלבד |
-| D‑15 | Repo **פרטי** בשם `requests-management`; לפני ההגשה – הזמנת הבודקים כ־Collaborators (או הפיכה לציבורי) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
+| D‑15 | Repos **פרטיים** (שלושה – ראו D‑16); לפני ההגשה – הזמנת הבודקים כ־Collaborators **לשלושת ה־Repos** (או הפיכתם לציבוריים) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
+| D‑16 | שלושה Repos נפרדים: `requests-management-docs` (תכנון ותיעוד, Issues, Milestones, נקודת הכניסה לבודקים), `requests-management-be` (Backend + CI), `requests-management-fe` (Frontend); כולם מקושרים לאותו Project Board | מחזור חיים ו־CI נפרדים לכל Stack, כמקובל בארגונים | Repo אחד לכל הקוד – מעט נוח יותר לבודקים; החיסרון מטופל ע״י README ב־Repo התיעוד שמפנה לשני ה־Repos האחרים |
 
 ## 6. אפיון
 
-### מבנה הפתרון
+### מבנה הפתרון (שלושה Repos – D‑16)
 ```
-RequestsManagement.sln
-src/
-  RequestsManagement.API   Controllers, Middleware (ProblemDetails), Auth (JWT), Program.cs
-  RequestsManagement.BL    IRequestService/RequestService, StatusTransitions, Validators, Cache
-  RequestsManagement.DAL   Entities, AppDbContext, IRequestRepository/RequestRepository, Migrations, Seeder
-  RequestsManagement.DTO   Request/Response DTOs, RequestFilter, PagedResult (ללא תלויות)
-  requests-web             Angular 22
-tests/
-  RequestsManagement.Tests Unit/ + Integration/
-docs/  DECISIONS.md, PERFORMANCE.md, API.md, WORK_PLAN.md
+<project-root>/                      תיקייה רגילה (לא Repo): CLAUDE.md, מסמך המבדק (PDF)
+  requests-management-docs\          תכנון ותיעוד בלבד (Issues, Milestones, Project Board)
+    README.md                        נקודת הכניסה לבודקים
+    PROJECT_TRACKING_RequestsManagement.md
+    docs/  DECISIONS.md, WORK_PLAN.md, PERFORMANCE.md, API.md
+  requests-management-be\            Backend
+    RequestsManagement.sln, global.json, .github/workflows/
+    src/
+      RequestsManagement.API   Controllers, Middleware (ProblemDetails), Auth (JWT), Program.cs
+      RequestsManagement.BL    IRequestService/RequestService, StatusTransitions, Validators, Cache
+      RequestsManagement.DAL   Entities, AppDbContext, IRequestRepository/RequestRepository, Migrations, Seeder
+      RequestsManagement.DTO   Request/Response DTOs, RequestFilter, PagedResult (ללא תלויות)
+    tests/
+      RequestsManagement.Tests Unit/ + Integration/
+  requests-management-fe\            Frontend – אפליקציית Angular 22 בשורש ה־Repo (נוצרת ב־M7)
 ```
+**מוסכמה:** ה־Issues נמצאים ב־`requests-management-docs`. Commit ב־BE/FE סוגר Issue עם הפניה מלאה, למשל `Closes naomy55978/requests-management-docs#12`; ב־Repo התיעוד מספיק `Closes #12`.
 **כללים:** Controllers פונים רק לממשקי BL; ה־API מפנה ל־DAL רק לרישום DI; ‏Lifetimes – ‏DbContext, ‏Repository ו־Service ב־Scoped, ‏Cache ב־Singleton; ‏CancellationToken מה־Controller ועד ה־DB; חוקי מעברי סטטוס במקום אחד ב־BL.
 
 ### מודל נתונים
@@ -97,7 +108,7 @@ docs/  DECISIONS.md, PERFORMANCE.md, API.md, WORK_PLAN.md
 ## 7. תוכנית עבודה
 | # | Milestone | תוצר | מאמץ | תלוי ב־ | מודל |
 |---|---|---|---|---|---|
-| M0 | הקמה ותכנון: Repo פרטי, ‏gh auth, ‏Solution + 5 פרויקטים + הפניות, ‏.gitignore, ‏Project Board, ‏Milestones, ‏Issues, שלד docs, ‏CI ל־build | Repo שעובר build ב־CI | 3 ש' | – | Opus |
+| M0 | הקמה ותכנון: שלושה Repos פרטיים (docs/be/fe – D‑16), ‏gh auth, ‏Solution + 4 פרויקטי Backend + פרויקט בדיקות + הפניות, ‏.gitignore, ‏Project Board, ‏Milestones, ‏Issues, שלד docs, ‏CI ל־build | Repo Backend שעובר build ב־CI; Repo תיעוד עם תכנון מלא | 3.75 ש' (כולל 0.75 ש' לפיצול ה־Repos, #50) | – | Opus |
 | M1 | DB ונתונים: Entities, ‏DbContext, ‏Migration, אינדקסים, Seeder | DB עם 100K רשומות | 4 ש' | M0 | Opus לתכנון, Sonnet לקוד |
 | M2 | API שליפה: סינון, מיון, דפדוף, Validation, ‏DTOs, ‏ProblemDetails, ‏Logging, ‏summary | GET פעיל + Swagger | 6 ש' | M1 | Sonnet |
 | M3 | עדכון ו־Concurrency: מעברים, PATCH, ‏409, ‏Audit, ‏history, ‏JWT | עדכון בטוח | 5 ש' | M2 | Opus |
@@ -108,12 +119,12 @@ docs/  DECISIONS.md, PERFORMANCE.md, API.md, WORK_PLAN.md
 | M8 | ביצועים: STATISTICS IO/TIME + Execution Plan לפני/אחרי לשתי פעולות, Bottleneck | PERFORMANCE.md | 3 ש' | M1–M2 | Opus |
 | M9 | תיעוד והגשה: README בעברית, החלטות, מגבלה ושיפור, שימוש ב־AI, בדיקה מקצה לקצה | הגשה מלאה | 4 ש' | הכל | Sonnet + Opus לסקירה |
 
-סה"כ כ־47 שעות. כל Issue כולל: תיאור, תוצר מצופה, הערכת מאמץ, תלויות, וסעיף מסמך הדרישות שהוא מכסה.
+סה"כ כ־47.75 שעות (47 בתכנון המקורי + 0.75 לפיצול ה־Repos). כל Issue כולל: תיאור, תוצר מצופה, הערכת מאמץ, תלויות, וסעיף מסמך הדרישות שהוא מכסה.
 
 ## 8. עבודה שהושלמה
 - 22.10.2026 – קריאת הדרישות, אפיון, קבלת החלטות D‑01 עד D‑15, בדיקת סביבה, יצירת קובץ זה, התחברות ל־GitHub.
 - 22.10.2026 – **M0 הושלם:**
-  - Repo פרטי: https://github.com/naomy55978/requests-management
+  - Repo פרטי: https://github.com/naomy55978/requests-management (כיום `requests-management-docs` – ראו פיצול ה־Repos למטה)
   - `RequestsManagement.sln` (פורמט `.sln` לפי האפיון, לא `.slnx`) עם API/BL/DAL/DTO תחת `src/` ו־Tests תחת `tests/` (תיקיות `Unit/`, `Integration/`), הפניות לפי סעיף 6, קוד דוגמה של התבניות הוסר. ‏`requests-web` ייווצר ב־M7.
   - `.gitignore` (‏.NET + Node/Angular); מסמך המבדק (PDF) מוחרג מה־Repo בכוונה.
   - CI: `.github/workflows/build.yml` – restore + build לפי `global.json`.
@@ -121,18 +132,28 @@ docs/  DECISIONS.md, PERFORMANCE.md, API.md, WORK_PLAN.md
   - GitHub: ‏10 Milestones (M0–M9), ‏49 Issues בעברית (‏47 ש') עם תיאור, תוצר, קריטריוני קבלה, מאמץ, תלויות, סעיף במבדק ומודל מומלץ; תלויות גם כקשרי *blocked by* מובנים.
   - Labels: סוג עבודה (`backend`, `frontend`, `database`, `testing`, `docs`, `devops`, `planning`, `non-code`, `security`) + סעיף דרישה (`req-01..req-11`, `req-entity`, `req-submission`).
   - Project Board: https://github.com/users/naomy55978/projects/2 – מקושר ל־Repo, כל ה־Issues עם שדה `Estimate (h)`.
+- 22.10.2026 – **פיצול לשלושה Repos (D‑16, Issue #50):**
+  - ה־Repo `requests-management` שונה ל־`requests-management-docs` (Issues, Milestones, Board והיסטוריה נשמרו; GitHub מפנה מהשם הישן). התיקייה `.git` הועברה ל־`requests-management-docs\` עם קובץ זה ו־`docs/`; קבצי הקוד ו־`CLAUDE.md` הוסרו ממנו ב־Commit.
+  - נוסף `README.md` בעברית ל־Repo התיעוד כנקודת כניסה לבודקים; `.gitignore` מינימלי.
+  - `requests-management-be` (פרטי): ה־Solution, ‏`global.json`, ‏`src/`, ‏`tests/`, ‏`.github/` הועברו אליו; `.gitignore` של .NET ו־README קצר. Commit ראשון חדש – היסטוריית M0 נשארה ב־Repo התיעוד. build מקומי עובר.
+  - `requests-management-fe` (פרטי): `.gitignore` של Node/Angular ו־README קצר; האפליקציה תיווצר בשורש ה־Repo ב־M7.
+  - שני ה־Repos החדשים קושרו ל־Project Board #2.
+  - עודכנו: D‑15, D‑16 (כאן וב־`DECISIONS.md`), סעיפים 4, 6, 7 (M0: ‏3.75 ש'), ‏`WORK_PLAN.md` (מבנה + מוסכמת Closes), ונתיבים/שמות Repo ב־Issues #2–#4, #17, #22, #31, #32, #44, #45, #47–#49.
 
 ## 9. שאלות פתוחות
-- כיצד יקבלו הבודקים גישה ל־Repo הפרטי (שמות משתמש של הבודקים, או הפיכה לציבורי בהגשה) – להחליט לפני M9.
+- כיצד יקבלו הבודקים גישה **לשלושת** ה־Repos הפרטיים (שמות משתמש של הבודקים, או הפיכה לציבוריים בהגשה) – להחליט לפני M9.
 
 ## 10. סיכונים ובעיות ידועות
 - חיפוש `LIKE '%x%'` אינו משתמש באינדקס – יימדד ויתועד (D‑12).
-- מפתח ה־JWT: מפתח פיתוח בלבד ב־`appsettings.Development.json`, יתועד שאינו לייצור. אסור להכניס סודות אמיתיים ל־Repo הציבורי.
+- מפתח ה־JWT: מפתח פיתוח בלבד ב־`appsettings.Development.json` (ב־Repo של ה־Backend), יתועד שאינו לייצור. אסור להכניס סודות אמיתיים לאף Repo – ייתכן שייפתחו לציבור בהגשה.
 - בדיקות Integration תלויות ב־SQL Server מקומי פעיל.
-- Repo פרטי: אם הבודקים לא יקבלו גישה – לא יוכלו לבחון את ההגשה. חובה לטפל לפני ההגשה (D‑15).
+- Repos פרטיים: אם הבודקים לא יקבלו גישה **לכל שלושת** ה־Repos – לא יוכלו לבחון את ההגשה במלואה. חובה לטפל לפני ההגשה (D‑15, Issue #49).
+- שלושה Repos: Commit ב־BE/FE שמפנה ל־Issue בלי הפניה מלאה (`#12` במקום `naomy55978/requests-management-docs#12`) יקושר ל־Repo הלא נכון ולא יסגור את ה־Issue.
+- `CLAUDE.md` נמצא מחוץ ל־Repos: פתיחת Claude Code בתוך אחד ה־Repos (ולא ב־`<project-root>`) תטען רק את ההנחיות הגלובליות; גם clone חדש לא יכלול אותו.
 - GitHub Actions ב־Repo פרטי צורך דקות מהמכסה החינמית (2,000 בחודש) – מספיק לפרויקט.
 
 ## 11. צעדים הבאים
 1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
-2. M1 – ‏DB ונתונים (Issues #6–#9), עם Opus לתכנון ו־Sonnet לקוד. לפי CLAUDE.md: הצגת תוכנית M1 וקבלת אישור לפני ביצוע.
-3. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit (`Closes #n`).
+2. M1 – ‏DB ונתונים (Issues #6–#9) ב־`requests-management-be`, עם Opus לתכנון ו־Sonnet לקוד. לפי CLAUDE.md: הצגת תוכנית M1 וקבלת אישור לפני ביצוע.
+3. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
+4. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
