@@ -19,7 +19,7 @@ internal class RequestStatusHistoryConfiguration : IEntityTypeConfiguration<Requ
 
         builder.Property(h => h.PreviousStatus).HasColumnType("tinyint");
         builder.Property(h => h.NewStatus).HasColumnType("tinyint");
-        builder.Property(h => h.ChangedAt).HasColumnType("datetime2");
+        builder.Property(h => h.ChangedAt).HasColumnType("datetime2").HasConversion(UtcDateTimeConverter.Instance);
         builder.Property(h => h.ChangedBy).HasMaxLength(100).IsRequired();
 
         // Requests are never deleted, so no cascade: history must not disappear silently

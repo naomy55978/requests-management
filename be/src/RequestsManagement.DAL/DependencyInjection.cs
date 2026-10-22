@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
         services.AddSingleton(databaseOptions);
         services.AddScoped<DatabaseSeeder>();
+        services.AddScoped<IRequestRepository, RequestRepository>();
 
         return services;
     }
