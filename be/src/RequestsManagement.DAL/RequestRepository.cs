@@ -58,6 +58,26 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         return row?.ToDto();
     }
 
+    public async Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken)
+    {
+        // Seek on IX_RequestStatusHistory_RequestId_ChangedAt; rows come back already in ChangedAt order.
+        // No paging: a request has only a handful of status changes.
+        var history = await db.RequestStatusHistory.AsNoTracking()
+            .Where(h => h.RequestId == id)
+            .OrderBy(h => h.ChangedAt)
+            .ThenBy(h => h.Id)
+            .Select(h => new StatusHistoryDto(h.PreviousStatus, h.NewStatus, h.ChangedAt, h.ChangedBy))
+            .ToListAsync(cancellationToken);
+
+        // No rows: either a request that never changed (empty history) or no such request (null → 404)
+        if (history.Count == 0 && !await db.Requests.AnyAsync(r => r.Id == id, cancellationToken))
+        {
+            return null;
+        }
+
+        return history;
+    }
+
     public async Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
     {
         var requests = db.Requests.AsNoTracking();

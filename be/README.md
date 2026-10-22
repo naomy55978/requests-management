@@ -49,11 +49,33 @@ dotnet run --project src/RequestsManagement.API --launch-profile http
 
 ב־Development זמין **Swagger UI** בכתובת http://localhost:5084/swagger – תיעוד כל הפרמטרים (כולל `assignedTo=unassigned` לפניות ללא מטפל) ואפשרות לנסות את ה־API.
 
+### התחברות
+
+**כל ה־Endpoints דורשים טוקן**, מלבד ההתחברות עצמה (החלטה D‑10).
+
+1. ב־Swagger UI: ‏`POST /api/auth/login` עם משתמש דמו, למשל `{"userName": "dana.cohen", "password": "Demo123!"}`.
+   לכל משתמשי הדמו אותה סיסמה – **`Demo123!`** (נתוני דמו בלבד). שמות משתמשים נוספים מופיעים בשדה `assignedTo` של הפניות.
+2. להעתיק את `accessToken` מהתשובה, ללחוץ **Authorize** ולהדביק אותו.
+
+הטוקן תקף 8 שעות; לאחר מכן כל קריאה מחזירה `401`. מפתח החתימה ב־`appsettings.Development.json` מיועד לפיתוח בלבד – בכל סביבה אחרת יש לספק `Jwt__SigningKey` (לפחות 32 בתים), אחרת ה־API לא יעלה.
+
+### Endpoints
+
 - `GET /api/requests` – רשימה עם דפדוף, סינון משולב, חיפוש ומיון בצד השרת
-- `GET /api/requests/{id}` – פנייה בודדת
+- `GET /api/requests/{id}` – פנייה בודדת (כולל `version`)
 - `GET /api/requests/summary` – ספירות לפי סטטוס ועדיפות וארגונים מובילים בפניות פתוחות
+- `PATCH /api/requests/{id}/status` – שינוי סטטוס עם `{"newStatus": "...", "version": "..."}` (Optimistic Concurrency): ‏`409` אם מישהו שינה את הפנייה בינתיים, ‏`422` למעבר סטטוס אסור
+- `GET /api/requests/{id}/history` – היסטוריית שינויי הסטטוס (מי ומתי)
 
 כל השגיאות חוזרות בפורמט `ProblemDetails` אחד (כולל `traceId`); קלט לא תקין – `400` עם רשימת כל הבעיות.
+
+### הוכחת Concurrency
+
+סקריפט שמוכיח שאין Lost Update: לכל אחת מ־50 פניות נשלחות 20 בקשות שינוי סטטוס **במקביל** עם אותה גרסה, משני משתמשים. מצופה: בדיוק `200` אחד ו־19 תשובות `409`, ושורת היסטוריה אחת בלבד – של המנצח. כשה־API רץ:
+
+```
+dotnet run scripts/ConcurrencyProof.cs
+```
 
 הוראות הרצה מלאות (כולל הבדיקות) יתווספו ב־M9.
 

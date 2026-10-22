@@ -15,6 +15,9 @@ public interface IRequestService
 
     Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
 
+    /// <returns>All status changes of the request, oldest first, or null if the request does not exist.</returns>
+    Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken);
+
     /// <summary>
     /// Changes the status of a request with optimistic concurrency, enforcing the transition rules (D-05, D-06).
     /// </summary>

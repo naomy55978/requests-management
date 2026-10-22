@@ -48,6 +48,9 @@ internal sealed class RequestService(
         return summary;
     }
 
+    public Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken) =>
+        repository.GetHistoryAsync(id, cancellationToken);
+
     public async Task<StatusUpdateResult> UpdateStatusAsync(
         int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken)
     {

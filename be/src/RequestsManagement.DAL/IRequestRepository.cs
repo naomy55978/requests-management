@@ -15,6 +15,10 @@ public interface IRequestRepository
     /// <returns>The request, or null if it does not exist.</returns>
     Task<RequestDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
+    /// <summary>All status changes of a request, oldest first.</summary>
+    /// <returns>The changes (empty for a request that never changed), or null if the request does not exist.</returns>
+    Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken);
+
     /// <summary>Aggregations over all requests (GROUP BY in the database).</summary>
     Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
 
