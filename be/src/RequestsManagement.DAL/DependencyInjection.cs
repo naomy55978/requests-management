@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddSingleton(databaseOptions);
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<IRequestRepository, RequestRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

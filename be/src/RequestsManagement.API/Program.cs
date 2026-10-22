@@ -1,7 +1,12 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RequestsManagement.API.Auth;
 using RequestsManagement.API.Commands;
 using RequestsManagement.API.Middleware;
 using RequestsManagement.BL;
@@ -13,12 +18,18 @@ var builder = WebApplication.CreateBuilder(isSeedCommand ? [] : args);
 
 // Add services to the container.
 
-builder.Services.AddControllers()
+// Required fields are declared explicitly on the DTOs ([Required], D-18). Without this switch every
+// non-nullable parameter is also implicitly required, which adds a misleading "The request field is
+// required." next to the real error when a body cannot be read (malformed JSON, unknown field).
+builder.Services.AddControllers(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         // Keys of validation errors follow the property names: "pageSize", not "PageSize"
         options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+        // A body field the API does not know is rejected with 400 instead of being ignored silently –
+        // e.g. a client that tries to send "changedBy" is told so (the acting user comes only from the token)
+        options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
     });
 // Enums travel as readable strings ("InProgress"); numbers are still accepted as input.
 // The OpenAPI schema generator reads these options, not the MVC ones.
@@ -26,6 +37,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
+{
     options.AddOperationTransformer((operation, _, _) =>
     {
         // Query binding ignores case; document the camelCase names the API contract uses (pageSize, sortBy, ...)
@@ -38,7 +50,38 @@ builder.Services.AddOpenApi(options =>
         }
 
         return Task.CompletedTask;
-    }));
+    });
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddOperationTransformer<BearerSecuritySchemeTransformer>();
+});
+
+// Authentication (D-10): JWT bearer tokens issued by POST /api/auth/login.
+// Secure by default: the fallback policy requires an authenticated user on every endpoint;
+// only endpoints marked [AllowAnonymous] (login) are open.
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+if (!isSeedCommand)
+{
+    jwtOptions.Validate();
+}
+builder.Services.AddSingleton(jwtOptions);
+builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Keep the standard claim names ("sub", "name") instead of mapping them to long WS-* URIs
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = jwtOptions.GetSigningKey(),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            NameClaimType = JwtRegisteredClaimNames.Sub,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 // One error format for the whole API: every error response is ProblemDetails with a traceId.
 // Invalid input is reported by ASP.NET model validation as ValidationProblemDetails (D-18);
@@ -75,13 +118,20 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // The API description itself is public (Development only), so Swagger UI can load it before login
+    app.MapOpenApi().AllowAnonymous();
     // Swagger UI (at /swagger) on top of the built-in OpenAPI document, for manual testing
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Requests Management API v1"));
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "Requests Management API v1");
+        // Keep the token after a page refresh while testing
+        options.EnablePersistAuthorization();
+    });
 }
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -50,6 +51,14 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
 
         var stopwatch = Stopwatch.StartNew();
         var data = SeedDataGenerator.Generate(requestCount);
+
+        // Each user gets its own random salt, so the hashes differ between runs (all other data is identical)
+        var passwordHasher = new PasswordHasher<User>();
+        foreach (var user in data.Users)
+        {
+            user.PasswordHash = passwordHasher.HashPassword(user, SeedDataGenerator.DemoPassword);
+        }
+
         logger.LogInformation(
             "Generated {Users} users, {Requests} requests and {History} history rows in {Elapsed} ms",
             data.Users.Count, data.Requests.Count, data.History.Count, stopwatch.ElapsedMilliseconds);
@@ -108,10 +117,11 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
         table.Columns.Add(nameof(User.Id), typeof(int));
         table.Columns.Add(nameof(User.UserName), typeof(string));
         table.Columns.Add(nameof(User.DisplayName), typeof(string));
+        table.Columns.Add(nameof(User.PasswordHash), typeof(string));
 
         foreach (var u in users)
         {
-            table.Rows.Add(u.Id, u.UserName, u.DisplayName);
+            table.Rows.Add(u.Id, u.UserName, u.DisplayName, u.PasswordHash);
         }
         return table;
     }

@@ -18,6 +18,12 @@ internal static class SeedDataGenerator
 {
     public const int RandomSeed = 20261022;
 
+    /// <summary>
+    /// The one password of all demo users (documented in the README). Demo data only – not a secret.
+    /// The generator leaves PasswordHash empty; the seeder hashes this password for every user.
+    /// </summary>
+    public const string DemoPassword = "Demo123!";
+
     /// <summary>All generated dates lie before this fixed point in time (UTC).</summary>
     public static readonly DateTime AnchorDate = new(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
 
