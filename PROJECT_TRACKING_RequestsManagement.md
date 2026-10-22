@@ -177,6 +177,12 @@
   - **סקריפט האימות של M2 עודכן להתחברות** – 77 בדיקות עוברות (כולל 401 ללא טוקן), מלבד 3 מיונים שנתקעו בהרצה הראשונה (ראו סעיף 10, לחץ זיכרון).
   - ה־DB המקומי נזרע מחדש (`seed --reset`) אחרי ה־Migration – המשתמשים הקודמים היו בלי Hash.
   - ארבעה Commits ב־BE (סגירה אוטומטית של #16–#19), ‏CI ירוק.
+- 23.10.2026 – **סקריפטי האימות נוספו ל־Repo של BE** (`scripts/`, לבקשתך; עד עכשיו היו רק בתיקייה זמנית):
+  - `node scripts/verify-read-api.js` – אימות M2 (לקריאה בלבד): סינון/חיפוש/מיון/דפדוף מול SQL ישיר, Validation ופורמט שגיאות, Summary, ‏OpenAPI, זמני תגובה.
+  - `node scripts/verify-status-update.js` – אימות M3 (**משנה נתונים**): 16 צירופי מעברים, 404/409/422/400/401/415, היסטוריה, ‏`ChangedBy` מהטוקן, עקביות כל הטבלה.
+  - שניהם מתחברים קודם כמשתמש דמו; ‏`API_URL` ו־`SQL_SERVER` ניתנים להגדרה (ברירת מחדל LocalDB, כמו ה־API; במחשב הפיתוח: `SQL_SERVER=.`); ה־warm-up רץ לפני ההתחברות; כשל התחברות או API/SQL לא זמינים ← הודעה ברורה וקוד יציאה 2. נוספה גם בדיקת 415 (גוף בלי `Content-Type`).
+  - ‏README של BE: פרק "סקריפטי אימות" – שלושת הסקריפטים (כולל `ConcurrencyProof.cs`), דרישות (Node 18+, ‏`sqlcmd`), משתני סביבה, אילו משנים נתונים ואיך לחזור לנתוני ה־Seed.
+  - הורצו מה־Repo מול המסד המקומי: ‏`verify-read-api` – ‏**80/80**, ‏`verify-status-update` – ‏**52/52**. בניסיון הראשון `verify-read-api` נעצר על שגיאת SQL Server 802 ("insufficient memory available in the buffer pool") – לחץ הזיכרון במחשב (סעיף 10); אחרי שהתפנה זיכרון – הכול עבר, כולל המיונים שנתקעו קודם.
 
 ## 9. שאלות פתוחות
 - כיצד יקבלו הבודקים גישה **לשלושת** ה־Repos הפרטיים (שמות משתמש של הבודקים, או הפיכה לציבוריים בהגשה) – להחליט לפני M9.
@@ -189,7 +195,7 @@
 - בדיקות Integration תלויות ב־SQL Server מקומי פעיל.
 - D‑17: בודק בלי LocalDB (למשל מחשב ללא Visual Studio/SQL Express) צריך לדרוס את מחרוזת ההתחברות – יתועד ב־README ב־M9. **הרצה ראשונה על LocalDB "קר" ארכה 138 שנ'** (הרצות חוזרות ~10–20 שנ'), ובזמן הזה ה־API עדיין לא מאזין. נוספה הודעת לוג לפני ה־Seed ("Seeding 100,000 requests - this may take a few minutes on first run"), ‏README של BE מציין זאת, וזה קריטריון קבלה ב־#45 (README הסופי ב־M9) – הבודק צריך לדעת למה לצפות.
 - **חיפוש טקסט איטי יחסית:** ‏`search` ‏(`LIKE '%x%'`) נמדד ~480 ms ב־100K רשומות (סריקה מלאה), ומיון לפי עמודה בלי אינדקס מתאים (title, updatedAt) ~120 ms – ה־Bottleneck המתוכנן (D‑12). יטופל/יתועד ב־M8 (אינדקסים, ו־Full‑Text כהצעת שיפור).
-- **לחץ זיכרון במחשב הפיתוח** (סעיף 4) מייצר "קפיאות" אקראיות של שאילתות ועלול לעוות מדידות M8. בבודק עם מחשב דל בזיכרון ייתכנו 500 על timeout של 30 שנ' בהרצה הראשונה. **אבחון (M3):** הקפיאות פוגעות בעיקר במיונים בלי אינדקס תואם (`updatedAt`, `priority`, `status`) – תוכנית מקבילית (DOP 10) עם Sort שממתינה ל־Memory Grant כש־SQL Server מצומצם ל־~420 MB: ‏`CXSYNC_PORT` עד 120 שנ', ‏`LATCH_EX` עד 97 שנ', ‏`RESOURCE_SEMAPHORE` עד 68 שנ'. **ל־M8:** אינדקס התומך במיון (למשל `UpdatedAt`) מבטל את ה־Sort ואת ה־Memory Grant; לשקול גם `MAXDOP`/‏`cost threshold` ברמת השאילתה – ולתעד ב־PERFORMANCE.md.
+- **לחץ זיכרון במחשב הפיתוח** (סעיף 4) מייצר "קפיאות" אקראיות של שאילתות ועלול לעוות מדידות M8. בבודק עם מחשב דל בזיכרון ייתכנו 500 על timeout של 30 שנ' בהרצה הראשונה. **אבחון (M3):** הקפיאות פוגעות בעיקר במיונים בלי אינדקס תואם (`updatedAt`, `priority`, `status`) – תוכנית מקבילית (DOP 10) עם Sort שממתינה ל־Memory Grant כש־SQL Server מצומצם ל־~420 MB: ‏`CXSYNC_PORT` עד 120 שנ', ‏`LATCH_EX` עד 97 שנ', ‏`RESOURCE_SEMAPHORE` עד 68 שנ'. **ל־M8:** אינדקס התומך במיון (למשל `UpdatedAt`) מבטל את ה־Sort ואת ה־Memory Grant; לשקול גם `MAXDOP`/‏`cost threshold` ברמת השאילתה – ולתעד ב־PERFORMANCE.md. ב־23.10 המצב החמיר עד שגיאת SQL Server ‏**802** ("insufficient memory available in the buffer pool") בשאילתה מ־`sqlcmd` – לפני הרצות ארוכות חובה לפנות זיכרון.
 - **סיסמת הדמו ומפתח החתימה ב־Repo** – נתוני דמו ומפתח פיתוח בלבד, מתועדים ככאלה; במערכת אמיתית: מפתח מ־Secret Store, סיסמאות אישיות, הגבלת ניסיונות התחברות (Rate Limiting) – לא מומש (מגבלה ידועה ל־M9).
 - טוקן JWT אינו ניתן לביטול לפני פקיעתו (8 שעות) – אין Logout בצד השרת; מקובל לדמו, יתועד כמגבלה.
 - הודעות ה־Validation באנגלית וכוללות את שם המאפיין ("The field PageSize ..."), בעוד המפתח camelCase – ה־UI (M7) יציג הודעות משלו לפי המפתח.
@@ -204,5 +210,6 @@
 1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
 2. M4 – ‏Bulk (Issues #20–#22) ב־`requests-management-be`, עם Sonnet. לפי CLAUDE.md: הצגת תוכנית M4 וקבלת אישור לפני ביצוע. נקודות מוכנות: ‏`IRequestRepository.UpdateStatusAsync` (עדכון מותנה + Audit בטרנזקציה אחת) – Bulk ישתמש בו לכל פריט (D‑08, בלי שכפול לוגיקה); ‏`StatusUpdateOutcome` (Updated/NotFound/Conflict/InvalidTransition) כבר מוגדר; ‏`StatusTransitions` ב־BL; ‏Validation של הגוף ב־DataAnnotations (D‑18) – עד 100 פריטים, בלי מזהים כפולים; ‏`ChangedBy` מהטוקן. אפשר אחרי כן M5 (Cache) – תלוי רק ב־M3.
 3. לפני הרצות אימות/מדידה ארוכות: `dotnet build-server shutdown`, לסגור אפליקציות כבדות, ו־warm-up ב־`sqlcmd` (ללא timeout).
+   אחרי כל Milestone של BE: להריץ את סקריפטי האימות הקיימים (`scripts/`, ראו README של BE) כבדיקת רגרסיה. ב־M6 (#28, #29) הם הבסיס לבדיקות האוטומטיות – אותם תרחישים, ב־xUnit מול DB זמני.
 4. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
 5. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
