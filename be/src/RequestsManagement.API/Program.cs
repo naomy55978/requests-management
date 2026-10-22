@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using RequestsManagement.API.Commands;
+using RequestsManagement.API.Middleware;
 using RequestsManagement.DAL;
 
 // In "seed" mode the arguments belong to the seed command, not to the configuration system
@@ -10,6 +12,15 @@ var builder = WebApplication.CreateBuilder(isSeedCommand ? [] : args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// One error format for the whole API: every error response is ProblemDetails with a traceId.
+// Invalid input is reported by ASP.NET model validation as ValidationProblemDetails (D-18);
+// exceptions nobody handled end up in GlobalExceptionHandler.
+builder.Services.AddProblemDetails(options =>
+    options.CustomizeProblemDetails = context =>
+        context.ProblemDetails.Extensions.TryAdd(
+            "traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Data access: the connection string can be overridden by user-secrets or the
 // ConnectionStrings__RequestsDb environment variable (D-17)
@@ -30,6 +41,10 @@ if (isSeedCommand)
 await app.Services.InitializeDatabaseAsync();
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+// Also answers bodiless errors (unknown route, wrong method) as ProblemDetails
+app.UseStatusCodePages();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
