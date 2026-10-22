@@ -1,4 +1,6 @@
+using System.Data;
 using System.Linq.Expressions;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using RequestsManagement.DAL.Entities;
 using RequestsManagement.DTO;
@@ -92,6 +94,114 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             byStatus,
             byPriority,
             topOrganizations.ConvertAll(o => new OrganizationCountDto(o.OrganizationName, o.OpenRequests)));
+    }
+
+    public async Task<StatusUpdateResult> UpdateStatusAsync(
+        int id,
+        byte[] expectedVersion,
+        RequestStatus newStatus,
+        IReadOnlyCollection<RequestStatus> allowedPrevious,
+        string changedBy,
+        DateTime changedAt,
+        CancellationToken cancellationToken)
+    {
+        // The update and its audit row are written together or not at all
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // Optimistic concurrency enforced by the database (D-06): the row is changed only if it still has the
+        // version the client read AND its current status may change to the new one. Both conditions are part of
+        // the same UPDATE, so nothing can change between checking and writing. Concurrent updates with the same
+        // version are serialized by the row lock: the first one changes the rowversion, so the others match 0 rows.
+        // UpdatedAt is set in the same row write that makes SQL Server generate the new rowversion,
+        // so the two always change together. OUTPUT returns the updated row and the previous status in one round trip.
+        UpdatedRow? updated = null;
+        if (allowedPrevious.Count > 0)
+        {
+            var statusParameters = allowedPrevious
+                .Select((status, i) => new SqlParameter($"@allowed{i}", SqlDbType.TinyInt) { Value = (byte)status })
+                .ToList();
+            var sql = $"""
+                UPDATE [Requests]
+                SET [Status] = @newStatus, [UpdatedAt] = @changedAt
+                OUTPUT deleted.[Status] AS [PreviousStatus], inserted.[Id], inserted.[Title], inserted.[OrganizationName],
+                       inserted.[Status], inserted.[Priority], inserted.[AssignedTo], inserted.[CreatedAt],
+                       inserted.[UpdatedAt], inserted.[RowVersion]
+                WHERE [Id] = @id AND [RowVersion] = @expectedVersion
+                  AND [Status] IN ({string.Join(", ", statusParameters.Select(p => p.ParameterName))})
+                """;
+
+            SqlParameter[] parameters =
+            [
+                new("@newStatus", SqlDbType.TinyInt) { Value = (byte)newStatus },
+                new("@changedAt", SqlDbType.DateTime2) { Value = changedAt },
+                new("@id", SqlDbType.Int) { Value = id },
+                new("@expectedVersion", SqlDbType.Binary, 8) { Value = expectedVersion },
+                .. statusParameters
+            ];
+
+            updated = (await db.Database.SqlQueryRaw<UpdatedRow>(sql, parameters).ToListAsync(cancellationToken))
+                .SingleOrDefault();
+        }
+
+        if (updated is not null)
+        {
+            // Audit row (D-06): previous status comes from the database (OUTPUT deleted), never from the client.
+            // A separate INSERT because OUTPUT ... INTO cannot target a table with a foreign key.
+            await db.Database.ExecuteSqlAsync(
+                $"""
+                INSERT INTO [RequestStatusHistory] ([RequestId], [PreviousStatus], [NewStatus], [ChangedAt], [ChangedBy])
+                VALUES ({id}, {(byte)updated.PreviousStatus}, {(byte)newStatus}, {changedAt}, {changedBy})
+                """,
+                cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+            return new StatusUpdateResult(StatusUpdateOutcome.Updated, updated.ToDto());
+        }
+
+        // 0 rows: find out why. Not found → 404; another version → 409 (the client's data is stale, so this wins
+        // over 422); same version → the transition itself is not allowed → 422.
+        // (If another update commits between the UPDATE above and this read, the answer is 409 – also correct:
+        // the client has to reload either way.)
+        var current = await db.Requests.AsNoTracking()
+            .Where(r => r.Id == id)
+            .Select(r => new { r.Status, r.RowVersion, r.UpdatedAt })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (current is null)
+        {
+            return new StatusUpdateResult(StatusUpdateOutcome.NotFound);
+        }
+
+        var outcome = current.RowVersion.AsSpan().SequenceEqual(expectedVersion)
+            ? StatusUpdateOutcome.InvalidTransition
+            : StatusUpdateOutcome.Conflict;
+
+        return new StatusUpdateResult(
+            outcome,
+            CurrentStatus: current.Status,
+            CurrentVersion: Convert.ToBase64String(current.RowVersion),
+            CurrentUpdatedAt: current.UpdatedAt);
+    }
+
+    /// <summary>Row returned by the OUTPUT clause of the status update (raw SQL result, so plain settable properties).</summary>
+    private sealed class UpdatedRow
+    {
+        public RequestStatus PreviousStatus { get; set; }
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+        public string OrganizationName { get; set; } = null!;
+        public RequestStatus Status { get; set; }
+        public RequestPriority Priority { get; set; }
+        public string? AssignedTo { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public byte[] RowVersion { get; set; } = null!;
+
+        // Raw SQL results bypass the entity's UTC converter, so the kind is set here
+        public RequestDto ToDto() => new(
+            Id, Title, OrganizationName, Status, Priority, AssignedTo,
+            DateTime.SpecifyKind(CreatedAt, DateTimeKind.Utc), DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc),
+            Convert.ToBase64String(RowVersion));
     }
 
     private static IQueryable<Request> ApplyFilter(IQueryable<Request> query, RequestFilter filter)

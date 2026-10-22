@@ -14,4 +14,14 @@ public interface IRequestService
     Task<RequestDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes the status of a request with optimistic concurrency, enforcing the transition rules (D-05, D-06).
+    /// </summary>
+    /// <param name="id">Request id.</param>
+    /// <param name="request">New status and the version the client read (already validated).</param>
+    /// <param name="changedBy">The authenticated user, taken from the token by the caller – never from the body.</param>
+    /// <param name="cancellationToken">Cancelled when the client disconnects.</param>
+    Task<StatusUpdateResult> UpdateStatusAsync(
+        int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken);
 }

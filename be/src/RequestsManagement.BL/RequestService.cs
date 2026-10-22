@@ -5,7 +5,8 @@ using RequestsManagement.DTO;
 
 namespace RequestsManagement.BL;
 
-internal sealed class RequestService(IRequestRepository repository, ILogger<RequestService> logger) : IRequestService
+internal sealed class RequestService(
+    IRequestRepository repository, TimeProvider timeProvider, ILogger<RequestService> logger) : IRequestService
 {
     public async Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
@@ -45,5 +46,42 @@ internal sealed class RequestService(IRequestRepository repository, ILogger<Requ
             "Summary calculated for {Total} requests in {ElapsedMs} ms", summary.Total, stopwatch.ElapsedMilliseconds);
 
         return summary;
+    }
+
+    public async Task<StatusUpdateResult> UpdateStatusAsync(
+        int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken)
+    {
+        var newStatus = request.NewStatus!.Value;
+
+        // One timestamp for both UpdatedAt and the audit row's ChangedAt
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+
+        var result = await repository.UpdateStatusAsync(
+            id, request.GetVersionBytes(), newStatus, StatusTransitions.AllowedPrevious(newStatus),
+            changedBy, now, cancellationToken);
+
+        switch (result.Outcome)
+        {
+            case StatusUpdateOutcome.Updated:
+                logger.LogInformation("Request {RequestId} status changed to {NewStatus}", id, newStatus);
+                break;
+            case StatusUpdateOutcome.NotFound:
+                logger.LogInformation("Status change of request {RequestId}: not found", id);
+                break;
+            case StatusUpdateOutcome.Conflict:
+                logger.LogInformation(
+                    "Status change of request {RequestId} to {NewStatus} rejected: changed concurrently (now {CurrentStatus})",
+                    id, newStatus, result.CurrentStatus);
+                break;
+            case StatusUpdateOutcome.InvalidTransition:
+                logger.LogInformation(
+                    "Status change of request {RequestId} rejected: {CurrentStatus} to {NewStatus} is not allowed",
+                    id, result.CurrentStatus, newStatus);
+                // Tell the client which changes are possible from the current status
+                result = result with { AllowedStatuses = StatusTransitions.AllowedNext(result.CurrentStatus!.Value) };
+                break;
+        }
+
+        return result;
     }
 }
