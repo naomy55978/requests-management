@@ -34,7 +34,8 @@ public class UpdateStatusRequest : IValidatableObject
         }
     }
 
-    private static bool IsValidVersion(string value)
+    // Also used by the bulk items, so the format of a version is defined in one place
+    internal static bool IsValidVersion(string value)
     {
         Span<byte> buffer = stackalloc byte[VersionBytes + 1];
         return Convert.TryFromBase64String(value, buffer, out var written) && written == VersionBytes;
