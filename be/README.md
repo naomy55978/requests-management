@@ -25,6 +25,21 @@ tests/
 dotnet build RequestsManagement.sln
 ```
 
-הוראות הרצה מלאות (מסד נתונים, נתוני בדיקה, הרצת ה־API והבדיקות) יתווספו ב־M9.
+## מסד הנתונים
+
+בהרצה ב־Development ה־API יוצר את מסד הנתונים `RequestsManagement` לבד: מריץ את ה־Migrations, ואם המסד ריק – יוצר 100,000 פניות דמו (נתונים זהים בכל הרצה). אין צורך בצעד ידני (החלטה D‑17).
+
+- ברירת המחדל: ‏SQL Server LocalDB – ‏`(localdb)\MSSQLLocalDB`.
+- מופע אחר: לדרוס את `ConnectionStrings:RequestsDb` באמצעות user-secrets או משתנה הסביבה `ConnectionStrings__RequestsDb`.
+- כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` (מופעלים ב־`appsettings.Development.json`).
+- יצירה מחדש של הנתונים:
+
+```
+dotnet run --project src/RequestsManagement.API -- seed --count 100000 --reset
+```
+
+‏`--reset` מוחק את המסד ויוצר אותו מחדש, ומותר רק כאשר שם המסד הוא בדיוק `RequestsManagement`.
+
+הוראות הרצה מלאות (הרצת ה־API והבדיקות) יתווספו ב־M9.
 
 > היסטוריית העבודה של M0 (הקמת ה־Solution) נשמרה ב־Repo של התיעוד, ממנו הקוד הועבר לכאן.

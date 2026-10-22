@@ -1,6 +1,9 @@
+using RequestsManagement.API.Commands;
 using RequestsManagement.DAL;
 
-var builder = WebApplication.CreateBuilder(args);
+// In "seed" mode the arguments belong to the seed command, not to the configuration system
+var isSeedCommand = SeedCommand.IsInvoked(args);
+var builder = WebApplication.CreateBuilder(isSeedCommand ? [] : args);
 
 // Add services to the container.
 
@@ -18,6 +21,14 @@ builder.Services.AddDataAccess(connectionString, databaseOptions);
 
 var app = builder.Build();
 
+if (isSeedCommand)
+{
+    return await SeedCommand.RunAsync(app.Services, args);
+}
+
+// Migrate and seed an empty database when enabled in configuration (Development only by default, D-17)
+await app.Services.InitializeDatabaseAsync();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -30,4 +41,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
+return 0;

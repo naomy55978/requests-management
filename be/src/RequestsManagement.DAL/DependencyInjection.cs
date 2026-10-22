@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using RequestsManagement.DAL.Seeding;
 
 namespace RequestsManagement.DAL;
 
@@ -14,6 +15,7 @@ public static class DependencyInjection
         // AddDbContext registers the context as Scoped – one instance per HTTP request
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
         services.AddSingleton(databaseOptions);
+        services.AddScoped<DatabaseSeeder>();
 
         return services;
     }
