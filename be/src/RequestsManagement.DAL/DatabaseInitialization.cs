@@ -38,7 +38,7 @@ public static class DatabaseInitialization
             var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
             if (await seeder.IsEmptyAsync(cancellationToken))
             {
-                logger.LogInformation("Database is empty – seeding {Count} demo requests", options.SeedRequestCount);
+                logger.LogInformation("Database is empty – seeding demo data first; the API starts listening when it is done");
                 await seeder.SeedAsync(options.SeedRequestCount, cancellationToken);
             }
             else

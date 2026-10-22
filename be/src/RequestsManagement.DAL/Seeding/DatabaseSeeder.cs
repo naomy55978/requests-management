@@ -44,6 +44,10 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
 
     public async Task SeedAsync(int requestCount, CancellationToken cancellationToken)
     {
+        // On a cold SQL Server (e.g. the first LocalDB start) this took over two minutes - tell the user to wait
+        logger.LogInformation(
+            "Seeding {Count:N0} requests - this may take a few minutes on first run", requestCount);
+
         var stopwatch = Stopwatch.StartNew();
         var data = SeedDataGenerator.Generate(requestCount);
         logger.LogInformation(
