@@ -27,5 +27,10 @@ internal class RequestStatusHistoryConfiguration : IEntityTypeConfiguration<Requ
             .WithMany(r => r.StatusHistory)
             .HasForeignKey(h => h.RequestId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // GET /api/requests/{id}/history: all changes of one request in chronological order
+        // (seek on RequestId, rows already sorted by ChangedAt). Also serves as the index for the FK.
+        builder.HasIndex(h => new { h.RequestId, h.ChangedAt })
+            .HasDatabaseName("IX_RequestStatusHistory_RequestId_ChangedAt");
     }
 }

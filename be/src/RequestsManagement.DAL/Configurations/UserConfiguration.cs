@@ -15,5 +15,10 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.UserName).HasMaxLength(50).IsRequired();
         builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
+
+        // User names are unique; the login (M3) looks users up by UserName
+        builder.HasIndex(u => u.UserName)
+            .IsUnique()
+            .HasDatabaseName("UX_Users_UserName");
     }
 }
