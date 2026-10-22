@@ -85,11 +85,11 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 
 | Issue | משימה | מאמץ | תלוי ב־ | סעיף במבדק |
 |---|---|---|---|---|
-| [#10](https://github.com/naomy55978/requests-management-docs/issues/10) | DTOs: RequestFilter, PagedResult, פריט רשימה, פרטי פנייה, Summary | 0.75 | [#2](https://github.com/naomy55978/requests-management-docs/issues/2) | §1 (החזרת DTOs), §10 (DTOs / Mapping) |
+| [#10](https://github.com/naomy55978/requests-management-docs/issues/10) | DTOs: RequestFilter, PagedResult, RequestDto, Summary | 0.75 | [#2](https://github.com/naomy55978/requests-management-docs/issues/2) | §1 (החזרת DTOs), §10 (DTOs / Mapping) |
 | [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | Repository: שאילתת רשימה עם סינון, חיפוש, מיון, דפדוף ו-Projection | 1.5 | [#7](https://github.com/naomy55978/requests-management-docs/issues/7), [#10](https://github.com/naomy55978/requests-management-docs/issues/10) | §1 שליפת נתונים, §6 (אין טעינה מלאה לפני Pagination) |
-| [#12](https://github.com/naomy55978/requests-management-docs/issues/12) | Service ו-Validation לפרמטרי השליפה | 1 | [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §1 (הגבלת Page Size ו-Validation), §10 (Validation עקבי) |
-| [#13](https://github.com/naomy55978/requests-management-docs/issues/13) | Controllers: GET רשימה ו-GET לפי מזהה + OpenAPI/Swagger | 0.75 | [#12](https://github.com/naomy55978/requests-management-docs/issues/12) | §1 שליפת נתונים |
-| [#14](https://github.com/naomy55978/requests-management-docs/issues/14) | טיפול שגיאות גלובלי (ProblemDetails) ו-Logging | 1 | [#13](https://github.com/naomy55978/requests-management-docs/issues/13) | §10 (Global Error Handling / ProblemDetails, Logging) |
+| [#12](https://github.com/naomy55978/requests-management-docs/issues/12) | Service ו-Validation (DataAnnotations על ה-DTOs) לפרמטרי השליפה | 1 | [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §1 (הגבלת Page Size ו-Validation), §10 (Validation עקבי) |
+| [#13](https://github.com/naomy55978/requests-management-docs/issues/13) | Controllers: GET רשימה ו-GET לפי מזהה + OpenAPI/Swagger | 0.75 | [#12](https://github.com/naomy55978/requests-management-docs/issues/12), [#14](https://github.com/naomy55978/requests-management-docs/issues/14) | §1 שליפת נתונים |
+| [#14](https://github.com/naomy55978/requests-management-docs/issues/14) | טיפול שגיאות גלובלי (ProblemDetails) ו-Logging | 1 | [#12](https://github.com/naomy55978/requests-management-docs/issues/12) | §10 (Global Error Handling / ProblemDetails, Logging) |
 | [#15](https://github.com/naomy55978/requests-management-docs/issues/15) | Endpoint summary: Aggregations | 1 | [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §1 (לפחות שני Aggregations) |
 
 ### M3 – עדכון ו־Concurrency (5 ש')

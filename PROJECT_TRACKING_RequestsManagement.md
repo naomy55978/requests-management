@@ -65,6 +65,7 @@
 | D‑15 | Repos **פרטיים** (שלושה – ראו D‑16); לפני ההגשה – הזמנת הבודקים כ־Collaborators **לשלושת ה־Repos** (או הפיכתם לציבוריים) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
 | D‑16 | שלושה Repos נפרדים: `requests-management-docs` (תכנון ותיעוד, Issues, Milestones, נקודת הכניסה לבודקים), `requests-management-be` (Backend + CI), `requests-management-fe` (Frontend); כולם מקושרים לאותו Project Board | מחזור חיים ו־CI נפרדים לכל Stack, כמקובל בארגונים | Repo אחד לכל הקוד – מעט נוח יותר לבודקים; החיסרון מטופל ע״י README ב־Repo התיעוד שמפנה לשני ה־Repos האחרים |
 | D‑17 | מסד נתונים לבודקים: בעליית ה־API מריצים Migrations ו־Seed (100K, דטרמיניסטי) אם המסד ריק; נשלט ע״י `Database:MigrateOnStartup` ו־`Database:SeedOnStartup` (כבויים כברירת מחדל, מופעלים ב־`appsettings.Development.json`; בדיקות ה־Integration ב־M6 יכבו את ה־Seed). מחרוזת ברירת המחדל: ‏`(localdb)\MSSQLLocalDB`, ניתנת לדריסה ב־user-secrets או במשתנה הסביבה `ConnectionStrings__RequestsDb`. ‏`seed --reset` מוחק מסד רק אם שמו בדיוק `RequestsManagement` | הבודק מקבל מסד מוכן עם נתונים זהים בהרצה הראשונה, בלי צעד ידני ובלי סודות ב־Repo; הדגלים מאפשרים לכבות את האתחול בבדיקות ובסביבות אחרות; ההגנה ב־`--reset` מונעת מחיקת מסד אחר על מופע משותף | קובץ גיבוי (‎.bak) – גיבוי מ־SQL Server 2025 לא ניתן לשחזור בגרסאות ישנות, ודורש שחזור ידני; מסד משותף בענן – פרטי התחברות ב־Repo, והבודקים ישנו נתונים משותפים זה לזה |
+| D‑18 | מנגנון ולידציה אחד לכל הפרויקט: ‏DataAnnotations על ה־DTOs (`Range`, `StringLength`, `EnumDataType`, ו־`IValidatableObject` לכללים חוצי־שדות), הנאכף ע״י ה־model validation המובנה של ASP.NET. אותו מנגנון חל על Query (ב־M2) ועל Body (ב־M3–M4: PATCH, Bulk). כל שגיאת קלט – גם שלנו וגם מובנית (JSON פגום, ערך enum לא חוקי) – חוזרת כ־`ValidationProblemDetails` באותו פורמט, עם מפתחות camelCase ו־`traceId`. שגיאות עסק (409, 422) נפרדות (D‑07) | מנגנון אחד = פורמט שגיאה אחד ללקוח; ה־DTO הוא מקור יחיד לכללי הקלט וגם לתיעוד ה־OpenAPI; אין כפל כללים בין ה־Controller ל־BL ואין תלות חדשה | ‏FluentValidation (תלות נוספת ומנגנון שני לצד ה־binding המובנה – Over‑Engineering לכמה DTOs); ולידציה ידנית ב־BL (שני פורמטי שגיאה: אחד לשגיאות ה־binding ואחד לשלנו) |
 
 ## 6. אפיון
 
@@ -99,12 +100,14 @@
 | Endpoint | תיאור | קודים |
 |---|---|---|
 | `POST /api/auth/login` | התחברות דמו → JWT | 200/401 |
-| `GET /api/requests` | page, pageSize (≤100), status[], priority[], organization, assignedTo, createdFrom, createdTo, search (Title+OrganizationName), sortBy (createdAt/updatedAt/priority/status/title), sortDir | 200/400 |
+| `GET /api/requests` | page, pageSize (≤100), status[], priority[], organization (התחלת שם), assignedTo (או הערך `unassigned` לפניות ללא מטפל), createdFrom, createdTo (ימי UTC שלמים), search (Title+OrganizationName), sortBy (createdAt/updatedAt/priority/status/title), sortDir | 200/400 |
 | `GET /api/requests/{id}` | פנייה בודדת | 200/404 |
 | `GET /api/requests/summary` | Aggregations: ספירה לפי סטטוס ועדיפות; ארגונים מובילים בפניות פתוחות (Cache) | 200 |
 | `PATCH /api/requests/{id}/status` | `{newStatus, version}` | 200/400/404/409/422 |
 | `GET /api/requests/{id}/history` | היסטוריית שינויים | 200/404 |
 | `POST /api/requests/bulk-status` | `{newStatus, items:[{id, version}]}` עד 100 | 200/400 |
+
+**מוסכמות API (נקבעו ב־M2):** פרמטרים ו־JSON ב־camelCase; Enums כמחרוזות (`"InProgress"`), ומספרים מתקבלים כקלט; כל התאריכים UTC עם `Z`; `version` הוא ה־RowVersion כ־base64; כל שגיאה היא ProblemDetails עם `traceId` (400 = `ValidationProblemDetails` עם רשימת כל הבעיות, מפתחות camelCase); דף מעבר לסוף ← 200 עם `items` ריק; ‏Swagger UI ב־`/swagger` (Development בלבד).
 
 ### Angular
 מסך רשימה (mat-table + mat-paginator + mat-sort, הכל בצד השרת), טופס סינון, חיפוש עם debounce ו־switchMap, כרטיסי summary, מצבי Loading/Empty/Error, עדכון סטטוס עם טיפול ב־409 (הודעה + רענון השורה), בחירה מרובה ל־Bulk עם הצגת התוצאה לכל פריט, חלון היסטוריה, מסך Login ו־Interceptor ל־JWT ולשגיאות. הפרדה: Components לתצוגה, Services ל־HTTP ולמצב.
@@ -152,16 +155,31 @@
   - זמני Seed: ‏8.7–23.6 שנ' על המופע המקומי, ‏10.7 שנ' ב־LocalDB חם (הרצה ראשונה על LocalDB "קר" – 138 שנ').
   - אבטחה: ‏`Microsoft.Data.SqlClient` 6.1.7 (תלות של EF Core 10.0.13) מביא את `System.Security.Cryptography.Pkcs` 9.0.11 עם פגיעויות ידועות (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx); הוצמדה גרסה 10.0.13 ב־DAL, עם הערה בקובץ הפרויקט.
   - שלושה Commits ב־BE ‏(סגירה אוטומטית של #6–#8 בהפניה מלאה – המוסכמה עובדת), ‏CI ירוק.
+- 22.10.2026 – **M2 הושלם (Issues #10–#15):**
+  - **החלטות שאושרו:** סדר ביצוע #10, #11, #12, #14, #13, #15 (תלויות ה־Issues עודכנו: #14 תלוי ב־#12, ‏#13 ב־#12 וב־#14); ‏`RequestDto` אחד לרשימה ולפרטים; סינון `organization` לפי התחלת שם (`LIKE 'x%'`, משתמש באינדקס); טווח תאריכים כ־`DateOnly` בימי UTC שלמים; ‏Enums כמחרוזות; ‏Swagger UI מעל ה־OpenAPI המובנה; ‏**D‑18** (מנגנון ולידציה אחד); ‏`assignedTo=unassigned` ← `AssignedTo IS NULL`.
+  - **#10 – DTOs:** ‏`RequestFilter` (כללי הוולידציה מוצהרים עליו), ‏`RequestDto`, ‏`PagedResult<T>`, ‏`SummaryDto` ועוד, בפרויקט DTO (ללא תלויות).
+  - **#11 – Repository:** ‏`IRequestRepository` ציבורי (DTOs בלבד), מימוש internal: שאילתת COUNT + שאילתת דף, ‏`AsNoTracking`, ‏Projection לעמודות הנדרשות, ‏`Id` כ־tie-breaker, ‏`LIKE` עם escape ל־`% _ [`, ‏CancellationToken לכל קריאה. תאריכים נקראים כ־UTC (`ValueConverter`, בלי שינוי סכמה – נבדק `has-pending-model-changes`).
+  - **#12 – Service:** ‏`RequestService` (Scoped, עם Logging שלא כולל טקסט חופשי). **שינוי מהתכנון המקורי:** הוולידציה לא ב־Validator ב־BL אלא על ה־DTOs (D‑18) – ראו Issue #12 המעודכן.
+  - **#14 – טיפול שגיאות:** ‏`GlobalExceptionHandler` + `AddProblemDetails` + `UseStatusCodePages`: כל שגיאה ב־`application/problem+json` עם `traceId`; ‏500 בלי `detail` מחוץ ל־Development. **תיקון שנמצא באימות:** ניתוק לקוח באמצע שאילתה יכול לזרוק `SqlException` ולא `OperationCanceledException` (ASP.NET מטפל רק בשני) – כעת כל חריגה אחרי ניתוק נרשמת כ־Information ומסתיימת ב־499, בלי Error. נבדק עם ~150 בקשות מבוטלות.
+  - **#13 – Controller:** ‏`GET /api/requests`, ‏`GET /api/requests/{id}`, ‏`GET /api/requests/summary`; ‏Swagger UI ב־`/swagger` (Development בלבד), תיאורי XML ופרמטרים ב־camelCase. **#15 – Summary:** שלוש שאילתות GROUP BY (סטטוס, עדיפות, Top 10 ארגונים בפניות פתוחות).
+  - **אימות (77 בדיקות, השוואה לשאילתות SQL ישירות על 100K הרשומות):** 20 תרחישי סינון/חיפוש (כולל תווי `% _ [ '` כתווים רגילים) – ספירות זהות; מיון ב־5 שדות × 2 כיוונים – אותו סדר כמו `ORDER BY` ב־SQL; דפדוף יציב (500 שורות ב־5 דפים בלי כפילויות); 19 קלטים לא חוקיים ← 400 באותו פורמט ובאותו Content-Type; 404/405 כ־ProblemDetails; ‏Summary זהה ל־SQL; ‏`version` = ה־RowVersion; הערך `unassigned` מתועד ב־OpenAPI. ‏Development/Production: ‏500 עם/בלי `detail`, ו־Swagger נעלם ב־Production. פירוט בתגובות ב־#11, #14, #15.
+  - **זמני תגובה (מחשב הפיתוח, אחרי warm-up, מקצה לקצה):** רשימה ללא פילטר 21 ms; סטטוס+עדיפות 2 ms; ארגון 4 ms; מיון לפי title 121 ms; דף 1000 (OFFSET עמוק) 216 ms; ‏**חיפוש `LIKE '%x%'` 480 ms** (סריקה מלאה – ה־Bottleneck הצפוי, D‑12); ‏summary 114 ms (בסיס ל־Cache ב־M5).
+  - **תוספת 3 (הודעת Seed):** ‏"Seeding 100,000 requests - this may take a few minutes on first run" נרשמת לפני ה־Seed (בעלייה וב־`seed`); נוסף ל־README של BE ולקריטריוני הקבלה של #45 (README ב־M9).
+  - שבעה Commits ב־BE (סגירה אוטומטית של #10–#15), ‏CI ירוק.
 
 ## 9. שאלות פתוחות
 - כיצד יקבלו הבודקים גישה **לשלושת** ה־Repos הפרטיים (שמות משתמש של הבודקים, או הפיכה לציבוריים בהגשה) – להחליט לפני M9.
 - הרצה נוחה לבודקים מעבר ל־LocalDB (D‑17): ‏docker-compose שנבדק ב־CI, ו/או דמו חי בענן – להחליט ב־M9.
+- יציבות מדידות M8 (ראו סעיף 10, לחץ זיכרון): האם להגדיר `min server memory` (למשל 2 GB) במופע המקומי `MSSQLSERVER`? דורש אישורך. חלופה: לסגור אפליקציות כבדות בזמן מדידה ולבצע warm-up.
 
 ## 10. סיכונים ובעיות ידועות
 - חיפוש `LIKE '%x%'` אינו משתמש באינדקס – יימדד ויתועד (D‑12).
 - מפתח ה־JWT: מפתח פיתוח בלבד ב־`appsettings.Development.json` (ב־Repo של ה־Backend), יתועד שאינו לייצור. אסור להכניס סודות אמיתיים לאף Repo – ייתכן שייפתחו לציבור בהגשה.
 - בדיקות Integration תלויות ב־SQL Server מקומי פעיל.
-- D‑17: בודק בלי LocalDB (למשל מחשב ללא Visual Studio/SQL Express) צריך לדרוס את מחרוזת ההתחברות – יתועד ב־README ב־M9. הרצה ראשונה על LocalDB "קר" ארכה ~2 דק' (הרצות חוזרות ~10–20 שנ') – לציין ב־README שהעלייה הראשונה איטית.
+- D‑17: בודק בלי LocalDB (למשל מחשב ללא Visual Studio/SQL Express) צריך לדרוס את מחרוזת ההתחברות – יתועד ב־README ב־M9. **הרצה ראשונה על LocalDB "קר" ארכה 138 שנ'** (הרצות חוזרות ~10–20 שנ'), ובזמן הזה ה־API עדיין לא מאזין. נוספה הודעת לוג לפני ה־Seed ("Seeding 100,000 requests - this may take a few minutes on first run"), ‏README של BE מציין זאת, וזה קריטריון קבלה ב־#45 (README הסופי ב־M9) – הבודק צריך לדעת למה לצפות.
+- **חיפוש טקסט איטי יחסית:** ‏`search` ‏(`LIKE '%x%'`) נמדד ~480 ms ב־100K רשומות (סריקה מלאה), ומיון לפי עמודה בלי אינדקס מתאים (title, updatedAt) ~120 ms – ה־Bottleneck המתוכנן (D‑12). יטופל/יתועד ב־M8 (אינדקסים, ו־Full‑Text כהצעת שיפור).
+- **לחץ זיכרון במחשב הפיתוח** (סעיף 4) מייצר "קפיאות" אקראיות של שאילתות ועלול לעוות מדידות M8. בבודק עם מחשב דל בזיכרון ייתכנו 500 על timeout של 30 שנ' בהרצה הראשונה.
+- הודעות ה־Validation באנגלית וכוללות את שם המאפיין ("The field PageSize ..."), בעוד המפתח camelCase – ה־UI (M7) יציג הודעות משלו לפי המפתח.
 - הצמדת `System.Security.Cryptography.Pkcs` 10.0.13 ב־DAL היא עקיפה זמנית – להסיר כש־EF Core/SqlClient יעדכנו את התלות (לבדוק בכל עדכון חבילות).
 - שינוי ב־`SeedWordLists`/`SeedDataGenerator` משנה את הנתונים – מדידות M8 יש להשוות רק על אותה גרסת Seeder.
 - Repos פרטיים: אם הבודקים לא יקבלו גישה **לכל שלושת** ה־Repos – לא יוכלו לבחון את ההגשה במלואה. חובה לטפל לפני ההגשה (D‑15, Issue #49).
@@ -171,6 +189,6 @@
 
 ## 11. צעדים הבאים
 1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
-2. M2 – ‏API שליפה (Issues #10–#15) ב־`requests-management-be`, עם Sonnet. לפי CLAUDE.md: הצגת תוכנית M2 וקבלת אישור לפני ביצוע. ‏DTOs משתמשים ב־Enums הקיימים ב־`RequestsManagement.DTO.Enums`; ה־Repository ייכתב ב־DAL ויחזיר DTOs (Projection) – Entities נשארים internal.
+2. M3 – ‏עדכון ו־Concurrency (Issues #16–#19) ב־`requests-management-be`, עם **Opus**. לפי CLAUDE.md: הצגת תוכנית M3 וקבלת אישור לפני ביצוע. נקודות מוכנות: ‏`RequestDto.Version` (base64) קיים; ה־Body של PATCH ושל Bulk יקבל Validation ב־DataAnnotations באותו מנגנון (D‑18, ‏`[EnumDataType]` לערך enum בודד); ‏`PasswordHash` ל־Users ב־Migration שני (כבר מתוכנן); שגיאות 404/409/422 כ־ProblemDetails באותו פורמט (D‑07); ה־`ValueConverter` של UTC כבר חל על `UpdatedAt`/`ChangedAt`; ב־`GlobalExceptionHandler` יש להוסיף מיפוי לחריגות עסק (או להחזיר ProblemDetails ישירות מה־Controller).
 3. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
 4. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
