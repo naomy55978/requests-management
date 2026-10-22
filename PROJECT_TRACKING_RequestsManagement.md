@@ -41,6 +41,9 @@
   - `<project-root>/requests-management-fe` ← https://github.com/naomy55978/requests-management-fe
 - Claude Code נפתח תמיד ב־`<project-root>`, כדי ש־`CLAUDE.md` ייטען ושלושת ה־Repos יהיו זמינים.
 - `global.json` ב־Repo של ה־Backend מקבע SDK ‏10.0.401 (מותקן גם SDK 9)
+- SQL Server LocalDB מותקן: המופע `MSSQLLocalDB` הוא SQL Server 2025 (17.0.4025.3); מותקנת גם גרסת LocalDB 2019. זו ברירת המחדל לבודקים (D‑17).
+- במחשב הפיתוח: user-secrets של ה־API מפנה את `ConnectionStrings:RequestsDb` למופע המקומי (`Server=.;Database=RequestsManagement`).
+- `dotnet-ef` ‏10.0.13 כ־Local Tool (`dotnet-tools.json` בשורש ה־BE; `dotnet tool restore`). פקודת Migration: `dotnet ef migrations add <Name> --project src/RequestsManagement.DAL --startup-project src/RequestsManagement.API --output-dir Migrations`
 
 ## 5. החלטות
 | # | החלטה | סיבה | חלופות שנשקלו |
@@ -61,6 +64,7 @@
 | D‑14 | תכנון: GitHub Issues + Project Board + Milestones, וגם `docs/WORK_PLAN.md` | הבודקים רואים תכנון אמיתי ומעקב | מסמך בלבד |
 | D‑15 | Repos **פרטיים** (שלושה – ראו D‑16); לפני ההגשה – הזמנת הבודקים כ־Collaborators **לשלושת ה־Repos** (או הפיכתם לציבוריים) | בקשת המפתחת לשמור על פרטיות עד ההגשה | Repo ציבורי מההתחלה |
 | D‑16 | שלושה Repos נפרדים: `requests-management-docs` (תכנון ותיעוד, Issues, Milestones, נקודת הכניסה לבודקים), `requests-management-be` (Backend + CI), `requests-management-fe` (Frontend); כולם מקושרים לאותו Project Board | מחזור חיים ו־CI נפרדים לכל Stack, כמקובל בארגונים | Repo אחד לכל הקוד – מעט נוח יותר לבודקים; החיסרון מטופל ע״י README ב־Repo התיעוד שמפנה לשני ה־Repos האחרים |
+| D‑17 | מסד נתונים לבודקים: בעליית ה־API מריצים Migrations ו־Seed (100K, דטרמיניסטי) אם המסד ריק; נשלט ע״י `Database:MigrateOnStartup` ו־`Database:SeedOnStartup` (כבויים כברירת מחדל, מופעלים ב־`appsettings.Development.json`; בדיקות ה־Integration ב־M6 יכבו את ה־Seed). מחרוזת ברירת המחדל: ‏`(localdb)\MSSQLLocalDB`, ניתנת לדריסה ב־user-secrets או במשתנה הסביבה `ConnectionStrings__RequestsDb`. ‏`seed --reset` מוחק מסד רק אם שמו בדיוק `RequestsManagement` | הבודק מקבל מסד מוכן עם נתונים זהים בהרצה הראשונה, בלי צעד ידני ובלי סודות ב־Repo; הדגלים מאפשרים לכבות את האתחול בבדיקות ובסביבות אחרות; ההגנה ב־`--reset` מונעת מחיקת מסד אחר על מופע משותף | קובץ גיבוי (‎.bak) – גיבוי מ־SQL Server 2025 לא ניתן לשחזור בגרסאות ישנות, ודורש שחזור ידני; מסד משותף בענן – פרטי התחברות ב־Repo, והבודקים ישנו נתונים משותפים זה לזה |
 
 ## 6. אפיון
 
@@ -139,14 +143,27 @@
   - `requests-management-fe` (פרטי): `.gitignore` של Node/Angular ו־README קצר; האפליקציה תיווצר בשורש ה־Repo ב־M7.
   - שני ה־Repos החדשים קושרו ל־Project Board #2.
   - עודכנו: D‑15, D‑16 (כאן וב־`DECISIONS.md`), סעיפים 4, 6, 7 (M0: ‏3.75 ש'), ‏`WORK_PLAN.md` (מבנה + מוסכמת Closes), ונתיבים/שמות Repo ב־Issues #2–#4, #17, #22, #31, #32, #44, #45, #47–#49.
+- 22.10.2026 – **M1 הושלם (Issues #6–#9):**
+  - **#6:** ‏Enums ‏`RequestStatus` (New=1..Completed=4) ו־`RequestPriority` (Low=1..High=3) מסוג byte בפרויקט DTO (משותפים ל־DTOs ול־Entities). Entities ו־`AppDbContext` הם **internal** ב־DAL – אכיפה של D‑04 בזמן קומפילציה. קונפיגורציה מפורשת לכל טבלה: אורכים לפי סעיף 6, ‏tinyint עם CHECK constraints, ‏`rowversion` כ־Concurrency Token, ‏FK להיסטוריה ללא Cascade. ‏`AssignedTo` הוא nullable (רק פניות New לא משויכות) ומכיל UserName. ‏Users: ‏`UserName` (ייחודי), ‏`DisplayName`; ‏PasswordHash יתווסף ב־M3 (Migration שני).
+  - **#7:** Migration ‏`InitialCreate` עם כל האינדקסים מסעיף 6 + ‏`UX_Users_UserName`; לכל אינדקס הערה בקוד (`Configurations/`) על התרחיש שהוא משרת. ‏SQL שנוצר נבדק מול התוכנית.
+  - **#8:** ‏Seeder דטרמיניסטי (Random seed ‏20261022, תאריך עוגן קבוע 2026‑10‑01) עם SqlBulkCopy בטרנזקציה אחת (`KeepIdentity`, `CheckConstraints`); פקודת `seed [--count N] [--reset]`; הגנה: ‏`--reset` רק למסד בשם `RequestsManagement` (נבדק מול מסד אחר על אותו מופע – נדחה). אתחול בעלייה לפי D‑17 עם `Database:MigrateOnStartup`/`SeedOnStartup`. היסטוריה עקבית עם D‑05 לכל פנייה שאינה New.
+  - **#9:** אימות על המופע המקומי – 100,000 פניות, ‏179,178 שורות היסטוריה, 40 משתמשים, 400 ארגונים; סטטוס: ‏New 8.9%, ‏InProgress 17.0%, ‏Waiting 11.2%, ‏Completed 62.9%; עדיפות: 29.9/50.1/20.0%; ארגונים: 106–2,621 פניות (חציון 185.5). כל בדיקות העקביות = 0. הרצה שנייה עם `--reset` – סטטיסטיקות ו־Checksums זהים. פירוט מלא: [תגובה ב־#9](https://github.com/naomy55978/requests-management-docs/issues/9#issuecomment-6349549045).
+  - מסלול הבודק (D‑17) נבדק מול LocalDB בלי user-secrets: Migration + Seed אוטומטי, השרת עלה; המסד ב־LocalDB נמחק לאחר הבדיקה. אתחול מול מסד עם נתונים – ה־Seed מדולג.
+  - זמני Seed: ‏8.7–23.6 שנ' על המופע המקומי, ‏10.7 שנ' ב־LocalDB חם (הרצה ראשונה על LocalDB "קר" – 138 שנ').
+  - אבטחה: ‏`Microsoft.Data.SqlClient` 6.1.7 (תלות של EF Core 10.0.13) מביא את `System.Security.Cryptography.Pkcs` 9.0.11 עם פגיעויות ידועות (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx); הוצמדה גרסה 10.0.13 ב־DAL, עם הערה בקובץ הפרויקט.
+  - שלושה Commits ב־BE ‏(סגירה אוטומטית של #6–#8 בהפניה מלאה – המוסכמה עובדת), ‏CI ירוק.
 
 ## 9. שאלות פתוחות
 - כיצד יקבלו הבודקים גישה **לשלושת** ה־Repos הפרטיים (שמות משתמש של הבודקים, או הפיכה לציבוריים בהגשה) – להחליט לפני M9.
+- הרצה נוחה לבודקים מעבר ל־LocalDB (D‑17): ‏docker-compose שנבדק ב־CI, ו/או דמו חי בענן – להחליט ב־M9.
 
 ## 10. סיכונים ובעיות ידועות
 - חיפוש `LIKE '%x%'` אינו משתמש באינדקס – יימדד ויתועד (D‑12).
 - מפתח ה־JWT: מפתח פיתוח בלבד ב־`appsettings.Development.json` (ב־Repo של ה־Backend), יתועד שאינו לייצור. אסור להכניס סודות אמיתיים לאף Repo – ייתכן שייפתחו לציבור בהגשה.
 - בדיקות Integration תלויות ב־SQL Server מקומי פעיל.
+- D‑17: בודק בלי LocalDB (למשל מחשב ללא Visual Studio/SQL Express) צריך לדרוס את מחרוזת ההתחברות – יתועד ב־README ב־M9. הרצה ראשונה על LocalDB "קר" ארכה ~2 דק' (הרצות חוזרות ~10–20 שנ') – לציין ב־README שהעלייה הראשונה איטית.
+- הצמדת `System.Security.Cryptography.Pkcs` 10.0.13 ב־DAL היא עקיפה זמנית – להסיר כש־EF Core/SqlClient יעדכנו את התלות (לבדוק בכל עדכון חבילות).
+- שינוי ב־`SeedWordLists`/`SeedDataGenerator` משנה את הנתונים – מדידות M8 יש להשוות רק על אותה גרסת Seeder.
 - Repos פרטיים: אם הבודקים לא יקבלו גישה **לכל שלושת** ה־Repos – לא יוכלו לבחון את ההגשה במלואה. חובה לטפל לפני ההגשה (D‑15, Issue #49).
 - שלושה Repos: Commit ב־BE/FE שמפנה ל־Issue בלי הפניה מלאה (`#12` במקום `naomy55978/requests-management-docs#12`) יקושר ל־Repo הלא נכון ולא יסגור את ה־Issue.
 - `CLAUDE.md` נמצא מחוץ ל־Repos: פתיחת Claude Code בתוך אחד ה־Repos (ולא ב־`<project-root>`) תטען רק את ההנחיות הגלובליות; גם clone חדש לא יכלול אותו.
@@ -154,6 +171,6 @@
 
 ## 11. צעדים הבאים
 1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
-2. M1 – ‏DB ונתונים (Issues #6–#9) ב־`requests-management-be`, עם Opus לתכנון ו־Sonnet לקוד. לפי CLAUDE.md: הצגת תוכנית M1 וקבלת אישור לפני ביצוע.
+2. M2 – ‏API שליפה (Issues #10–#15) ב־`requests-management-be`, עם Sonnet. לפי CLAUDE.md: הצגת תוכנית M2 וקבלת אישור לפני ביצוע. ‏DTOs משתמשים ב־Enums הקיימים ב־`RequestsManagement.DTO.Enums`; ה־Repository ייכתב ב־DAL ויחזיר DTOs (Projection) – Entities נשארים internal.
 3. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
 4. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
