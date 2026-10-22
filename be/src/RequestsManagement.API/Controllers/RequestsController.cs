@@ -129,6 +129,35 @@ public class RequestsController(IRequestService requestService) : ControllerBase
         };
     }
 
+    /// <summary>Change the status of up to 100 requests at once (Partial Success).</summary>
+    /// <remarks>
+    /// Every item is its own update, exactly like **PATCH /api/requests/{id}/status**: it is checked against its
+    /// `version`, the transition rules apply, and it is saved (with its history row) in its own transaction.
+    /// A failed item does not stop or undo the others.
+    ///
+    /// The answer is **200** whenever the body is valid, even if every item failed. `succeeded` and `failed` are counts;
+    /// `results` has one entry per item, in the order of the call, with the outcome:
+    ///
+    /// * **Updated** – the request is changed; `request` holds it with its new `version`.
+    /// * **NotFound** – there is no request with this id.
+    /// * **Conflict** – someone changed the request since you read it; `currentStatus`, `currentVersion`, `currentUpdatedAt`.
+    ///   (Conflict is reported before InvalidTransition, as in the single update.)
+    /// * **InvalidTransition** – the change is not allowed from the current status; `currentStatus`, `allowedStatuses`, `currentVersion`.
+    ///
+    /// The body must have 1 to 100 items and each request id at most once; otherwise nothing is changed and the
+    /// answer is **400**. The changes are recorded in the history under the user of the access token.
+    /// </remarks>
+    /// <param name="request">New status and the requests with the versions you read.</param>
+    /// <param name="cancellationToken">Cancelled when the client disconnects; items already saved stay saved.</param>
+    /// <response code="200">Counts and a result per item.</response>
+    /// <response code="400">The body is invalid (no items, more than 100, repeated id, bad version, unknown field, ...).</response>
+    [HttpPost("bulk-status")]
+    [ProducesResponseType<BulkStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public Task<BulkStatusResponse> BulkUpdateStatus(BulkStatusRequest request, CancellationToken cancellationToken) =>
+        // The acting user comes only from the validated token (D-10); the body has no such field
+        requestService.BulkUpdateStatusAsync(request, User.GetUserName(), cancellationToken);
+
     // ProblemDetails (with traceId, like every other error) plus fields the client needs to react
     private ObjectResult StatusProblem(int statusCode, string title, string detail, Dictionary<string, object?> extensions)
     {

@@ -27,4 +27,15 @@ public interface IRequestService
     /// <param name="cancellationToken">Cancelled when the client disconnects.</param>
     Task<StatusUpdateResult> UpdateStatusAsync(
         int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes the status of up to 100 requests (D-08, Partial Success): every item is its own update with its own
+    /// transaction, through the same path as <see cref="UpdateStatusAsync"/>, so one failed item does not affect the others.
+    /// </summary>
+    /// <param name="request">New status and the requests with their versions (already validated).</param>
+    /// <param name="changedBy">The authenticated user, taken from the token by the caller – never from the body.</param>
+    /// <param name="cancellationToken">Cancelled when the client disconnects; items already saved stay saved.</param>
+    /// <returns>A result per item, in the order of the call.</returns>
+    Task<BulkStatusResponse> BulkUpdateStatusAsync(
+        BulkStatusRequest request, string changedBy, CancellationToken cancellationToken);
 }
