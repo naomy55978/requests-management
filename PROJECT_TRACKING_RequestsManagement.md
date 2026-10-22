@@ -57,7 +57,7 @@
 | D‑07 | קודי שגיאה: 400 קלט פגום, 404 לא קיים, 409 עדכון מתחרה (כולל הגרסה הנוכחית), 422 מעבר סטטוס אסור; כולם ProblemDetails | הבחנה ברורה ללקוח בין סוגי הכשל | 400 לכל שגיאת עסק |
 | D‑08 | Bulk: ‏Partial Success, עד 100 פריטים `{id, version}`, טרנזקציה לכל פריט, תשובה 200 עם `succeeded`, `failed` ותוצאה לכל פריט (Updated / NotFound / Conflict / InvalidTransition) | כל פנייה יחידה עצמאית – כשל באחת לא אמור לחסום את השאר | All‑or‑Nothing (משתמש מאבד את כל העבודה בגלל התנגשות אחת) |
 | D‑09 | בלי Docker מקומי; בדיקות Integration מול SQL Server המקומי (DB זמני לכל ריצה); ב־GitHub Actions מול SQL Server בקונטיינר; בלי docker-compose | התקנת Docker במחשב ארגוני כבדה; CI מוכיח שהבדיקות עוברות | Testcontainers מקומי; docker-compose שלא נבדק |
-| D‑10 | ChangedBy מתוך JWT: התחברות פשוטה עם משתמשי דמו מה־Seed | השרת קובע מי ביצע את השינוי – אי אפשר לזייף; מרשים בלי ניהול משתמשים מלא | Header חופשי מהלקוח (ניתן לזיוף); Identity מלא (Over‑Engineering) |
+| D‑10 | ChangedBy מתוך JWT: התחברות פשוטה עם משתמשי דמו מה־Seed (סיסמת דמו אחת מתועדת, Hash של ASP.NET Core Identity). **עודכן ב־M3: כל ה־Endpoints דורשים טוקן** (Fallback Authorization Policy – Secure by Default) מלבד `POST /api/auth/login` (`[AllowAnonymous]`); ‏Swagger UI עם כפתור Authorize. סיסמאות וטוקנים לעולם לא נרשמים בלוג | השרת קובע מי ביצע את השינוי – אי אפשר לזייף; מרשים בלי ניהול משתמשים מלא. נתוני הפניות ארגוניים ובמערכת אמיתית היו חסויים – גם קריאה דורשת זהות; ‏Fallback Policy מגן גם על Endpoint שיתווסף בעתיד בלי `[Authorize]` | Header חופשי מהלקוח (ניתן לזיוף); Identity מלא (Over‑Engineering); טוקן רק לעדכונים וקריאה פתוחה (התכנון המקורי – נדחה: חושף נתונים ארגוניים) |
 | D‑11 | Cache: ‏`IMemoryCache` ל־summary, ‏Expiration ‏60 שניות, Invalidation בכל שינוי סטטוס (בודד ו־Bulk) | ה־summary יקר (Aggregation על כל הטבלה) ונקרא בכל טעינת מסך; Redis מתועד בלבד | Redis / HybridCache בפועל (Over‑Engineering למופע יחיד) |
 | D‑12 | Pagination לפי Offset + TotalCount; חיפוש `LIKE '%x%'` | פשוט ומתאים ל־UI עם מספרי עמודים; ה־Bottleneck יתועד ב־PERFORMANCE.md | Keyset Pagination, Full‑Text Index (יוצעו כשיפור) |
 | D‑13 | Seed: ‏SqlBulkCopy, ‏Random עם Seed קבוע, 100,000 רשומות, הרצה חוזרת עם `--reset` | מהיר, נתונים זהים בכל הרצה – מדידות ניתנות להשוואה | הכנסה דרך EF (איטי) |
@@ -99,15 +99,15 @@
 ### חוזה API
 | Endpoint | תיאור | קודים |
 |---|---|---|
-| `POST /api/auth/login` | התחברות דמו → JWT | 200/401 |
+| `POST /api/auth/login` | `{userName, password}` → `{accessToken, expiresAt, userName, displayName}`; ה־Endpoint היחיד ללא טוקן | 200/400/401 |
 | `GET /api/requests` | page, pageSize (≤100), status[], priority[], organization (התחלת שם), assignedTo (או הערך `unassigned` לפניות ללא מטפל), createdFrom, createdTo (ימי UTC שלמים), search (Title+OrganizationName), sortBy (createdAt/updatedAt/priority/status/title), sortDir | 200/400 |
 | `GET /api/requests/{id}` | פנייה בודדת | 200/404 |
 | `GET /api/requests/summary` | Aggregations: ספירה לפי סטטוס ועדיפות; ארגונים מובילים בפניות פתוחות (Cache) | 200 |
-| `PATCH /api/requests/{id}/status` | `{newStatus, version}` | 200/400/404/409/422 |
-| `GET /api/requests/{id}/history` | היסטוריית שינויים | 200/404 |
+| `PATCH /api/requests/{id}/status` | `{newStatus, version}` (בלי `changedBy` – נלקח מהטוקן); 200 = הפנייה המעודכנת עם `version` חדש; 409 עם `currentStatus`, `currentVersion`, `currentUpdatedAt`; ‏422 עם `currentStatus`, `requestedStatus`, `allowedStatuses`, `currentVersion`; ‏409 קודם ל־422 | 200/400/401/404/409/422 |
+| `GET /api/requests/{id}/history` | `[{previousStatus, newStatus, changedAt, changedBy}]` מהישן לחדש; `[]` לפנייה שלא שונתה | 200/401/404 |
 | `POST /api/requests/bulk-status` | `{newStatus, items:[{id, version}]}` עד 100 | 200/400 |
 
-**מוסכמות API (נקבעו ב־M2):** פרמטרים ו־JSON ב־camelCase; Enums כמחרוזות (`"InProgress"`), ומספרים מתקבלים כקלט; כל התאריכים UTC עם `Z`; `version` הוא ה־RowVersion כ־base64; כל שגיאה היא ProblemDetails עם `traceId` (400 = `ValidationProblemDetails` עם רשימת כל הבעיות, מפתחות camelCase); דף מעבר לסוף ← 200 עם `items` ריק; ‏Swagger UI ב־`/swagger` (Development בלבד).
+**מוסכמות API (נקבעו ב־M2):** פרמטרים ו־JSON ב־camelCase; Enums כמחרוזות (`"InProgress"`), ומספרים מתקבלים כקלט; כל התאריכים UTC עם `Z`; `version` הוא ה־RowVersion כ־base64; כל שגיאה היא ProblemDetails עם `traceId` (400 = `ValidationProblemDetails` עם רשימת כל הבעיות, מפתחות camelCase); דף מעבר לסוף ← 200 עם `items` ריק; ‏Swagger UI ב־`/swagger` (Development בלבד). **נוסף ב־M3:** כל Endpoint מלבד login דורש `Authorization: Bearer` – בלעדיו (או טוקן פג/מזויף) ← 401 ProblemDetails עם `WWW-Authenticate: Bearer error="invalid_token"`; שדה לא מוכר בגוף JSON ← 400; גוף בלי `Content-Type: application/json` ← 415.
 
 ### Angular
 מסך רשימה (mat-table + mat-paginator + mat-sort, הכל בצד השרת), טופס סינון, חיפוש עם debounce ו־switchMap, כרטיסי summary, מצבי Loading/Empty/Error, עדכון סטטוס עם טיפול ב־409 (הודעה + רענון השורה), בחירה מרובה ל־Bulk עם הצגת התוצאה לכל פריט, חלון היסטוריה, מסך Login ו־Interceptor ל־JWT ולשגיאות. הפרדה: Components לתצוגה, Services ל־HTTP ולמצב.
@@ -166,11 +166,22 @@
   - **זמני תגובה (מחשב הפיתוח, אחרי warm-up, מקצה לקצה):** רשימה ללא פילטר 21 ms; סטטוס+עדיפות 2 ms; ארגון 4 ms; מיון לפי title 121 ms; דף 1000 (OFFSET עמוק) 216 ms; ‏**חיפוש `LIKE '%x%'` 480 ms** (סריקה מלאה – ה־Bottleneck הצפוי, D‑12); ‏summary 114 ms (בסיס ל־Cache ב־M5).
   - **תוספת 3 (הודעת Seed):** ‏"Seeding 100,000 requests - this may take a few minutes on first run" נרשמת לפני ה־Seed (בעלייה וב־`seed`); נוסף ל־README של BE ולקריטריוני הקבלה של #45 (README ב־M9).
   - שבעה Commits ב־BE (סגירה אוטומטית של #10–#15), ‏CI ירוק.
+- 22–23.10.2026 – **M3 הושלם (Issues #16–#19):**
+  - **החלטות שאושרו:** כל ה־Endpoints דורשים טוקן מלבד login (Fallback Policy – **D‑10 עודכן**); סיסמת דמו אחת `Demo123!` (מתועדת ב־README של BE וב־Swagger); שדה לא מוכר בגוף JSON ← 400 (`UnmappedMemberHandling.Disallow`). ‏Issue #17 עודכן בהתאם, ו־#33 (Interceptor ב־M7) קיבל הערה: כל 401 = טוקן חסר/פג (8 שעות) ← מחיקת הטוקן והפניה ל־Login.
+  - **#16:** ‏`StatusTransitions` ב־BL – המקום היחיד של מטריצת D‑05 (`IsAllowed`, `AllowedNext`, `AllowedPrevious`).
+  - **#17:** Migration ‏`AddUserPasswordHash`; ה־Seeder שומר Hash (PBKDF2, salt אקראי – ה־Hash שונה בכל Seed, שאר הנתונים זהים); ‏`POST /api/auth/login` – אותה תשובת 401 למשתמש לא קיים ולסיסמה שגויה, ומשתמש לא קיים נבדק מול Hash דמה (תזמון לא חושף שמות). ‏JWT ‏HS256, ‏`sub`=UserName, ‏8 שעות; מפתח פיתוח רק ב־`appsettings.Development.json`, ובכל סביבה אחרת חסר מפתח ← ה־API לא עולה (נבדק). ‏Swagger: כפתור Authorize; מסמך ה־OpenAPI עצמו אנונימי (Development בלבד). בוטל ה־`[Required]` המשתמע לפרמטרים לא־nullable – שגיאת גוף לא מדווחת פעמיים.
+  - **#18:** עדכון מותנה ב־SQL אחד: `UPDATE ... WHERE Id AND RowVersion AND Status IN (AllowedPrevious)` עם `OUTPUT` (השורה המעודכנת + הסטטוס הקודם מה־DB), ואז `INSERT` להיסטוריה – באותה טרנזקציה. ‏`UpdatedAt` = ‏`ChangedAt` (אותו `now` מ־`TimeProvider`). ‏0 שורות ← בדיקה: לא קיים 404, גרסה אחרת 409 (קודם ל־422), אותה גרסה 422. התוצאה `StatusUpdateResult`/`StatusUpdateOutcome` משותפת ל־Bulk (M4, ‏D‑08).
+  - **#19:** ‏`PATCH /api/requests/{id}/status` (ProblemDetails ל־409/422 עם השדות הנדרשים ללקוח) ו־`GET /api/requests/{id}/history`. ‏**`scripts/ConcurrencyProof.cs`** ב־BE ‏(`dotnet run scripts/ConcurrencyProof.cs`, ‏C# file-based app של ‏.NET 10, רק דרך ה־API) – ישמש בסיס לבדיקה האוטומטית ב־#29.
+  - **הוכחת אין Lost Update:** 50 פניות × 20 בקשות PATCH במקביל עם אותה גרסה, משני משתמשים ולסטטוסים שונים (1,000 בקשות): **50 × 200, ‏950 × 409, ‏0 אחר**; לכל פנייה שורת היסטוריה אחת בדיוק, של המנצח, והסטטוס/הגרסה הסופיים שלו; כל 409 מדווח את הגרסה הסופית. הורץ פעמיים; המנצחים מכל צירוף משתמש×יעד. תרחיש רציף: ‏A עם V ← 200; ‏B עם V ← 409 (currentVersion=V2); ‏B עם V2 ← 200.
+  - **אימות נוסף (בתגובות ב־#18, #19):** כל 16 צירופי המעברים דרך ה־API (6 × 200, ‏10 × 422 עם `allowedStatuses` נכון, והפנייה לא שונתה); ‏`UpdatedAt` = ‏`ChangedAt` עד 100 ns; ‏`ChangedBy` = משתמש הטוקן; ‏`"changedBy"` בגוף ← 400 ושום שורה של "hacker"; 404/409/400/401/415 כ־ProblemDetails; פקיעת טוקן ← 401 עם `WWW-Authenticate: ... token expired`; עקביות כל הטבלה (אין מעבר אסור, סטטוס = השינוי האחרון, ‏UpdatedAt = ‏ChangedAt האחרון, Constraints מאומתים). **בדיקת דליפה:** 1,204 שורות לוג ב־Debug – 0 מופעים של הסיסמה, הטוקן או חלק ממנו, מפתח החתימה או ה־Header.
+  - **סקריפט האימות של M2 עודכן להתחברות** – 77 בדיקות עוברות (כולל 401 ללא טוקן), מלבד 3 מיונים שנתקעו בהרצה הראשונה (ראו סעיף 10, לחץ זיכרון).
+  - ה־DB המקומי נזרע מחדש (`seed --reset`) אחרי ה־Migration – המשתמשים הקודמים היו בלי Hash.
+  - ארבעה Commits ב־BE (סגירה אוטומטית של #16–#19), ‏CI ירוק.
 
 ## 9. שאלות פתוחות
 - כיצד יקבלו הבודקים גישה **לשלושת** ה־Repos הפרטיים (שמות משתמש של הבודקים, או הפיכה לציבוריים בהגשה) – להחליט לפני M9.
 - הרצה נוחה לבודקים מעבר ל־LocalDB (D‑17): ‏docker-compose שנבדק ב־CI, ו/או דמו חי בענן – להחליט ב־M9.
-- יציבות מדידות M8 (ראו סעיף 10, לחץ זיכרון): האם להגדיר `min server memory` (למשל 2 GB) במופע המקומי `MSSQLSERVER`? דורש אישורך. חלופה: לסגור אפליקציות כבדות בזמן מדידה ולבצע warm-up.
+- ~~יציבות מדידות M8 – `min server memory`?~~ **נסגר (22.10.2026):** לא משנים את `min server memory` (המופע משותף). ב־M8 המדדים הראשיים הם **logical reads (`STATISTICS IO`) ו־Execution Plans** – אינם תלויים בלחץ הזיכרון; זמנים (`STATISTICS TIME`) הם מדד משני, נמדדים חמים (אחרי warm-up) ועם אפליקציות כבדות סגורות.
 
 ## 10. סיכונים ובעיות ידועות
 - חיפוש `LIKE '%x%'` אינו משתמש באינדקס – יימדד ויתועד (D‑12).
@@ -178,7 +189,9 @@
 - בדיקות Integration תלויות ב־SQL Server מקומי פעיל.
 - D‑17: בודק בלי LocalDB (למשל מחשב ללא Visual Studio/SQL Express) צריך לדרוס את מחרוזת ההתחברות – יתועד ב־README ב־M9. **הרצה ראשונה על LocalDB "קר" ארכה 138 שנ'** (הרצות חוזרות ~10–20 שנ'), ובזמן הזה ה־API עדיין לא מאזין. נוספה הודעת לוג לפני ה־Seed ("Seeding 100,000 requests - this may take a few minutes on first run"), ‏README של BE מציין זאת, וזה קריטריון קבלה ב־#45 (README הסופי ב־M9) – הבודק צריך לדעת למה לצפות.
 - **חיפוש טקסט איטי יחסית:** ‏`search` ‏(`LIKE '%x%'`) נמדד ~480 ms ב־100K רשומות (סריקה מלאה), ומיון לפי עמודה בלי אינדקס מתאים (title, updatedAt) ~120 ms – ה־Bottleneck המתוכנן (D‑12). יטופל/יתועד ב־M8 (אינדקסים, ו־Full‑Text כהצעת שיפור).
-- **לחץ זיכרון במחשב הפיתוח** (סעיף 4) מייצר "קפיאות" אקראיות של שאילתות ועלול לעוות מדידות M8. בבודק עם מחשב דל בזיכרון ייתכנו 500 על timeout של 30 שנ' בהרצה הראשונה.
+- **לחץ זיכרון במחשב הפיתוח** (סעיף 4) מייצר "קפיאות" אקראיות של שאילתות ועלול לעוות מדידות M8. בבודק עם מחשב דל בזיכרון ייתכנו 500 על timeout של 30 שנ' בהרצה הראשונה. **אבחון (M3):** הקפיאות פוגעות בעיקר במיונים בלי אינדקס תואם (`updatedAt`, `priority`, `status`) – תוכנית מקבילית (DOP 10) עם Sort שממתינה ל־Memory Grant כש־SQL Server מצומצם ל־~420 MB: ‏`CXSYNC_PORT` עד 120 שנ', ‏`LATCH_EX` עד 97 שנ', ‏`RESOURCE_SEMAPHORE` עד 68 שנ'. **ל־M8:** אינדקס התומך במיון (למשל `UpdatedAt`) מבטל את ה־Sort ואת ה־Memory Grant; לשקול גם `MAXDOP`/‏`cost threshold` ברמת השאילתה – ולתעד ב־PERFORMANCE.md.
+- **סיסמת הדמו ומפתח החתימה ב־Repo** – נתוני דמו ומפתח פיתוח בלבד, מתועדים ככאלה; במערכת אמיתית: מפתח מ־Secret Store, סיסמאות אישיות, הגבלת ניסיונות התחברות (Rate Limiting) – לא מומש (מגבלה ידועה ל־M9).
+- טוקן JWT אינו ניתן לביטול לפני פקיעתו (8 שעות) – אין Logout בצד השרת; מקובל לדמו, יתועד כמגבלה.
 - הודעות ה־Validation באנגלית וכוללות את שם המאפיין ("The field PageSize ..."), בעוד המפתח camelCase – ה־UI (M7) יציג הודעות משלו לפי המפתח.
 - הצמדת `System.Security.Cryptography.Pkcs` 10.0.13 ב־DAL היא עקיפה זמנית – להסיר כש־EF Core/SqlClient יעדכנו את התלות (לבדוק בכל עדכון חבילות).
 - שינוי ב־`SeedWordLists`/`SeedDataGenerator` משנה את הנתונים – מדידות M8 יש להשוות רק על אותה גרסת Seeder.
@@ -189,6 +202,7 @@
 
 ## 11. צעדים הבאים
 1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
-2. M3 – ‏עדכון ו־Concurrency (Issues #16–#19) ב־`requests-management-be`, עם **Opus**. לפי CLAUDE.md: הצגת תוכנית M3 וקבלת אישור לפני ביצוע. נקודות מוכנות: ‏`RequestDto.Version` (base64) קיים; ה־Body של PATCH ושל Bulk יקבל Validation ב־DataAnnotations באותו מנגנון (D‑18, ‏`[EnumDataType]` לערך enum בודד); ‏`PasswordHash` ל־Users ב־Migration שני (כבר מתוכנן); שגיאות 404/409/422 כ־ProblemDetails באותו פורמט (D‑07); ה־`ValueConverter` של UTC כבר חל על `UpdatedAt`/`ChangedAt`; ב־`GlobalExceptionHandler` יש להוסיף מיפוי לחריגות עסק (או להחזיר ProblemDetails ישירות מה־Controller).
-3. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
-4. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
+2. M4 – ‏Bulk (Issues #20–#22) ב־`requests-management-be`, עם Sonnet. לפי CLAUDE.md: הצגת תוכנית M4 וקבלת אישור לפני ביצוע. נקודות מוכנות: ‏`IRequestRepository.UpdateStatusAsync` (עדכון מותנה + Audit בטרנזקציה אחת) – Bulk ישתמש בו לכל פריט (D‑08, בלי שכפול לוגיקה); ‏`StatusUpdateOutcome` (Updated/NotFound/Conflict/InvalidTransition) כבר מוגדר; ‏`StatusTransitions` ב־BL; ‏Validation של הגוף ב־DataAnnotations (D‑18) – עד 100 פריטים, בלי מזהים כפולים; ‏`ChangedBy` מהטוקן. אפשר אחרי כן M5 (Cache) – תלוי רק ב־M3.
+3. לפני הרצות אימות/מדידה ארוכות: `dotnet build-server shutdown`, לסגור אפליקציות כבדות, ו־warm-up ב־`sqlcmd` (ללא timeout).
+4. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
+5. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
