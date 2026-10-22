@@ -17,11 +17,15 @@ internal sealed class GlobalExceptionHandler(
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        // The client cancelled or disconnected: expected, not an error, and nobody waits for a body
-        if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
+        // The client disconnected while the request was running: expected, not a server error, and nobody
+        // waits for a body. ASP.NET already handles a plain OperationCanceledException before this handler
+        // is called, but SqlClient can instead throw a SqlException ("Operation cancelled by user") when the
+        // cancellation hits a command that is already running - so any exception counts after a disconnect.
+        if (httpContext.RequestAborted.IsCancellationRequested)
         {
-            logger.LogDebug(
-                "{Method} {Path} was cancelled by the client", httpContext.Request.Method, httpContext.Request.Path);
+            logger.LogInformation(
+                "{Method} {Path} failed after the client disconnected ({ExceptionType})",
+                httpContext.Request.Method, httpContext.Request.Path, exception.GetType().Name);
             httpContext.Response.StatusCode = ClientClosedRequest;
             return true;
         }
