@@ -112,6 +112,14 @@ if (isSeedCommand)
 await app.Services.InitializeDatabaseAsync();
 
 // Configure the HTTP request pipeline.
+
+// Server-Timing header (D-25): first, so the total covers the whole pipeline, error responses included.
+// Off by default because it exposes internal timings; on in appsettings.Development.json.
+if (app.Configuration.GetValue<bool>("ServerTiming:Enabled"))
+{
+    app.UseMiddleware<ServerTimingMiddleware>();
+}
+
 app.UseExceptionHandler();
 // Also answers bodiless errors (unknown route, wrong method) as ProblemDetails
 app.UseStatusCodePages();

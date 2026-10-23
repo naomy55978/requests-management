@@ -2,12 +2,14 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RequestsManagement.DAL;
 using RequestsManagement.DTO;
+using RequestsManagement.DTO.Diagnostics;
 using RequestsManagement.DTO.Enums;
 
 namespace RequestsManagement.BL;
 
 internal sealed class RequestService(
-    IRequestRepository repository, SummaryCache summaryCache, TimeProvider timeProvider, ILogger<RequestService> logger)
+    IRequestRepository repository, SummaryCache summaryCache, RequestTimings timings, TimeProvider timeProvider,
+    ILogger<RequestService> logger)
     : IRequestService
 {
     public async Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken)
@@ -39,11 +41,16 @@ internal sealed class RequestService(
         return request;
     }
 
-    public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken) =>
-        summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
+    public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
+    {
+        // Reported in the Server-Timing header (D-25): a hit unless the cache has to load (LoadSummaryAsync)
+        timings.SummaryCache = CacheOutcome.Hit;
+        return summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
+    }
 
     private async Task<SummaryDto> LoadSummaryAsync(CancellationToken cancellationToken)
     {
+        timings.SummaryCache = CacheOutcome.Miss;
         var stopwatch = Stopwatch.StartNew();
         var summary = await repository.GetSummaryAsync(cancellationToken);
 
