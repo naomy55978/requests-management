@@ -62,6 +62,12 @@ internal sealed class RequestService(
         var newStatus = request.NewStatus!.Value;
         var result = await ChangeStatusAsync(id, request.GetVersionBytes(), newStatus, changedBy, cancellationToken);
 
+        // Only a committed change makes the cached summary wrong; a failed one (404, 409, 422) changed nothing
+        if (result.Outcome == StatusUpdateOutcome.Updated)
+        {
+            summaryCache.Invalidate();
+        }
+
         switch (result.Outcome)
         {
             case StatusUpdateOutcome.Updated:
@@ -97,21 +103,38 @@ internal sealed class RequestService(
         // a failed item does not affect the others. Sequential because a DbContext is not thread-safe, and it
         // also means the bulk call holds a lock on one row at a time, so two overlapping bulk calls cannot deadlock.
         // If the client disconnects, the loop stops; items already saved stay saved.
-        foreach (var item in items)
+        var updatedCount = 0;
+        try
         {
-            var result = await ChangeStatusAsync(
-                item!.Id, item.GetVersionBytes(), newStatus, changedBy, cancellationToken);
-
-            if (result.Outcome != StatusUpdateOutcome.Updated)
+            foreach (var item in items)
             {
-                // Ids and outcomes only: no versions and no free text
-                logger.LogDebug(
-                    "Bulk status change of request {RequestId} to {NewStatus}: {Outcome}", item.Id, newStatus, result.Outcome);
-            }
+                var result = await ChangeStatusAsync(
+                    item!.Id, item.GetVersionBytes(), newStatus, changedBy, cancellationToken);
 
-            results.Add(new BulkStatusItemResult(
-                item.Id, result.Outcome, result.Request, result.CurrentStatus, result.CurrentVersion,
-                result.CurrentUpdatedAt, result.AllowedStatuses));
+                if (result.Outcome == StatusUpdateOutcome.Updated)
+                {
+                    updatedCount++;
+                }
+                else
+                {
+                    // Ids and outcomes only: no versions and no free text
+                    logger.LogDebug(
+                        "Bulk status change of request {RequestId} to {NewStatus}: {Outcome}", item.Id, newStatus, result.Outcome);
+                }
+
+                results.Add(new BulkStatusItemResult(
+                    item.Id, result.Outcome, result.Request, result.CurrentStatus, result.CurrentVersion,
+                    result.CurrentUpdatedAt, result.AllowedStatuses));
+            }
+        }
+        finally
+        {
+            // In finally, because a disconnecting client stops the loop with an exception, while the items
+            // saved before that are committed and already change the summary. One invalidation per call.
+            if (updatedCount > 0)
+            {
+                summaryCache.Invalidate();
+            }
         }
 
         var succeeded = results.Count(r => r.Outcome == StatusUpdateOutcome.Updated);
