@@ -9,6 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # SQL Server for the integration tests (D-09). The container exists only for this run and is thrown away
+    # afterwards, so its password is not a secret; it only has to satisfy SQL Server's complexity rules.
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Ci-only-Passw0rd!"
+        ports:
+          - 1433:1433
+        # The job starts its steps only when SQL Server answers a query
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P $MSSQL_SA_PASSWORD -Q 'SELECT 1' -b"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,4 +42,19 @@ jobs:
       - name: Build
         run: dotnet build RequestsManagement.sln -c Release --no-restore
 
-      # Tests (including integration tests against a SQL Server service container) are added in M6
+      # A failing test fails the build. The tests create and drop their own temporary database on this server.
+      - name: Test
+        env:
+          TESTS_SQL_CONNECTION: "Server=localhost,1433;User Id=sa;Password=Ci-only-Passw0rd!;TrustServerCertificate=True"
+        run: >-
+          dotnet test RequestsManagement.sln -c Release --no-build
+          --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      # The results are kept for 14 days, also when tests failed
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          retention-days: 14
