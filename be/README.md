@@ -126,7 +126,7 @@ dotnet test --filter "FullyQualifiedName~Concurrency"    # רק בדיקות ה�
 
 ## סקריפטי אימות
 
-חמישה סקריפטים בתיקייה `scripts/` בודקים את ה־API מקצה לקצה מול מסד נתונים אמיתי. **ה־API חייב לרוץ** (ראו למעלה), והמסד חייב להיות זרוע (100,000 פניות ומשתמשי הדמו). כל סקריפט **מתחבר קודם כמשתמש דמו** ושולח את הטוקן בכל קריאה. כל אחד מסתיים ב־`ALL CHECKS PASSED` (קוד יציאה 0) או ברשימת הבדיקות שנכשלו.
+חמישה סקריפטי אימות בתיקייה `scripts/` בודקים את ה־API מקצה לקצה מול מסד נתונים אמיתי. **ה־API חייב לרוץ** (ראו למעלה), והמסד חייב להיות זרוע (100,000 פניות ומשתמשי הדמו). כל סקריפט **מתחבר קודם כמשתמש דמו** ושולח את הטוקן בכל קריאה. כל אחד מסתיים ב־`ALL CHECKS PASSED` (קוד יציאה 0) או ברשימת הבדיקות שנכשלו.
 
 | סקריפט | מה הוא בודק | משנה נתונים? |
 |---|---|---|
@@ -148,6 +148,18 @@ dotnet run --project src/RequestsManagement.API -- seed --reset
 ```
 
 > במחשב עם מעט זיכרון פנוי, SQL Server עלול להאט מאוד או לא לענות (timeout של 30 שנ' ← `500`), ואז בדיקות בודדות נכשלות. מומלץ לסגור אפליקציות כבדות לפני ההרצה.
+
+## מדידת ביצועים
+
+`scripts/MeasureQueries.cs` (M8) מריץ ישירות מול SQL Server את ה־SQL ש־EF מייצר לתרחישי ה־API העיקריים (רשימה עם סינון משולב, מיונים, דף עמוק, חיפוש, Summary, היסטוריה ועדכון סטטוס שמבוטל ב־Rollback). לכל שאילתה הוא שומר logical reads ‏(`STATISTICS IO`), את ה־Execution Plan בפועל (קובץ `.sqlplan` ועץ אופרטורים בטקסט: Sort, ‏Key Lookup, ‏Memory Grant, ‏DOP) וזמנים חמים. ה־API לא צריך לרוץ. התוצאות והניתוח: `docs/PERFORMANCE.md` ב־Repo התיעוד.
+
+```
+dotnet run scripts/MeasureQueries.cs -- --out <dir> --label final
+dotnet run scripts/MeasureQueries.cs -- --out <dir> --compare before final
+```
+
+- `--shape original` מודד את ה־SQL שלפני M8; ‏`--alternatives` מודד את חלופות השאילתה שנבחנו; ‏`--disable <index>` מכבה אינדקס אחד לריצה ותמיד בונה אותו מחדש בסוף (רק במסד בשם `RequestsManagement`, ולא את ה־Clustered Index).
+- `SQL_SERVER` כמו בסקריפטים האחרים. הסקריפט לא משנה נתונים ולא מריץ פקודות ברמת המופע: ניקוי Plans רק למסד הזה (`ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE`).
 
 הוראות הרצה מלאות (כולל הבדיקות) יתווספו ב־M9.
 
