@@ -344,9 +344,51 @@ WHERE UPPER([r].[Title]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ES
   - **5 הרצות רצופות** של כל הבדיקות (129) אחרי השינויים: כולן עברו (5–6 שנ' כל אחת), ו**אף הודעת paging** ביומן במהלכן. בזמן המדידות שלפניהן היו 23.
 - **המסקנה:** לא ניתן להוכיח שהכשל לא יחזור. הוא לא שוחזר גם ב־10 הרצות ב־M6. הסיכון הסביבתי נשאר מתועד (README של BE).
 
-## 9. ‏Server-Timing
+## 9. ‏Server-Timing – מדידה בזמן ריצה
 
-*(יושלם ב־#51.)*
+מעבר למדידות החד־פעמיות במסמך הזה, כל תשובה של ה־API מדווחת על הזמנים שלה בכותרת התקנית (W3C) `Server-Timing` (D‑23, ‏D‑25):
+
+```
+GET /api/requests?search=bonus     Server-Timing: total;dur=70.3, db;dur=65.5;desc="2 queries"
+GET /api/requests?page=1000&…      Server-Timing: total;dur=26.3, db;dur=24.3;desc="2 queries"
+GET /api/requests/summary (miss)   Server-Timing: total;dur=151.6, db;dur=107.0;desc="3 queries", cache;desc="miss"
+GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc="0 queries", cache;desc="hit"
+```
+
+| מדד | מה הוא מודד |
+|---|---|
+| `total` | זמן השרת כולו, מה־Middleware הראשון ועד תחילת שליחת התשובה |
+| `db` | סכום זמני הפקודות למסד ומספרן |
+| `cache` | ב־summary בלבד |
+
+**איך זה בנוי:**
+
+| רכיב | שכבה | תפקיד |
+|---|---|---|
+| ‏`RequestTimings` | DTO | אובייקט Scoped – טיפוס דיאגנוסטיקה חוצה שכבות, לא DTO (D‑25) |
+| ‏`DbTimingInterceptor` | DAL | ‏`DbCommandInterceptor` של EF Core, אוסף את הזמנים ש־EF כבר מודד |
+| ‏`RequestService` | BL | מסמן `hit`, או `miss` כשה־Cache נאלץ לטעון |
+| ‏`ServerTimingMiddleware` | API | כותב את הכותרת |
+
+בלי ספריות חדשות.
+
+**ממצא במימוש:** הספירה הראשונה לקחה את הזמן מאירוע `DataReaderDisposing` בלבד, וקיבלה `db=4.2 ms` לחיפוש של 242 ms. בדיקה (הדפסה זמנית של שני האירועים) הראתה שהזמן באירוע הזה מתחיל רק **כשה־Reader נפתח**, כלומר הוא כולל רק את קריאת השורות. זמן הביצוע עצמו מדווח ב־`ReaderExecuted`. הזמן הנכון הוא הסכום של שניהם.
+
+**תקורה:** ‏300 קריאות לכל Endpoint, עם הכותרת ובלעדיה (חציון):
+
+| Endpoint | בלי | עם |
+|---|---|---|
+| פנייה בודדת | 1.51 ms | 1.60 ms |
+| רשימה מסוננת | 2.53 ms | 2.62 ms |
+| summary מה־Cache | 0.60 ms | 0.59 ms |
+
+כ־0.1 ms, בתוך רעש המדידה.
+
+**אבטחה:** הכותרת חושפת זמנים פנימיים, שיכולים לרמוז על מבנה הנתונים או לסייע ב־timing attacks. לכן היא **כבויה כברירת מחדל**, ומופעלת ע״י `ServerTiming:Enabled` רק ב־`appsettings.Development.json`.
+
+**שימוש:**
+- **DevTools:** הכותרת מוצגת ב־Network ← Timing.
+- **UI (‏M7):** יציג תג זמן ליד כל טעינה ופאנל ביצועים מתקפל (D‑23). ה־Angular קורא את הכותרת דרך ה־Proxy של שרת הפיתוח (#32), כלומר מאותו Origin, ולכן לא נדרש `Access-Control-Expose-Headers`.
 
 ## נספח א' – כל המדידות
 
