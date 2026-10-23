@@ -7,7 +7,8 @@ using RequestsManagement.DTO.Enums;
 namespace RequestsManagement.BL;
 
 internal sealed class RequestService(
-    IRequestRepository repository, TimeProvider timeProvider, ILogger<RequestService> logger) : IRequestService
+    IRequestRepository repository, SummaryCache summaryCache, TimeProvider timeProvider, ILogger<RequestService> logger)
+    : IRequestService
 {
     public async Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
@@ -38,7 +39,10 @@ internal sealed class RequestService(
         return request;
     }
 
-    public async Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
+    public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken) =>
+        summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
+
+    private async Task<SummaryDto> LoadSummaryAsync(CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
         var summary = await repository.GetSummaryAsync(cancellationToken);

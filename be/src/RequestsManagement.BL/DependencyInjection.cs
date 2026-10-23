@@ -12,6 +12,10 @@ public static class DependencyInjection
         services.AddScoped<IRequestService, RequestService>();
         services.AddScoped<IAuthService, AuthService>();
 
+        // Singleton: the cached summary is shared by all requests (D-11)
+        services.AddMemoryCache();
+        services.AddSingleton<SummaryCache>();
+
         // Clock for UpdatedAt / ChangedAt and token times; replaceable in tests
         services.TryAddSingleton(TimeProvider.System);
 
