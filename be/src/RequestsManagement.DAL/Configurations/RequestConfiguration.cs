@@ -30,29 +30,54 @@ internal class RequestConfiguration : IEntityTypeConfiguration<Request>
         builder.Property(r => r.RowVersion).IsRowVersion();
 
         // ---- Indexes ----
-        // Initial choices based on the main query scenarios; each one is verified by measurement in M8
-        // (STATISTICS IO/TIME + execution plans). Text search (LIKE '%x%') cannot use any of them (D-12).
+        // Chosen by measurement in M8 (logical reads + actual plans, docs/PERFORMANCE.md and D-24 in the docs
+        // repository). Text search (LIKE '%x%') cannot use any of them (D-12).
+        //
+        // All keys are ascending on purpose: the list sorts by <field> DESC, Id DESC, and every nonclustered
+        // index ends with the clustered key Id (ascending). An ascending index read backwards gives exactly
+        // "<field> DESC, Id DESC" – no Sort. A DESC key would give "<field> DESC, Id ASC", which does not match
+        // the tie-breaker, so SQL Server sorts anyway (measured: 672 instead of 70 reads for one page).
+        //
+        // Write cost: a status change updates Status, UpdatedAt and RowVersion. Indexes without these columns
+        // are not touched by it (OrganizationName, CreatedAt, Priority, Title).
 
-        // Main list screen: filter by Status and/or Priority, newest first (default sort).
-        // INCLUDE makes it covering for the list columns, so a filtered page needs no key lookups.
-        // Also serves the summary counts grouped by Status and by Priority.
-        // Trade-off: the index holds almost every column, so it costs extra storage and write time.
+        // Main list filter: Status and/or Priority, newest first. Narrow on purpose (keys only): COUNT reads
+        // only this index, a page reads it and then looks up the 20 rows. Also the summary counts.
+        // M1 had a covering INCLUDE of all list columns: 19 MB (almost a copy of the table) and 40% of the
+        // log of every status change, for a gain that the narrow index plus 20 key lookups also gives.
         builder.HasIndex(r => new { r.Status, r.Priority, r.CreatedAt })
-            .HasDatabaseName("IX_Requests_Status_Priority_CreatedAt")
-            .IsDescending(false, false, true)
-            .IncludeProperties(r => new { r.Title, r.OrganizationName, r.AssignedTo, r.UpdatedAt, r.RowVersion });
+            .HasDatabaseName("IX_Requests_Status_Priority_CreatedAt");
 
-        // "Requests of handler X", optionally narrowed by status (e.g. my open requests).
-        builder.HasIndex(r => new { r.AssignedTo, r.Status })
-            .HasDatabaseName("IX_Requests_AssignedTo_Status");
+        // "Requests of handler X", newest first, optionally narrowed by status (e.g. my open requests).
+        // CreatedAt in the key serves the page order; Status is only included, so a status change rewrites
+        // the row in place instead of moving it.
+        builder.HasIndex(r => new { r.AssignedTo, r.CreatedAt })
+            .HasDatabaseName("IX_Requests_AssignedTo_CreatedAt")
+            .IncludeProperties(r => r.Status);
 
         // Filter by organization (equality or prefix search) and GROUP BY organization
         // for the "top organizations with open requests" aggregation.
-        builder.HasIndex(r => r.OrganizationName)
-            .HasDatabaseName("IX_Requests_OrganizationName");
+        // CreatedAt in the key gives the page its order from this index alone; with OrganizationName only,
+        // SQL Server joined it with IX_Requests_CreatedAt and sorted (23 ms instead of 2). Neither column ever changes.
+        builder.HasIndex(r => new { r.OrganizationName, r.CreatedAt })
+            .HasDatabaseName("IX_Requests_OrganizationName_CreatedAt");
 
-        // Date range filter without a status filter, and sorting by CreatedAt when no other filter applies.
+        // Default sort (CreatedAt DESC) and the date range filter; a filtered page reads it newest first
+        // until it finds 20 matching rows.
         builder.HasIndex(r => r.CreatedAt)
             .HasDatabaseName("IX_Requests_CreatedAt");
+
+        // Sorting without a filter by UpdatedAt / Priority / Title: without these indexes every page sorts the
+        // whole table (parallel plan, ~80 MB memory grant – the queries that stalled under memory pressure).
+        // UpdatedAt changes with every status change (+16% log per change); Priority and Title never change.
+        // No index for sorting by Status: it would cost +15% on every status change for a sort over 4 values.
+        builder.HasIndex(r => r.UpdatedAt)
+            .HasDatabaseName("IX_Requests_UpdatedAt");
+
+        builder.HasIndex(r => r.Priority)
+            .HasDatabaseName("IX_Requests_Priority");
+
+        builder.HasIndex(r => r.Title)
+            .HasDatabaseName("IX_Requests_Title");
     }
 }

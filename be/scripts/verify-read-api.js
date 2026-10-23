@@ -44,9 +44,11 @@ const section = t => console.log(`\n== ${t}`);
   // Bring the database into SQL Server's memory first, so the first API calls measure the API and not disk reads.
   // Done before logging in: a long warm-up would otherwise outlive the HTTP keep-alive connection.
   const warmStart = performance.now();
-  sql('SELECT COUNT_BIG(*) FROM Requests WITH (INDEX(PK_Requests)); SELECT COUNT_BIG(*) FROM Requests WITH (INDEX(IX_Requests_Status_Priority_CreatedAt)); ' +
-      'SELECT COUNT_BIG(*) FROM Requests WITH (INDEX(IX_Requests_AssignedTo_Status)); SELECT COUNT_BIG(*) FROM Requests WITH (INDEX(IX_Requests_OrganizationName)); ' +
-      'SELECT COUNT_BIG(*) FROM Requests WITH (INDEX(IX_Requests_CreatedAt)); SELECT COUNT_BIG(*) FROM RequestStatusHistory');
+  // Every index of both tables, read from sys.indexes – the script does not depend on index names (changed in M8)
+  sql("DECLARE @s nvarchar(max) = N''; " +
+      "SELECT @s += N'SELECT COUNT_BIG(*) FROM ' + QUOTENAME(OBJECT_NAME(object_id)) + N' WITH (INDEX(' + QUOTENAME(name) + N'));' " +
+      "FROM sys.indexes WHERE object_id IN (OBJECT_ID('Requests'), OBJECT_ID('RequestStatusHistory')) AND index_id > 0; " +
+      'EXEC (@s);');
   console.log(`warm-up of the buffer pool took ${(performance.now() - warmStart).toFixed(0)} ms`);
 
   const loginResponse = await fetch(BASE + '/api/auth/login', {

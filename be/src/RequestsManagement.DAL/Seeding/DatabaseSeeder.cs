@@ -81,7 +81,21 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
             await db.Database.CloseConnectionAsync();
         }
 
+        await RebuildIndexesAsync(cancellationToken);
+
         logger.LogInformation("Seeded {Requests} requests in {Elapsed} ms", data.Requests.Count, stopwatch.ElapsedMilliseconds);
+    }
+
+    // Bulk copy into tables that already have their nonclustered indexes leaves those indexes only 35-61% full
+    // (page splits), so every query reads up to ~3x more pages than necessary (measured in M8,
+    // docs/PERFORMANCE.md). A rebuild of our own tables compacts them in a few seconds.
+    private async Task RebuildIndexesAsync(CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        await db.Database.ExecuteSqlRawAsync("ALTER INDEX ALL ON [dbo].[Requests] REBUILD", cancellationToken);
+        await db.Database.ExecuteSqlRawAsync("ALTER INDEX ALL ON [dbo].[RequestStatusHistory] REBUILD", cancellationToken);
+
+        logger.LogInformation("Rebuilt the indexes of Requests and RequestStatusHistory in {Elapsed} ms", stopwatch.ElapsedMilliseconds);
     }
 
     private async Task BulkCopyAsync(

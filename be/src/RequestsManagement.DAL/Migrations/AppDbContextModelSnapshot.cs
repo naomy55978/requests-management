@@ -67,17 +67,25 @@ namespace RequestsManagement.DAL.Migrations
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("IX_Requests_CreatedAt");
 
-                    b.HasIndex("OrganizationName")
-                        .HasDatabaseName("IX_Requests_OrganizationName");
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("IX_Requests_Priority");
 
-                    b.HasIndex("AssignedTo", "Status")
-                        .HasDatabaseName("IX_Requests_AssignedTo_Status");
+                    b.HasIndex("Title")
+                        .HasDatabaseName("IX_Requests_Title");
+
+                    b.HasIndex("UpdatedAt")
+                        .HasDatabaseName("IX_Requests_UpdatedAt");
+
+                    b.HasIndex("AssignedTo", "CreatedAt")
+                        .HasDatabaseName("IX_Requests_AssignedTo_CreatedAt");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("AssignedTo", "CreatedAt"), new[] { "Status" });
+
+                    b.HasIndex("OrganizationName", "CreatedAt")
+                        .HasDatabaseName("IX_Requests_OrganizationName_CreatedAt");
 
                     b.HasIndex("Status", "Priority", "CreatedAt")
-                        .IsDescending(false, false, true)
                         .HasDatabaseName("IX_Requests_Status_Priority_CreatedAt");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Status", "Priority", "CreatedAt"), new[] { "Title", "OrganizationName", "AssignedTo", "UpdatedAt", "RowVersion" });
 
                     b.ToTable("Requests", null, t =>
                         {
