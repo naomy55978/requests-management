@@ -178,3 +178,81 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | §10 איכות הקוד | `req-10-quality` | [#2](https://github.com/naomy55978/requests-management-docs/issues/2), [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#10](https://github.com/naomy55978/requests-management-docs/issues/10), [#12](https://github.com/naomy55978/requests-management-docs/issues/12), [#14](https://github.com/naomy55978/requests-management-docs/issues/14), [#41](https://github.com/naomy55978/requests-management-docs/issues/41), [#50](https://github.com/naomy55978/requests-management-docs/issues/50) |
 | §11 תיעוד הפתרון | `req-11-docs` | [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#5](https://github.com/naomy55978/requests-management-docs/issues/5), [#22](https://github.com/naomy55978/requests-management-docs/issues/22), [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#45](https://github.com/naomy55978/requests-management-docs/issues/45), [#46](https://github.com/naomy55978/requests-management-docs/issues/46), [#47](https://github.com/naomy55978/requests-management-docs/issues/47) |
 | אופן ההגשה | `req-submission` | [#48](https://github.com/naomy55978/requests-management-docs/issues/48), [#49](https://github.com/naomy55978/requests-management-docs/issues/49) |
+
+## מיפוי בדיקות לדרישות (M6 (בדיקות))
+
+53 שיטות בדיקה ב־`requests-management-be/tests/RequestsManagement.Tests`, **123 מקרים** כולל שורות ה־`Theory` (28 יחידה, 25 Integration מתוכן 2 Concurrency). הסעיפים (§) הם סעיפי מסמך המבדק כפי שמופיעים במטריצה למעלה. ההרצה והחיבור ל־SQL Server מתוארים ב־README של BE.
+בדיקות היחידה רצות בזיכרון; בדיקות ה־Integration רצות מול ה־API האמיתי ומסד זמני ב־SQL Server שנוצר מה־Migrations (D‑09), ומשוות גם למה שנשמר ב־DB.
+
+### יחידה
+
+| בדיקה | מקרים | דרישה | מה היא מוכיחה |
+|---|---|---|---|
+| `StatusTransitionsTests.IsAllowed_MatchesTheTransitionMatrix` | 16 | §2 | כל 16 צירופי המעבר לפי D‑05 (6 מותרים, 10 אסורים), הכללים כתובים ידנית ולא נגזרים מהקוד |
+| `StatusTransitionsTests.AllowedNext_AllowedPrevious_AndIsAllowed_AgreeForEveryCombination` | 1 | §2 | העדכון המותנה ב־DB (`AllowedPrevious`) ורשימת `allowedStatuses` בתשובת 422 (`AllowedNext`) תואמים את `IsAllowed` |
+| `RequestFilterValidationTests.PagingLimits` | 7 | §1 | הגבלת `pageSize` ל־100, ‏`page` בין 1 ל־1,000,000 |
+| `RequestFilterValidationTests.DefaultFilter_IsValid` | 1 | §1 | בקשת ברירת מחדל תקינה |
+| `RequestFilterValidationTests.DateRange_StartAfterEnd_IsRejected_SameDayAndOpenRangesAreNot` | 1 | §1 | טווח תאריכים הפוך נדחה; אותו יום וטווח פתוח מותרים |
+| `RequestFilterValidationTests.UndefinedEnumNumbers_AreRejected` | 1 | §1 | ערך Enum לא מוגדר (`status=99`) נדחה בסינון ובמיון |
+| `RequestFilterValidationTests.TextFilters_HaveALengthLimit` | 6 | §1 | אורך מרבי ל־`organization`, ‏`assignedTo`, ‏`search` |
+| `UpdateStatusRequestValidationTests.ValidRequest_IsAccepted` | 1 | §2 | גוף PATCH תקין |
+| `UpdateStatusRequestValidationTests.MissingOrUndefinedStatus_IsRejected` | 1 | §2 | סטטוס חסר או לא מוגדר נדחה |
+| `UpdateStatusRequestValidationTests.MissingOrMalformedVersion_IsRejected` | 4 | §2 | גרסה חסרה, לא base64, או באורך שגוי נדחית |
+| `BulkStatusRequestValidationTests.OneToHundredItems_AreAccepted` | 2 | §4 | פריט אחד ו־100 פריטים (הגבול העליון) מותרים |
+| `BulkStatusRequestValidationTests.NoItems_AreRejected` | 1 | §4 | רשימה חסרה או ריקה נדחית |
+| `BulkStatusRequestValidationTests.MoreThanHundredItems_AreRejected` | 1 | §4 | 101 פריטים נדחים |
+| `BulkStatusRequestValidationTests.MissingOrUndefinedStatus_IsRejected` | 1 | §4 | סטטוס יעד חסר או לא מוגדר נדחה |
+| `BulkStatusRequestValidationTests.RepeatedId_IsRejected_AndOnlyTenIdsAreNamed` | 1 | §4 | מזהה כפול נדחה, וההודעה מפרטת עד 10 מזהים (D‑19) |
+| `BulkStatusRequestValidationTests.ItemErrors_UseCamelCaseKeysWithTheIndex` | 1 | §4 | שגיאות פריט במפתחות camelCase עם אינדקס (`items[1].id`), כולל איבר `null` (D‑18, D‑19) |
+| `BulkStatusRequestValidationTests.NegativeId_IsRejected` | 1 | §4 | מזהה שלילי נדחה |
+| `SummaryCacheTests.SecondRead_IsServedFromTheCache` | 1 | §7 | קריאה שנייה לא פונה למקור הנתונים |
+| `SummaryCacheTests.AfterInvalidate_TheNextReadLoadsAgain` | 1 | §7 | Invalidation גורם לטעינה מחדש |
+| `SummaryCacheTests.InvalidationDuringALoad_PreventsTheOldResultFromBeingStored` | 1 | §7 | מונה ה"דור" (D‑20): תוצאה שנטענה לפני שינוי שנעשה בינתיים לא נשמרת |
+| `SummaryCacheTests.AFailedOrCancelledLoad_IsNotCached` | 2 | §7 | כשל או ביטול בטעינה לא נשמרים |
+| `SummaryCacheTests.Entry_ExpiresAfterSixtySecondsFromItsCreation_AndReadsDoNotExtendIt` | 1 | §7 | Expiration מוחלט של 60 שנ' (לא Sliding), בשעון מבוקר – בלי המתנה אמיתית |
+| `RequestServiceCacheTests.SuccessfulUpdate_ClearsTheCache` | 1 | §7 | שינוי סטטוס מוצלח מנקה |
+| `RequestServiceCacheTests.FailedUpdate_LeavesTheCacheAlone` | 3 | §7 | 404 / 409 / 422 לא מנקים |
+| `RequestServiceCacheTests.Bulk_WithAtLeastOneUpdatedItem_ClearsTheCache` | 1 | §7, §4 | Bulk עם פריט מעודכן אחד לפחות מנקה |
+| `RequestServiceCacheTests.Bulk_WhereEveryItemFails_LeavesTheCacheAlone` | 1 | §7, §4 | Bulk שכולו נכשל לא מנקה |
+| `RequestServiceCacheTests.Bulk_StoppedByADisconnectAfterASavedItem_StillClearsTheCache` | 1 | §7, §4 | ניתוק לקוח באמצע Bulk אחרי פריט שנשמר – ה־Cache מנוקה בכל זאת (`finally`, D‑20) |
+| `RequestServiceCacheTests.Bulk_StoppedByADisconnectBeforeAnythingWasSaved_LeavesTheCacheAlone` | 1 | §7, §4 | ניתוק לפני שנשמר משהו – אין ניקוי מיותר |
+
+### Integration
+
+| בדיקה | מקרים | דרישה | מה היא מוכיחה |
+|---|---|---|---|
+| `AuthenticationTests.Endpoints_WithoutToken_AreRejectedWith401` | 6 | §3 (זהות המבצע), D‑10 | כל ה־Endpoints מלבד login דורשים טוקן, ‏401 ב־ProblemDetails |
+| `AuthenticationTests.Endpoint_WithInvalidToken_IsRejectedWith401` | 1 | §3, D‑10 | טוקן פגום נדחה |
+| `AuthenticationTests.Login_WithCorrectPassword_ReturnsAToken` | 1 | §3, D‑10 | התחברות מחזירה טוקן |
+| `AuthenticationTests.Login_WithWrongPasswordOrUnknownUser_GivesTheSameAnswer` | 1 | §3, D‑10 | אותה תשובה לסיסמה שגויה ולמשתמש לא קיים |
+| `ReadRequestsTests.Filters_AreAppliedByTheServer` | 10 | §1 | סינון משולב וחיפוש בצד השרת מול תוצאת LINQ מהנתונים הקבועים; כולל `unassigned`, טווח תאריכים כולל, ו־`% _ [` כתווים רגילים בחיפוש |
+| `ReadRequestsTests.Sorting_IsDoneByTheServer` | 10 | §1 | מיון ב־5 שדות × 2 כיוונים, עם `Id` כ־tie‑breaker |
+| `ReadRequestsTests.Paging_ReturnsEveryRequestOnceAndKnowsTheTotal` | 1 | §1 | דפדוף יציב, ‏`totalCount`, דף אחרון חלקי ודף אחרי הסוף ← `200` ריק |
+| `ReadRequestsTests.InvalidQuery_IsAnswered400WithTheUsualErrorFormat` | 6 | §1 | פרמטר לא חוקי ← 400 ב־`ValidationProblemDetails` עם מפתחות camelCase ו־`traceId` (D‑18) |
+| `ReadRequestsTests.GetById_ReturnsTheRequestWithItsVersion_And404WhenMissing` | 1 | §1 | פנייה בודדת עם ה־`version` האמיתי מה־DB, ו־404 |
+| `UpdateStatusTests.Update_ChangesTheRequest_AndWritesOneAuditRowByTheUserOfTheToken` | 2 | §2, §3 | 200; ה־DB מעודכן; שורת היסטוריה אחת עם סטטוס קודם מה־DB ו־`ChangedBy` של בעל הטוקן (משני משתמשים); `UpdatedAt = ChangedAt` |
+| `UpdateStatusTests.ChangedByInTheBody_IsRejected_AndNothingIsChanged` | 1 | §3, D‑10 | הזהות לא נלקחת מהלקוח |
+| `UpdateStatusTests.StaleVersion_Gives409WithTheCurrentState_AndTheRetryWithItSucceeds` | 1 | §2 | ‏409 עם הסטטוס והגרסה הנוכחיים, אין עדכון ואין היסטוריה, ‏409 לפני 422, וניסיון חוזר עם הגרסה הנוכחית מצליח |
+| `UpdateStatusTests.NotAllowedTransition_Gives422WithTheAllowedStatuses_AndChangesNothing` | 3 | §2 | ‏422 עם `allowedStatuses`; ה־DB וההיסטוריה ללא שינוי |
+| `UpdateStatusTests.UnknownRequest_Gives404` | 1 | §2 | פנייה שלא קיימת ← 404 |
+| `UpdateStatusTests.InvalidBody_Gives400_AndChangesNothing` | 5 | §2 | גוף לא תקין (חסר, לא מוכר, פגום, לא JSON) ← 400 ושום שינוי |
+| `UpdateStatusTests.History_ListsTheChangesOldestFirst_IsEmptyForAnUntouchedRequest_And404ForAMissingOne` | 1 | §3 | היסטוריה מהישן לחדש, ‏`[]` לפנייה שלא שונתה, ו־404 |
+| `BulkStatusTests.MixedCall_ReportsEveryOutcome_AndOnlyTheSuccessfulItemsChangeTheDatabase` | 1 | §4, §3 | Partial Success: Updated, NotFound, Conflict, InvalidTransition בקריאה אחת; סדר ושדות; ה־DB לכל פריט; Conflict לפני InvalidTransition; היסטוריה רק למצליחים, עם `ChangedBy` מהטוקן |
+| `BulkStatusTests.InvalidCall_Gives400_AndNotEvenTheValidItemsAreChanged` | 3 | §4 | רשימה ריקה, מעל 100 פריטים, מזהה כפול ← 400 ושום פריט לא משתנה |
+| `BulkStatusTests.AFullCallOfHundredRequests_UpdatesAllOfThemWithTheirAuditRows` | 1 | §4 | הגבול העליון מקצה לקצה: 100 פניות, כולן עם שורת היסטוריה |
+| `SummaryTests.Summary_IsTheAggregationOfTheDatabase` | 1 | §1, §7 | ה־summary זהה ל־`GROUP BY` ישיר ב־SQL (כל הסטטוסים והעדיפויות, ארגונים מובילים בפניות פתוחות) |
+| `SummaryTests.AfterAnUpdate_TheNextSummaryShowsTheChange` | 1 | §7 | ה־summary משקף PATCH מיד, למרות שהיה ב־Cache |
+| `SummaryTests.AfterABulkUpdate_TheNextSummaryShowsTheChange` | 1 | §7, §4 | ה־summary משקף Bulk מיד |
+| `SummaryTests.FailedChanges_DoNotEmptyTheCache_ButASuccessfulOneDoes` | 1 | §7 | Hit לא קורא מה־DB; ‏409/404/422 ו־Bulk שכולו נכשל לא מנקים; שינוי מוצלח מנקה |
+
+### Concurrency
+
+| בדיקה | מקרים | דרישה | מה היא מוכיחה |
+|---|---|---|---|
+| `ConcurrencyTests.ParallelUpdatesWithTheSameVersion_ExactlyOneSucceeds_NoLostUpdate` | 1 | §2, §3 | 10 פניות × 20 בקשות PATCH בו־זמנית עם אותה גרסה (שני משתמשים, שני יעדים): בדיוק `200` אחד ו־19 × `409` לכל פנייה; שורת היסטוריה אחת של המנצח; ה־DB מחזיק את הסטטוס והגרסה שלו; כל 409 מדווח את המצב הסופי |
+| `ConcurrencyTests.BulkCallsRacingSinglePatchCalls_ExactlyOneChangePerRequest_NoServerErrors` | 1 | §2, §4 | שני Bulk (אחד בסדר הפוך) ו־3 בקשות PATCH לכל פנייה, במקביל: מנצח אחד לכל פנייה, שורת היסטוריה אחת, ‏0 תשובות 5xx (אין Deadlock) |
+
+### מה לא מכוסה בבדיקות האוטומטיות (ונבדק בסקריפטים או במדידה)
+- פקיעה **אמיתית** של 60 שניות, ובדיקה מול 100,000 פניות: `scripts/verify-summary-cache.js`, ‏`scripts/verify-read-api.js`.
+- זמני תגובה, אינדקסים ו־Execution Plans: M8 (ביצועים).
+- Frontend: M7 (Angular).
