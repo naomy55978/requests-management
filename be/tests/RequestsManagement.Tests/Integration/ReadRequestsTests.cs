@@ -189,4 +189,45 @@ public class ReadRequestsTests(ApiFixture fixture)
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
         Assert.Equal("application/problem+json", missing.Content.Headers.ContentType?.MediaType);
     }
+
+    // The search compares UPPER(column) and UPPER(pattern) in a binary collation (D-24). These requests are the
+    // test's own (created in 2030, with a unique token), so the expected result is exact whatever ran before.
+    [Theory]
+    [InlineData("urgent leak", "upper-case")]       // a lower-case term finds an upper-case title
+    [InlineData("URGENT LEAK", "upper-case")]       // and the same term in upper case
+    [InlineData("דחופה במזגן", "hebrew")]           // Hebrew text (no case) is found as is
+    [InlineData("50%_off [x]", "special")]          // % _ [ are plain characters, also when upper-cased
+    [InlineData("50x_off", "")]                     // unescaped, "_" would match the "%" of "50%_OFF"
+    [InlineData("le 5_%", "")]                      // unescaped, "le 5_%" would match "SALE 50%_OFF"
+    public async Task Search_IgnoresCase_FindsHebrew_AndKeepsSpecialCharactersLiteral(string term, string expectedTitle)
+    {
+        var token = Guid.NewGuid().ToString("N")[..12];
+        var titles = new Dictionary<string, string>
+        {
+            ["upper-case"] = $"URGENT LEAK {token}",
+            ["hebrew"] = $"תקלה דחופה במזגן {token}",
+            ["special"] = $"SALE 50%_OFF [X] {token}",
+            ["other"] = $"Routine check {token}"
+        };
+        var ids = new Dictionary<string, int>();
+        foreach (var (key, title) in titles)
+        {
+            ids[key] = (await fixture.InsertRequestAsync(title: title)).Id;
+        }
+
+        // The token keeps the search inside this test's requests; the term decides which of them match
+        var search = expectedTitle == "" ? term : $"{term} {token}";
+        if (expectedTitle == "")
+        {
+            // A term without the token may match only through a wildcard: look at this test's requests only
+            var all = await GetPageAsync($"search={Uri.EscapeDataString(search)}&createdFrom=2030-01-01&createdTo=2030-01-01&pageSize=100");
+            Assert.DoesNotContain(all.Items, r => ids.ContainsValue(r.Id));
+            return;
+        }
+
+        var page = await GetPageAsync($"search={Uri.EscapeDataString(search)}&createdFrom=2030-01-01&createdTo=2030-01-01&pageSize=100");
+
+        Assert.Equal([ids[expectedTitle]], page.Items.Select(r => r.Id).ToList());
+        Assert.Equal(1, page.TotalCount);
+    }
 }

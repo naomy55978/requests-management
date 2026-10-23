@@ -13,6 +13,9 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
     private const int TopOrganizationsCount = 10;
     private const string LikeEscape = "\\";
 
+    // Compares code points; used by the search after UPPER on both sides (see ApplyFilter)
+    private const string BinaryCollation = "Latin1_General_100_BIN2";
+
     // The columns the list needs, selected in SQL. RowVersion is converted to the DTO's base64 Version
     // in memory, for the rows of one page only.
     private sealed record RequestRow(
@@ -39,9 +42,18 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             return new PagedResult<RequestDto>([], filter.Page, filter.PageSize, 0);
         }
 
-        var rows = await ApplySort(query, filter)
+        // Deferred join: OFFSET skips over Ids only, and the full rows are read for the page alone.
+        // Skipping full rows makes SQL Server either sort the whole table or do one key lookup per skipped row:
+        // the last page (OFFSET 99,900) read 306,484 pages; this way 540 (docs/PERFORMANCE.md, M8). The inner query
+        // has all the filters and the same order, so it can be answered from a narrow index; page 1 costs the same.
+        // A join (not Contains of a separate query) keeps Skip/Take in the main query, so EF sends OFFSET/FETCH as
+        // parameters and SQL Server reuses one plan for every page number.
+        var pageIds = ApplySort(query, filter)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
+            .Select(r => r.Id);
+
+        var rows = await ApplySort(pageIds.Join(db.Requests.AsNoTracking(), id => id, r => r.Id, (_, r) => r), filter)
             .Select(ToRow)
             .ToListAsync(cancellationToken);
 
@@ -264,13 +276,17 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             query = query.Where(r => r.CreatedAt < beforeDate);
         }
 
-        // Contains search: LIKE '%x%' cannot use an index (known limitation, D-12)
+        // Contains search: LIKE '%x%' cannot use an index and scans the table (known limitation, D-12).
+        // Most of its time is the linguistic (Unicode) comparison, not reading: compared as binary after UPPER on
+        // both sides it is still case-insensitive and ~7x faster (390 → 58 ms on 100K rows, D-24). The price:
+        // linguistic equivalences such as "ae" = "æ" no longer match. UPPER runs in SQL for both the column and the
+        // pattern (AppDbContext.Upper); % _ [ and the escape character are not changed by UPPER.
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var pattern = "%" + EscapeLike(filter.Search.Trim()) + "%";
             query = query.Where(r =>
-                EF.Functions.Like(r.Title, pattern, LikeEscape) ||
-                EF.Functions.Like(r.OrganizationName, pattern, LikeEscape));
+                EF.Functions.Like(EF.Functions.Collate(AppDbContext.Upper(r.Title), BinaryCollation), AppDbContext.Upper(pattern), LikeEscape) ||
+                EF.Functions.Like(EF.Functions.Collate(AppDbContext.Upper(r.OrganizationName), BinaryCollation), AppDbContext.Upper(pattern), LikeEscape));
         }
 
         return query;

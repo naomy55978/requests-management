@@ -87,7 +87,8 @@ public sealed class ApiFixture : IAsyncLifetime
         RequestStatus status = RequestStatus.New,
         RequestPriority priority = RequestPriority.Medium,
         string organization = "Scratch Org",
-        string? assignedTo = null)
+        string? assignedTo = null,
+        string? title = null)
     {
         var rows = await Database.QueryAsync(
             """
@@ -96,7 +97,7 @@ public sealed class ApiFixture : IAsyncLifetime
             VALUES (@title, @organization, @status, @priority, @assignedTo, @createdAt, @createdAt)
             """,
             reader => new NewRequest(reader.GetInt32(0), Convert.ToBase64String((byte[])reader[1])),
-            ("@title", $"Scratch request {Guid.NewGuid():N}"),
+            ("@title", title ?? $"Scratch request {Guid.NewGuid():N}"),
             ("@organization", organization),
             ("@status", (byte)status),
             ("@priority", (byte)priority),
