@@ -1,0 +1,722 @@
+{
+  "Label": "experiments/narrow-SPC-asc",
+  "DisabledIndex": "IX_Requests_Status_Priority_CreatedAt",
+  "TakenAtUtc": "2026-10-23T09:32:58.6223178Z",
+  "Environment": {
+    "version": "17.0.1145.4",
+    "edition": "Standard Developer Edition (64-bit)",
+    "compatibility": "170",
+    "requests": "100000",
+    "history": "179178",
+    "sqlCommittedMb": "561",
+    "sqlTargetMb": "3219",
+    "osAvailableMb": "3469",
+    "maxdop": "10",
+    "costThreshold": "5",
+    "sqlCommittedMbAtEnd": "480",
+    "sqlTargetMbAtEnd": "3205",
+    "osAvailableMbAtEnd": "3536"
+  },
+  "IndexSizes": [
+    {
+      "Table": "Requests",
+      "Index": "PK_Requests",
+      "Type": "CLUSTERED",
+      "Kb": 21144,
+      "Rows": 100000
+    },
+    {
+      "Table": "Requests",
+      "Index": "IX_Requests_AssignedTo_Status",
+      "Type": "NONCLUSTERED",
+      "Kb": 3536,
+      "Rows": 100000
+    },
+    {
+      "Table": "Requests",
+      "Index": "IX_Requests_CreatedAt",
+      "Type": "NONCLUSTERED",
+      "Kb": 1800,
+      "Rows": 100000
+    },
+    {
+      "Table": "Requests",
+      "Index": "IX_Requests_OrganizationName",
+      "Type": "NONCLUSTERED",
+      "Kb": 5984,
+      "Rows": 100000
+    },
+    {
+      "Table": "Requests",
+      "Index": "IX_x_SPC",
+      "Type": "NONCLUSTERED",
+      "Kb": 2008,
+      "Rows": 100000
+    },
+    {
+      "Table": "RequestStatusHistory",
+      "Index": "PK_RequestStatusHistory",
+      "Type": "CLUSTERED",
+      "Kb": 11816,
+      "Rows": 179178
+    },
+    {
+      "Table": "RequestStatusHistory",
+      "Index": "IX_RequestStatusHistory_RequestId_ChangedAt",
+      "Type": "NONCLUSTERED",
+      "Kb": 6464,
+      "Rows": 179178
+    }
+  ],
+  "Results": [
+    {
+      "Id": "Q1.count",
+      "Title": "list: status IN (InProgress,Waiting) \u002B priority=High \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 75,
+      "ReadsPerTable": {
+        "Requests": 75
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 1024,
+      "UsedMemoryKb": 16,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_x_SPC"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Nested Loops (Inner Join) \u2013 5,689 rows\n      Merge Interval \u2013 2 rows\n        Sort (TopN Sort) \u2013 2 rows\n          Compute Scalar\n            Concatenation \u2013 2 rows\n              Compute Scalar\n                Constant Scan \u2013 1 rows\n              Compute Scalar\n                Constant Scan \u2013 1 rows\n      Index Seek [IX_x_SPC] \u2013 5,689 rows, 2 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 1,
+      "ClientMs": 1.4805000000000001,
+      "ClientMaxMs": 11.5431,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q1.page",
+      "Title": "list: same filter, sort createdAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 779,
+      "ReadsPerTable": {
+        "Requests": 779
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 251 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 251 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.55215,
+      "ClientMaxMs": 0.8643,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q1s.count",
+      "Title": "list: status=New \u002B priority=High \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 8,
+      "ReadsPerTable": {
+        "Requests": 8
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_x_SPC"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Index Seek [IX_x_SPC] \u2013 1,765 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.23355,
+      "ClientMaxMs": 0.8003,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q1s.page",
+      "Title": "list: status=New \u002B priority=High, sort createdAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 70,
+      "ReadsPerTable": {
+        "Requests": 70
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_x_SPC",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Seek [IX_x_SPC] \u2013 20 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 20 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.2596,
+      "ClientMaxMs": 0.3762,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q2.page",
+      "Title": "list: same filter, sort updatedAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2643,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2643
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 8328,
+      "UsedMemoryKb": 1336,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Sort \u2013 20 rows\n    Clustered Index Scan [PK_Requests] \u2013 5,689 rows",
+      "CpuMs": 16,
+      "ElapsedMs": 17,
+      "ClientMs": 18.551949999999998,
+      "ClientMaxMs": 39.215,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q3.count",
+      "Title": "list: no filter \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 225,
+      "ReadsPerTable": {
+        "Requests": 225
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 100,000 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 4,
+      "ClientMs": 4.6536,
+      "ClientMaxMs": 6.3779,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q3.page",
+      "Title": "list: no filter, sort createdAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 70,
+      "ReadsPerTable": {
+        "Requests": 70
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 20 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 20 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.29445,
+      "ClientMaxMs": 0.4164,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q4.updated",
+      "Title": "list: no filter, sort updatedAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2776,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2776
+      },
+      "Dop": 10,
+      "GrantedMemoryKb": 79440,
+      "UsedMemoryKb": 24280,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Parallelism (Gather Streams) \u2013 20 rows\n    Sort \u2013 3,616 rows\n      Clustered Index Scan [PK_Requests] \u2013 100,000 rows",
+      "CpuMs": 110,
+      "ElapsedMs": 60,
+      "ClientMs": 63.8107,
+      "ClientMaxMs": 113.146,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q4.priority",
+      "Title": "list: no filter, sort priority desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2776,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2776
+      },
+      "Dop": 10,
+      "GrantedMemoryKb": 79440,
+      "UsedMemoryKb": 24288,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Parallelism (Gather Streams) \u2013 20 rows\n    Sort \u2013 3,596 rows\n      Clustered Index Scan [PK_Requests] \u2013 100,000 rows",
+      "CpuMs": 101,
+      "ElapsedMs": 55.5,
+      "ClientMs": 56.88875,
+      "ClientMaxMs": 123.6463,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q4.status",
+      "Title": "list: no filter, sort status desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2776,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2776
+      },
+      "Dop": 10,
+      "GrantedMemoryKb": 79440,
+      "UsedMemoryKb": 24280,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Parallelism (Gather Streams) \u2013 20 rows\n    Sort \u2013 3,581 rows\n      Clustered Index Scan [PK_Requests] \u2013 100,000 rows",
+      "CpuMs": 94,
+      "ElapsedMs": 51.5,
+      "ClientMs": 52.6759,
+      "ClientMaxMs": 58.7427,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q4.title",
+      "Title": "list: no filter, sort title asc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2776,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2776
+      },
+      "Dop": 10,
+      "GrantedMemoryKb": 79440,
+      "UsedMemoryKb": 24296,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Parallelism (Gather Streams) \u2013 20 rows\n    Sort \u2013 3,402 rows\n      Clustered Index Scan [PK_Requests] \u2013 100,000 rows",
+      "CpuMs": 188.5,
+      "ElapsedMs": 98.5,
+      "ClientMs": 99.9084,
+      "ClientMaxMs": 163.9741,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q5.created",
+      "Title": "deep page 1000 x 100, sort createdAt desc",
+      "Rows": 100,
+      "LogicalReads": 306484,
+      "ReadsPerTable": {
+        "Requests": 306484
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 100 rows\n  Nested Loops (Inner Join) \u2013 100,000 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 100,000 rows\n    Key Lookup [PK_Requests] \u2013 100,000 rows, 100,000 executions",
+      "CpuMs": 140,
+      "ElapsedMs": 147.5,
+      "ClientMs": 148.73315,
+      "ClientMaxMs": 168.4107,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q5.title",
+      "Title": "deep page 1000 x 100, sort title asc",
+      "Rows": 100,
+      "LogicalReads": 2776,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Requests": 2776
+      },
+      "Dop": 10,
+      "GrantedMemoryKb": 79440,
+      "UsedMemoryKb": 24272,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 100 rows\n  Parallelism (Gather Streams) \u2013 100,000 rows\n    Sort \u2013 100,000 rows\n      Clustered Index Scan [PK_Requests] \u2013 100,000 rows",
+      "CpuMs": 311,
+      "ElapsedMs": 168.5,
+      "ClientMs": 169.41865,
+      "ClientMaxMs": 214.2358,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q6.count",
+      "Title": "search=bonus (LIKE \u0027%x%\u0027) \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 2643,
+      "ReadsPerTable": {
+        "Requests": 2643
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Clustered Index Scan [PK_Requests] \u2013 3,291 rows",
+      "CpuMs": 398,
+      "ElapsedMs": 428,
+      "ClientMs": 429.2021,
+      "ClientMaxMs": 5520.9481,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q6.page",
+      "Title": "search=bonus, sort createdAt desc, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 1638,
+      "ReadsPerTable": {
+        "Requests": 1638
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 531 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 531 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 3,
+      "ClientMs": 3.4080500000000002,
+      "ClientMaxMs": 4.1503,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7a.count",
+      "Title": "assignedTo=adi.ezra \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 15,
+      "ReadsPerTable": {
+        "Requests": 15
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_Requests_AssignedTo_Status"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Index Seek [IX_Requests_AssignedTo_Status] \u2013 3,043 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.62035,
+      "ClientMaxMs": 1.5126,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7a.page",
+      "Title": "assignedTo=adi.ezra, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 2408,
+      "ReadsPerTable": {
+        "Requests": 2408
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 782 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 782 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 1,
+      "ClientMs": 1.6280999999999999,
+      "ClientMaxMs": 1.8454,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7b.count",
+      "Title": "organization=Hermon (prefix) \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 49,
+      "ReadsPerTable": {
+        "Requests": 49
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_Requests_OrganizationName"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Nested Loops (Inner Join) \u2013 6,109 rows\n      Compute Scalar\n        Constant Scan \u2013 1 rows\n      Index Seek [IX_Requests_OrganizationName] \u2013 6,109 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 1.5,
+      "ClientMs": 2.2688499999999996,
+      "ClientMaxMs": 5.5203,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7b.page",
+      "Title": "organization=Hermon, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 580,
+      "ReadsPerTable": {
+        "Requests": 580
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Scan [IX_Requests_CreatedAt] \u2013 186 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 186 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.773,
+      "ClientMaxMs": 1.9729,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7c.count",
+      "Title": "createdFrom/To = January 2026 \u2013 COUNT",
+      "Rows": 1,
+      "LogicalReads": 13,
+      "ReadsPerTable": {
+        "Requests": 13
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 1 rows\n    Index Seek [IX_Requests_CreatedAt] \u2013 4,242 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.66055,
+      "ClientMaxMs": 1.6515,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q7c.page",
+      "Title": "January 2026, page 1 x 20",
+      "Rows": 20,
+      "LogicalReads": 70,
+      "ReadsPerTable": {
+        "Requests": 70
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "Requests.IX_Requests_CreatedAt",
+        "Requests.PK_Requests"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 20 rows\n  Nested Loops (Inner Join) \u2013 20 rows\n    Index Seek [IX_Requests_CreatedAt] \u2013 20 rows\n    Key Lookup [PK_Requests] \u2013 20 rows, 20 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.3034,
+      "ClientMaxMs": 0.3982,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q8.status",
+      "Title": "summary: count by status",
+      "Rows": 4,
+      "LogicalReads": 250,
+      "ReadsPerTable": {
+        "Requests": 250
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_x_SPC"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Stream Aggregate (Aggregate) \u2013 4 rows\n    Index Scan [IX_x_SPC] \u2013 100,000 rows",
+      "CpuMs": 15.5,
+      "ElapsedMs": 13,
+      "ClientMs": 13.8143,
+      "ClientMaxMs": 17.0123,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q8.priority",
+      "Title": "summary: count by priority",
+      "Rows": 3,
+      "LogicalReads": 250,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Workfile": 0,
+        "Requests": 250
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 1040,
+      "UsedMemoryKb": 248,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_x_SPC"
+      ],
+      "Warnings": [],
+      "PlanTree": "Compute Scalar\n  Hash Match (Aggregate) \u2013 3 rows\n    Index Scan [IX_x_SPC] \u2013 100,000 rows",
+      "CpuMs": 16,
+      "ElapsedMs": 19.5,
+      "ClientMs": 20.919600000000003,
+      "ClientMaxMs": 23.0545,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q8.orgs",
+      "Title": "summary: top 10 organizations by open requests",
+      "Rows": 10,
+      "LogicalReads": 842,
+      "ReadsPerTable": {
+        "Worktable": 0,
+        "Workfile": 0,
+        "Requests": 842
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 11952,
+      "UsedMemoryKb": 2640,
+      "HasSort": true,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.IX_x_SPC",
+        "Requests.IX_Requests_OrganizationName"
+      ],
+      "Warnings": [],
+      "PlanTree": "Top \u2013 10 rows\n  Sort \u2013 10 rows\n    Compute Scalar\n      Hash Match (Aggregate) \u2013 400 rows\n        Hash Match (Inner Join) \u2013 37,128 rows\n          Index Seek [IX_x_SPC] \u2013 37,128 rows\n          Index Scan [IX_Requests_OrganizationName] \u2013 100,000 rows",
+      "CpuMs": 47,
+      "ElapsedMs": 50.5,
+      "ClientMs": 51.63315,
+      "ClientMaxMs": 71.6165,
+      "LogBytes": null
+    },
+    {
+      "Id": "Q9.history",
+      "Title": "history of request 12345",
+      "Rows": 2,
+      "LogicalReads": 9,
+      "ReadsPerTable": {
+        "RequestStatusHistory": 9
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": true,
+      "Indexes": [
+        "RequestStatusHistory.IX_RequestStatusHistory_RequestId_ChangedAt",
+        "RequestStatusHistory.PK_RequestStatusHistory"
+      ],
+      "Warnings": [],
+      "PlanTree": "Nested Loops (Inner Join) \u2013 2 rows\n  Index Seek [IX_RequestStatusHistory_RequestId_ChangedAt] \u2013 2 rows\n  Key Lookup [PK_RequestStatusHistory] \u2013 2 rows, 2 executions",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 0.1915,
+      "ClientMaxMs": 0.3732,
+      "LogBytes": null
+    },
+    {
+      "Id": "W1",
+      "Title": "status change New -\u003E InProgress (UPDATE \u002B history INSERT, rolled back)",
+      "Rows": 1,
+      "LogicalReads": 22,
+      "ReadsPerTable": {
+        "Requests": 16,
+        "RequestStatusHistory": 6
+      },
+      "Dop": 1,
+      "GrantedMemoryKb": 0,
+      "UsedMemoryKb": 0,
+      "HasSort": false,
+      "HasKeyLookup": false,
+      "Indexes": [
+        "Requests.PK_Requests",
+        "Requests.IX_Requests_AssignedTo_Status",
+        "Requests.IX_x_SPC",
+        "RequestStatusHistory.PK_RequestStatusHistory",
+        "RequestStatusHistory.IX_RequestStatusHistory_RequestId_ChangedAt"
+      ],
+      "Warnings": [],
+      "PlanTree": "Assert \u2013 1 rows\n  Clustered Index Update (Update) [PK_Requests], [IX_Requests_AssignedTo_Status], [IX_x_SPC] \u2013 1 rows\n    Compute Scalar \u2013 1 rows\n      Compute Scalar\n        Top \u2013 1 rows\n          Compute Scalar \u2013 1 rows\n            Clustered Index Seek [PK_Requests] \u2013 1 rows\nAssert \u2013 1 rows\n  Nested Loops (Left Semi Join) \u2013 1 rows\n    Assert \u2013 1 rows\n      Clustered Index Insert (Insert) [PK_RequestStatusHistory], [IX_RequestStatusHistory_RequestId_ChangedAt] \u2013 1 rows\n        Compute Scalar\n          Compute Scalar \u2013 1 rows\n            Constant Scan \u2013 1 rows\n    Clustered Index Seek [PK_Requests] \u2013 1 rows",
+      "CpuMs": 0,
+      "ElapsedMs": 0,
+      "ClientMs": 1.3702999999999999,
+      "ClientMaxMs": 2.207,
+      "LogBytes": 1176
+    }
+  ]
+}
