@@ -40,11 +40,13 @@ Closes naomy55978/requests-management-docs#12
 | M5 | Cache | Cache מתועד | 2 ש' | M3 |
 | M6 | בדיקות | בדיקות ירוקות ב־CI | 5 ש' | M2–M5 |
 | M7 | Angular | UI מלא | 12 ש' | M2–M5 |
-| M8 | ביצועים | PERFORMANCE.md | 3 ש' | M1–M2 |
+| M8 | ביצועים | PERFORMANCE.md + כותרת Server-Timing | 5 ש' | M1–M2 |
 | M9 | תיעוד והגשה | הגשה מלאה | 4 ש' | הכל |
-| | **סה"כ** | | **47.75 ש'** | |
+| | **סה"כ** | | **49.75 ש'** | |
 
-M0 כולל 0.75 ש' שלא תוכננו מראש עבור פיצול הפתרון לשלושה Repos (#50); שאר התכנון ללא שינוי.
+M0 כולל 0.75 ש' שלא תוכננו מראש עבור פיצול הפתרון לשלושה Repos (#50).
+
+M8 הורחב מ־3 ל־5 ש' (עודכן 23.10.2026): סקירת כל אינדקס קיים מ־M1 עם ניסוי ביטול ומדידת עלות הכתיבה (W1) – ‏0.25 ש' ל־#42 ו־0.25 ש' ל־#43; כותרת `Server-Timing` (D‑23, הוחלטה אחרי התכנון המקורי) – Issue חדש #51, ‏1.5 ש'. שאר התכנון ללא שינוי.
 
 ```mermaid
 graph LR
@@ -143,13 +145,14 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | [#40](https://github.com/naomy55978/requests-management-docs/issues/40) | חלון היסטוריית שינויים | 0.75 | [#19](https://github.com/naomy55978/requests-management-docs/issues/19), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §5 (צפייה בהיסטוריית שינויים), §3 |
 | [#41](https://github.com/naomy55978/requests-management-docs/issues/41) | סקירת קוד ה-UI: הפרדת Components ו-Services | 0.25 | [#35](https://github.com/naomy55978/requests-management-docs/issues/35), [#36](https://github.com/naomy55978/requests-management-docs/issues/36), [#37](https://github.com/naomy55978/requests-management-docs/issues/37), [#38](https://github.com/naomy55978/requests-management-docs/issues/38), [#39](https://github.com/naomy55978/requests-management-docs/issues/39), [#40](https://github.com/naomy55978/requests-management-docs/issues/40) | §5 (הפרדת אחריות), §10 |
 
-### M8 – ביצועים (3 ש')
+### M8 – ביצועים (5 ש'; במקור 3 ש')
 
 | Issue | משימה | מאמץ | תלוי ב־ | סעיף במבדק |
 |---|---|---|---|---|
-| [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | מדידת בסיס: STATISTICS IO/TIME ו-Execution Plan לשתי פעולות | 1 | [#9](https://github.com/naomy55978/requests-management-docs/issues/9), [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §6 ביצועים (Execution Plan או מדד מקביל) |
-| [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | כוונון אינדקסים ומדידה חוזרת (לפני/אחרי) | 1 | [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | §6 (פירוט האינדקסים והסיבה) |
+| [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | מדידת בסיס: STATISTICS IO/TIME ו-Execution Plan לשתי פעולות | 1.25 | [#9](https://github.com/naomy55978/requests-management-docs/issues/9), [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §6 ביצועים (Execution Plan או מדד מקביל) |
+| [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | כוונון אינדקסים ומדידה חוזרת (לפני/אחרי) | 1.25 | [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | §6 (פירוט האינדקסים והסיבה) |
 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | ניתוח Bottleneck וכתיבת docs/PERFORMANCE.md | 1 | [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | §6 (Bottleneck והצעת שיפור), §1 (תיעוד מניעת טעינה מלאה), §11 |
+| [#51](https://github.com/naomy55978/requests-management-docs/issues/51) | כותרת `Server-Timing` בתשובות ה־API (חלק ה־Backend של D‑23) | 1.5 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | §6 (מדידה בזמן ריצה), §11 |
 
 ### M9 – תיעוד והגשה (4 ש')
 
@@ -171,12 +174,12 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | §3 היסטוריית שינויים | `req-03-audit` | [#17](https://github.com/naomy55978/requests-management-docs/issues/17), [#18](https://github.com/naomy55978/requests-management-docs/issues/18), [#19](https://github.com/naomy55978/requests-management-docs/issues/19), [#40](https://github.com/naomy55978/requests-management-docs/issues/40) |
 | §4 פעולת Bulk | `req-04-bulk` | [#20](https://github.com/naomy55978/requests-management-docs/issues/20), [#21](https://github.com/naomy55978/requests-management-docs/issues/21), [#22](https://github.com/naomy55978/requests-management-docs/issues/22), [#30](https://github.com/naomy55978/requests-management-docs/issues/30), [#39](https://github.com/naomy55978/requests-management-docs/issues/39) |
 | §5 Angular | `req-05-angular` | [#32](https://github.com/naomy55978/requests-management-docs/issues/32), [#33](https://github.com/naomy55978/requests-management-docs/issues/33), [#34](https://github.com/naomy55978/requests-management-docs/issues/34), [#35](https://github.com/naomy55978/requests-management-docs/issues/35), [#36](https://github.com/naomy55978/requests-management-docs/issues/36), [#37](https://github.com/naomy55978/requests-management-docs/issues/37), [#38](https://github.com/naomy55978/requests-management-docs/issues/38), [#39](https://github.com/naomy55978/requests-management-docs/issues/39), [#40](https://github.com/naomy55978/requests-management-docs/issues/40), [#41](https://github.com/naomy55978/requests-management-docs/issues/41) |
-| §6 ביצועים | `req-06-performance` | [#7](https://github.com/naomy55978/requests-management-docs/issues/7), [#9](https://github.com/naomy55978/requests-management-docs/issues/9), [#11](https://github.com/naomy55978/requests-management-docs/issues/11), [#42](https://github.com/naomy55978/requests-management-docs/issues/42), [#43](https://github.com/naomy55978/requests-management-docs/issues/43), [#44](https://github.com/naomy55978/requests-management-docs/issues/44) |
+| §6 ביצועים | `req-06-performance` | [#7](https://github.com/naomy55978/requests-management-docs/issues/7), [#9](https://github.com/naomy55978/requests-management-docs/issues/9), [#11](https://github.com/naomy55978/requests-management-docs/issues/11), [#42](https://github.com/naomy55978/requests-management-docs/issues/42), [#43](https://github.com/naomy55978/requests-management-docs/issues/43), [#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#51](https://github.com/naomy55978/requests-management-docs/issues/51) |
 | §7 Cache | `req-07-cache` | [#23](https://github.com/naomy55978/requests-management-docs/issues/23), [#24](https://github.com/naomy55978/requests-management-docs/issues/24), [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#30](https://github.com/naomy55978/requests-management-docs/issues/30) |
 | §8 בדיקות אוטומטיות | `req-08-tests` | [#26](https://github.com/naomy55978/requests-management-docs/issues/26), [#27](https://github.com/naomy55978/requests-management-docs/issues/27), [#28](https://github.com/naomy55978/requests-management-docs/issues/28), [#29](https://github.com/naomy55978/requests-management-docs/issues/29), [#30](https://github.com/naomy55978/requests-management-docs/issues/30), [#31](https://github.com/naomy55978/requests-management-docs/issues/31) |
 | §9 תכנון עבודה וחלוקה למשימות | `req-09-planning` | [#1](https://github.com/naomy55978/requests-management-docs/issues/1), [#4](https://github.com/naomy55978/requests-management-docs/issues/4), [#5](https://github.com/naomy55978/requests-management-docs/issues/5), [#50](https://github.com/naomy55978/requests-management-docs/issues/50) |
 | §10 איכות הקוד | `req-10-quality` | [#2](https://github.com/naomy55978/requests-management-docs/issues/2), [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#10](https://github.com/naomy55978/requests-management-docs/issues/10), [#12](https://github.com/naomy55978/requests-management-docs/issues/12), [#14](https://github.com/naomy55978/requests-management-docs/issues/14), [#41](https://github.com/naomy55978/requests-management-docs/issues/41), [#50](https://github.com/naomy55978/requests-management-docs/issues/50) |
-| §11 תיעוד הפתרון | `req-11-docs` | [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#5](https://github.com/naomy55978/requests-management-docs/issues/5), [#22](https://github.com/naomy55978/requests-management-docs/issues/22), [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#45](https://github.com/naomy55978/requests-management-docs/issues/45), [#46](https://github.com/naomy55978/requests-management-docs/issues/46), [#47](https://github.com/naomy55978/requests-management-docs/issues/47) |
+| §11 תיעוד הפתרון | `req-11-docs` | [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#5](https://github.com/naomy55978/requests-management-docs/issues/5), [#22](https://github.com/naomy55978/requests-management-docs/issues/22), [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#45](https://github.com/naomy55978/requests-management-docs/issues/45), [#46](https://github.com/naomy55978/requests-management-docs/issues/46), [#47](https://github.com/naomy55978/requests-management-docs/issues/47), [#51](https://github.com/naomy55978/requests-management-docs/issues/51) |
 | אופן ההגשה | `req-submission` | [#48](https://github.com/naomy55978/requests-management-docs/issues/48), [#49](https://github.com/naomy55978/requests-management-docs/issues/49) |
 
 ## מיפוי בדיקות לדרישות (M6 (בדיקות))
