@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- The test project tests internal types of this layer (RequestService, SummaryCache) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="RequestsManagement.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\RequestsManagement.DAL\RequestsManagement.DAL.csproj" />
     <ProjectReference Include="..\RequestsManagement.DTO\RequestsManagement.DTO.csproj" />
