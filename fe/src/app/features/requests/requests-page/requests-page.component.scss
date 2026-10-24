@@ -1,0 +1,17 @@
+.page-title {
+  margin: 0 0 16px;
+  font: var(--mat-sys-headline-small);
+}
+
+.results {
+  overflow: hidden;
+}
+
+.results-progress {
+  height: 4px;
+  visibility: hidden;
+
+  &.active {
+    visibility: visible;
+  }
+}

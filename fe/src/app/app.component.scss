@@ -25,9 +25,11 @@
   font: var(--mat-sys-body-medium);
 }
 
-// Text buttons are primary-colored by default, which is invisible on the primary toolbar
+// Text buttons are primary-colored by default, which is invisible on the primary toolbar.
+// The color is set directly: the Material token alone loses against the theme's own rule.
 .app-toolbar button {
   --mat-button-text-label-text-color: var(--mat-sys-on-primary);
+  color: var(--mat-sys-on-primary);
 }
 
 .app-content {

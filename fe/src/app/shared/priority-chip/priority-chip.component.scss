@@ -1,0 +1,22 @@
+.chip {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+
+  &[data-priority='High'] {
+    background: var(--app-priority-high-bg);
+    color: var(--app-priority-high-fg);
+  }
+
+  &[data-priority='Medium'] {
+    background: var(--app-priority-medium-bg);
+    color: var(--app-priority-medium-fg);
+  }
+
+  &[data-priority='Low'] {
+    background: var(--app-priority-low-bg);
+    color: var(--app-priority-low-fg);
+  }
+}

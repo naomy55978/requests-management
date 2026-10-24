@@ -1,0 +1,43 @@
+// Narrow windows scroll the table sideways instead of squeezing the columns
+.table-scroll {
+  overflow-x: auto;
+  transition: opacity 150ms;
+
+  // While the next page loads the rows stay on screen, only a little dimmer
+  &.busy {
+    opacity: 0.55;
+  }
+}
+
+.requests-table {
+  min-width: 960px;
+  width: 100%;
+  background: transparent;
+}
+
+.cell-id {
+  width: 72px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Free text can be Hebrew or English. dir="auto" gives each cell the direction of its own text, so a long English
+// title is cut at its END with the ellipsis (in an RTL cell it would be cut at its beginning).
+.cell-text {
+  display: block;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-title {
+  font-weight: 500;
+}
+
+.cell-date {
+  white-space: nowrap;
+}
+
+.unassigned {
+  color: var(--mat-sys-on-surface-variant);
+}

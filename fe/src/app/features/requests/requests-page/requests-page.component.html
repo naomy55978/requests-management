@@ -1,0 +1,24 @@
+<h1 class="page-title">פניות</h1>
+
+<mat-card class="results" appearance="outlined">
+  <!-- Always takes its space, so the table does not jump when loading starts -->
+  <mat-progress-bar class="results-progress" mode="indeterminate" [class.active]="store.loading()" />
+
+  <app-requests-table
+    [items]="store.items()"
+    [sortBy]="store.query().sortBy"
+    [sortDir]="store.query().sortDir"
+    [busy]="store.loading()"
+    (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
+  />
+
+  <mat-paginator
+    [length]="store.totalCount()"
+    [pageIndex]="store.query().page - 1"
+    [pageSize]="store.query().pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    showFirstLastButtons
+    aria-label="דפדוף בין עמודי הפניות"
+    (page)="store.changePage($event.pageIndex + 1, $event.pageSize)"
+  />
+</mat-card>
