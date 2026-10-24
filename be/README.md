@@ -152,6 +152,8 @@ dotnet test --filter "FullyQualifiedName~Concurrency"    # רק בדיקות ה�
 - `API_URL` – ברירת מחדל `http://localhost:5084` (ל־`ConcurrencyProof.cs`: הארגומנט `--base-url`)
 - `SQL_SERVER` – ברירת מחדל `(localdb)\MSSQLLocalDB`; אם ה־API מוגדר למופע אחר, לציין אותו, למשל `SQL_SERVER=.`
 
+**אין להשתמש ב־API בזמן שסקריפט אימות רץ** (לא ב־UI, לא בסקריפט אחר): הסקריפטים משווים מול SQL ישיר, ושינוי סטטוס של גורם אחר באמצע ריצה מייצר הבדל מדומה. `verify-summary-cache.js` מזהה שינוי סטטוס של משתמש אחר (שאינו `dana.cohen`) ונעצר עם קוד יציאה 2.
+
 הסקריפטים שמשנים נתונים מתעדים את השינויים בהיסטוריה (תחת `dana.cohen` ו־`yossi.friedman`). כדי לחזור לנתונים המקוריים:
 
 ```

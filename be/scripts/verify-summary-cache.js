@@ -6,6 +6,8 @@
 // CHANGES DATA: it changes the status of a few dozen requests (as dana.cohen) and, for a moment, the priority of
 // two requests directly in the database (restored at the end). It takes about 1.5 minutes: the expiry check
 // really waits for 60 seconds.
+// Nobody else may change statuses while it runs (no UI, no other script): it aborts with exit code 2 if it sees a status
+// change by another user. Its own changes are made as dana.cohen.
 // Run "dotnet run --project src/RequestsManagement.API -- seed --reset" afterwards to restore the original data.
 //
 //   node scripts/verify-summary-cache.js
@@ -22,7 +24,7 @@ const SKIP_EXPIRY = process.env.SKIP_EXPIRY === '1';
 const TTL_MS = 60000;
 
 const sql = q => execFileSync('sqlcmd',
-  ['-S', SQL_SERVER, '-E', '-d', 'RequestsManagement', '-h', '-1', '-W', '-b', '-t', '600', '-Q', 'SET NOCOUNT ON; ' + q],
+  ['-S', SQL_SERVER, '-E', '-d', 'RequestsManagement', '-h', '-1', '-W', '-b', '-f', '65001', '-t', '600', '-Q', 'SET NOCOUNT ON; ' + q],
   { encoding: 'utf8', timeout: 600000 }).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 
 let token = '';
@@ -81,24 +83,54 @@ const changeThroughApi = async () => {
 };
 const count = (s, key, value) => s[key === 'status' ? 'byStatus' : 'byPriority'].find(x => x[key] === value)?.count ?? 0;
 
-// The summary as the database itself would calculate it (status and priority counts)
+// The summary as the database itself would calculate it (counts and top organizations)
 const truth = () => {
   const lines = sql(`
     SELECT 'S', Status, COUNT(*) FROM Requests GROUP BY Status;
-    SELECT 'P', Priority, COUNT(*) FROM Requests GROUP BY Priority;`);
-  const byStatus = {}, byPriority = {};
+    SELECT 'P', Priority, COUNT(*) FROM Requests GROUP BY Priority;
+    SELECT TOP 10 'O|' + CAST(COUNT(*) AS varchar(10)) + '|' + OrganizationName FROM Requests
+      WHERE Status <> 4 GROUP BY OrganizationName ORDER BY COUNT(*) DESC, OrganizationName;`);
+  const byStatus = {}, byPriority = {}, topOrganizations = [];
   for (const line of lines) {
+    if (line.startsWith('O|')) {
+      // organization names contain spaces and may contain "|": everything after the second "|" is the name
+      const [, n, ...name] = line.split('|');
+      topOrganizations.push(`${n}:${name.join('|')}`);
+      continue;
+    }
     const [kind, key, n] = line.split(/\s+/);
     (kind === 'S' ? byStatus : byPriority)[key] = Number(n);
   }
-  return { byStatus, byPriority };
+  return { byStatus, byPriority, topOrganizations };
 };
 const names = { status: { 1: 'New', 2: 'InProgress', 3: 'Waiting', 4: 'Completed' }, priority: { 1: 'Low', 2: 'Medium', 3: 'High' } };
-const matchesDatabase = s => {
-  const t = truth();
-  return Object.entries(t.byStatus).every(([k, n]) => count(s, 'status', names.status[k]) === n) &&
-    Object.entries(t.byPriority).every(([k, n]) => count(s, 'priority', names.priority[k]) === n) &&
-    s.total === Object.values(t.byStatus).reduce((a, b) => a + b, 0);
+// What differs between a summary and the database (empty = they match). The top organizations are compared in order:
+// the API orders by open count (descending) and then by name, the same as the query above (docs/API.md)
+const mismatches = s => {
+  const t = truth(), diffs = [];
+  for (const [k, n] of Object.entries(t.byStatus)) {
+    const api = count(s, 'status', names.status[k]);
+    if (api !== n) diffs.push(`status ${names.status[k]}: api ${api}, database ${n}`);
+  }
+  for (const [k, n] of Object.entries(t.byPriority)) {
+    const api = count(s, 'priority', names.priority[k]);
+    if (api !== n) diffs.push(`priority ${names.priority[k]}: api ${api}, database ${n}`);
+  }
+  const total = Object.values(t.byStatus).reduce((a, b) => a + b, 0);
+  if (s.total !== total) diffs.push(`total: api ${s.total}, database ${total}`);
+  const apiTop = (s.topOrganizations ?? []).map(o => `${o.openRequests}:${o.organizationName}`);
+  if (apiTop.join(' | ') !== t.topOrganizations.join(' | ')) diffs.push(`top organizations differ: api [${apiTop.join(', ')}], database [${t.topOrganizations.join(', ')}]`);
+  return diffs;
+};
+const matchesDatabase = s => mismatches(s).length === 0;
+
+// This script writes through the API as dana.cohen only. A status change by anyone else while it runs (for example in
+// the UI) changes the database behind its back and makes the comparisons meaningless, so that aborts the run
+let firstHistoryId = 0;
+const foreignChanges = () => Number(sql(`SELECT COUNT(*) FROM RequestStatusHistory WHERE Id > ${firstHistoryId} AND ChangedBy <> 'dana.cohen'`)[0]);
+const assertNoForeignChanges = () => {
+  const n = foreignChanges();
+  if (n > 0) throw new Error(`${n} status change(s) were made by another client during the run (the UI, another script). The results are not valid: close other clients and run again.`);
 };
 
 // Direct database changes (they bypass the API, so they never invalidate the cache); all restored in `finally`
@@ -116,6 +148,7 @@ const restoreDatabase = () => { while (reverts.length) reverts.pop()(); };
   console.log(`API ${BASE}, SQL Server ${SQL_SERVER}`);
   token = await login('dana.cohen');
   await summary(); // warm-up (JIT, connections); its result is irrelevant
+  firstHistoryId = Number(sql('SELECT ISNULL(MAX(Id), 0) FROM RequestStatusHistory')[0]);
 
   try {
     section('1. A cache hit is faster than a miss');
@@ -205,7 +238,7 @@ const restoreDatabase = () => { while (reverts.length) reverts.pop()(); };
     // The cache is emptied first, so all readers MISS and load from the database (~100 ms each). A status change
     // is committed while they are loading. A reader that read the old data must not store it after the
     // invalidation (generation counter); afterwards the summary must equal the database.
-    let stale6 = 0;
+    let stale6 = 0, patchFailed6 = 0;
     for (let i = 0; i < 20; i++) {
       await changeThroughApi();                 // empties the cache
       const [r] = await pick('New');
@@ -213,8 +246,20 @@ const restoreDatabase = () => { while (reverts.length) reverts.pop()(); };
       await sleep(5 + Math.floor(Math.random() * 60)); // lands the change somewhere inside the readers' loading
       const res = await patch(r.id, 'InProgress', r.version);
       await Promise.all(readers);
-      if (res.status !== 200 || !matchesDatabase(await summary())) stale6++;
+      if (res.status !== 200) {
+        patchFailed6++;
+        console.log(`      round ${i + 1}: the PATCH returned ${res.status}`);
+        continue;
+      }
+      const diffs = mismatches(await summary());
+      if (diffs.length) {
+        assertNoForeignChanges();               // a foreign writer explains a difference: abort instead of failing
+        stale6++;
+        console.log(`      round ${i + 1}: stale summary – ${diffs.join('; ')}`);
+      }
     }
+    assertNoForeignChanges();
+    check('20 rounds of 8 concurrent cache misses + 1 PATCH in the middle: every PATCH succeeded', patchFailed6 === 0, `${patchFailed6} failed`);
     check('20 rounds of 8 concurrent cache misses + 1 PATCH in the middle: the next read always equals the database', stale6 === 0, `${stale6} stale`);
   } finally {
     restoreDatabase();
