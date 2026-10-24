@@ -1,5 +1,7 @@
 <h1 class="page-title">פניות</h1>
 
+<app-requests-filters (filtersChange)="store.setFilters($event)" />
+
 <mat-card class="results" appearance="outlined">
   <!-- Always takes its space, so the table does not jump when loading starts -->
   <mat-progress-bar class="results-progress" mode="indeterminate" [class.active]="store.loading()" />

@@ -9,6 +9,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { HebrewPaginatorIntl } from './core/i18n/hebrew-paginator-intl';
+import { provideAppIcons } from './core/icons/app-icons';
 
 // Hebrew formats for the date and number pipes
 registerLocaleData(localeHe);
@@ -23,5 +24,6 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_LOCALE, useValue: 'he-IL' },
     provideNativeDateAdapter(),
     { provide: MatPaginatorIntl, useClass: HebrewPaginatorIntl },
+    provideAppIcons(),
   ],
 };

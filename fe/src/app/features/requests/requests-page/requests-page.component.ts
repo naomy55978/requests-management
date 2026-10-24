@@ -3,13 +3,14 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
+import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
 
 /** The requests screen: puts the parts together and connects them to the store. */
 @Component({
   selector: 'app-requests-page',
-  imports: [MatCardModule, MatPaginatorModule, MatProgressBarModule, RequestsTableComponent],
+  imports: [MatCardModule, MatPaginatorModule, MatProgressBarModule, RequestsFiltersComponent, RequestsTableComponent],
   // A new store for every visit: rows and filters of a previous session never show up for the next user
   providers: [RequestsListStore],
   templateUrl: './requests-page.component.html',
