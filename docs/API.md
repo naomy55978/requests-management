@@ -92,3 +92,12 @@
 
 ### אימות
 `node scripts/verify-bulk-status.js` ב־`requests-management-be` (ראו README שם): ולידציה, כל התוצאות בבקשה אחת והשפעתן על ה־DB וההיסטוריה, `ChangedBy` מהטוקן, 100 פריטים, וקריאות Bulk **במקביל** לבקשות PATCH בודדות על אותן פניות – לכל פנייה מנצח אחד בדיוק, ללא 5xx.
+
+## סיכום (`GET /api/requests/summary`)
+
+התשובה: `total`, ‏`byStatus` ו־`byPriority` (לכל ערך אפשרי – גם 0), ו־`topOrganizations`. התוצאה נשמרת ב־Cache של 60 שנ' ומתבטלת בכל שינוי סטטוס שנשמר (D‑11, ‏D‑20).
+
+**סדר ה־`topOrganizations`:** עד 10 ארגונים, לפי מספר הפניות הפתוחות (כל סטטוס מלבד `Completed`) **בסדר יורד**, ובשוויון – **לפי שם הארגון בסדר עולה** (לפי ה־Collation של מסד הנתונים). הסדר דטרמיניסטי, כך שאותם נתונים תמיד מחזירים אותה רשימה באותו סדר.
+
+### אימות
+`node scripts/verify-summary-cache.js` ב־`requests-management-be` (ראו README שם) משווה את התשובה, כולל `topOrganizations` **לפי הסדר**, לחישוב ישיר ב־SQL.
