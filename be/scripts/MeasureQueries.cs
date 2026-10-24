@@ -232,10 +232,10 @@ IEnumerable<Statement> Statements()
         ? @"WHERE UPPER([r].[Title]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ESCAPE N'\' OR UPPER([r].[OrganizationName]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ESCAPE N'\'"
         : @"WHERE [r].[Title] LIKE @pattern ESCAPE N'\' OR [r].[OrganizationName] LIKE @pattern0 ESCAPE N'\'";
     SqlParameter[] Search() => finalShape
-        ? [NVarChar("@pattern", 4000, "%bonus%")]
-        : [NVarChar("@pattern", 200, "%bonus%"), NVarChar("@pattern0", 150, "%bonus%")];
-    yield return new("Q6.count", "search=bonus (LIKE '%x%') – COUNT", $"SELECT COUNT(*)\nFROM [Requests] AS [r]\n{searchWhere}", Search());
-    yield return new("Q6.page", "search=bonus, sort createdAt desc, page 1 x 20",
+        ? [NVarChar("@pattern", 4000, "%בונוס%")]
+        : [NVarChar("@pattern", 200, "%בונוס%"), NVarChar("@pattern0", 150, "%בונוס%")];
+    yield return new("Q6.count", "search=בונוס (LIKE '%x%') – COUNT", $"SELECT COUNT(*)\nFROM [Requests] AS [r]\n{searchWhere}", Search());
+    yield return new("Q6.page", "search=בונוס, sort createdAt desc, page 1 x 20",
         Paged(searchWhere, "[r].[CreatedAt] DESC, [r].[Id] DESC"), [.. Search(), .. Page(0, 20)]);
 
     // Q7 – the other single filters
@@ -302,7 +302,7 @@ IEnumerable<Statement> AlternativeStatements()
 
     // Search: one query with COUNT(*) OVER() instead of COUNT + page
     const string SearchWhere = @"WHERE [r].[Title] LIKE @pattern ESCAPE N'\' OR [r].[OrganizationName] LIKE @pattern0 ESCAPE N'\'";
-    SqlParameter[] Search() => [NVarChar("@pattern", 200, "%bonus%"), NVarChar("@pattern0", 150, "%bonus%")];
+    SqlParameter[] Search() => [NVarChar("@pattern", 200, "%בונוס%"), NVarChar("@pattern0", 150, "%בונוס%")];
     yield return new("A4.search", "search: COUNT(*) OVER() + page in one query", $"""
         SELECT [r].[Id], [r].[Title], [r].[OrganizationName], [r].[Status], [r].[Priority], [r].[AssignedTo], [r].[CreatedAt], [r].[UpdatedAt], [r].[RowVersion], COUNT(*) OVER() AS [TotalCount]
         FROM [Requests] AS [r]

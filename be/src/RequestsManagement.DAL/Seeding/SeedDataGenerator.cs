@@ -128,9 +128,13 @@ internal static class SeedDataGenerator
         var seen = new HashSet<string>(StringComparer.Ordinal);
         while (names.Count < OrganizationCount)
         {
-            var name = $"{SeedWordLists.OrganizationPrefixes[random.Next(SeedWordLists.OrganizationPrefixes.Length)]} " +
-                       $"{SeedWordLists.OrganizationSectors[random.Next(SeedWordLists.OrganizationSectors.Length)]} " +
-                       $"{SeedWordLists.OrganizationSuffixes[random.Next(SeedWordLists.OrganizationSuffixes.Length)]}";
+            // The same three random draws as always; only the language of the sector and suffix follows the prefix
+            var prefix = SeedWordLists.OrganizationPrefixes[random.Next(SeedWordLists.OrganizationPrefixes.Length)];
+            var sectorIndex = random.Next(SeedWordLists.OrganizationSectors.Length);
+            var suffixIndex = random.Next(SeedWordLists.OrganizationSuffixes.Length);
+            var name = IsHebrew(prefix)
+                ? $"{prefix} {SeedWordLists.OrganizationSectorsHebrew[sectorIndex]} {SeedWordLists.OrganizationSuffixesHebrew[suffixIndex]}"
+                : $"{prefix} {SeedWordLists.OrganizationSectors[sectorIndex]} {SeedWordLists.OrganizationSuffixes[suffixIndex]}";
             if (seen.Add(name))
             {
                 names.Add(name);
@@ -138,6 +142,9 @@ internal static class SeedDataGenerator
         }
         return names;
     }
+
+    /// <summary>True when the text starts with a Hebrew letter (the Hebrew block, U+0590–U+05FF).</summary>
+    private static bool IsHebrew(string text) => text.Length > 0 && text[0] is >= '֐' and <= '׿';
 
     /// <summary>
     /// Older requests are more likely to be completed, recent ones more likely to be new or in progress.

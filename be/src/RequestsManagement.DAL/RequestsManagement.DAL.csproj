@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- The test project checks the internal seed word lists and generator (lengths, determinism) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="RequestsManagement.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\RequestsManagement.DTO\RequestsManagement.DTO.csproj" />
   </ItemGroup>
