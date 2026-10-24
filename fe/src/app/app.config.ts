@@ -10,6 +10,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { HebrewPaginatorIntl } from './core/i18n/hebrew-paginator-intl';
 import { provideAppIcons } from './core/icons/app-icons';
+import { timingInterceptor } from './core/perf/timing.interceptor';
 
 // Hebrew formats for the date and number pipes
 registerLocaleData(localeHe);
@@ -18,7 +19,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // The timing interceptor is last: it measures the call on the network, after the token was added
+    provideHttpClient(withInterceptors([authInterceptor, timingInterceptor])),
     { provide: LOCALE_ID, useValue: 'he' },
     // Date pickers: Hebrew month and day names, week starts on Sunday
     { provide: MAT_DATE_LOCALE, useValue: 'he-IL' },

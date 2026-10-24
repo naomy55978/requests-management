@@ -1,0 +1,62 @@
+<section class="panel" id="performance-panel" aria-labelledby="performance-title">
+  <header class="panel-header">
+    <h2 id="performance-title" class="panel-title">ביצועים – בקשות אחרונות</h2>
+    @if (averageText(); as average) {
+      <span class="panel-note">{{ entries().length }} בקשות · ממוצע {{ average }}</span>
+    }
+    <span class="panel-spacer"></span>
+    <button mat-button type="button" [disabled]="entries().length === 0" (click)="clear()">נקה</button>
+  </header>
+
+  @if (entries().length === 0) {
+    <p class="empty">עדיין לא נרשמו בקשות.</p>
+  } @else {
+    <!-- The chart repeats what the table says, so it is hidden from screen readers -->
+    <div class="chart" aria-hidden="true">
+      @for (bar of bars(); track bar.id) {
+        <span class="bar" [class.failed]="bar.failed" [style.height.%]="bar.totalPercent" [attr.title]="bar.title">
+          <span class="bar-db" [style.height.%]="bar.dbPercent"></span>
+        </span>
+      }
+    </div>
+    <p class="legend" aria-hidden="true">
+      <span class="swatch total"></span> זמן שרת כולל
+      <span class="swatch db"></span> מתוכו מסד נתונים
+      <span class="legend-note">החדש ביותר מימין</span>
+    </p>
+
+    <div class="table-scroll">
+      <table class="entries">
+        <thead>
+          <tr>
+            <th scope="col">שעה</th>
+            <th scope="col">פעולה</th>
+            <th scope="col">קוד</th>
+            <th scope="col">שרת</th>
+            <th scope="col">מסד נתונים</th>
+            <th scope="col">Cache</th>
+            <th scope="col">דפדפן</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr [class.failed]="row.failed">
+              <td class="num">{{ row.at | date: 'HH:mm:ss' }}</td>
+              <td>{{ row.kind }}</td>
+              <td class="num">{{ row.status }}</td>
+              <td class="num">{{ row.server }}</td>
+              <td class="num">
+                {{ row.database }}
+                @if (row.queries !== null) {
+                  <span class="queries">({{ row.queries }})</span>
+                }
+              </td>
+              <td>{{ row.cache }}</td>
+              <td class="num">{{ row.browser }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

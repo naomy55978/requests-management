@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 
 import { RequestsApiService } from '../../../core/api/requests-api.service';
+import { PerformanceLogService } from '../../../core/perf/performance-log.service';
 import { provideAppIcons } from '../../../core/icons/app-icons';
 import { createFakeApi, fakeRequest } from '../requests-list.store.test-helpers';
 import { RequestsPageComponent } from './requests-page.component';
@@ -448,5 +449,41 @@ describe('RequestsPageComponent', () => {
 
     TestBed.inject(MatDialog).closeAll();
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
+
+  describe('time badges', () => {
+    it('show nothing until a load has been measured', () => {
+      expect(element.querySelector('app-timing-badge .badge')).toBeNull();
+    });
+
+    it('show the last list and summary load, quietly, next to the title', async () => {
+      const log = TestBed.inject(PerformanceLogService);
+      log.record({
+        at: new Date(),
+        kind: 'list',
+        method: 'GET',
+        status: 200,
+        clientMs: 20,
+        timing: { totalMs: 42, dbMs: 30, queryCount: 2, cache: null },
+      });
+      log.record({
+        at: new Date(),
+        kind: 'summary',
+        method: 'GET',
+        status: 200,
+        clientMs: 3,
+        timing: { totalMs: 1.2, dbMs: 0, queryCount: 0, cache: 'hit' },
+      });
+      await fixture.whenStable();
+
+      // Label, time and cache are separate elements (the gap between them is CSS), so they are read one by one
+      const badges = Array.from(element.querySelectorAll('.page-header app-timing-badge')).map((badge) =>
+        ['.label', '.value', '.cache'].map((part) => badge.querySelector(part)?.textContent ?? null),
+      );
+      expect(badges).toEqual([
+        ['סיכום', '1.2 ms', 'HIT'],
+        ['רשימה', '42 ms', null],
+      ]);
+    });
   });
 });

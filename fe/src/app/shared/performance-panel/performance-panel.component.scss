@@ -1,0 +1,128 @@
+// A side note, not a feature: flat, small text, light surface.
+.panel {
+  padding: 8px 16px 16px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+  font: var(--mat-sys-body-small);
+}
+
+.panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.panel-title {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+}
+
+.panel-note {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.panel-spacer {
+  flex: 1;
+}
+
+.empty {
+  margin: 8px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  margin-top: 8px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.bar {
+  position: relative;
+  flex: 0 0 14px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--mat-sys-secondary-container);
+
+  &.failed {
+    background: var(--mat-sys-error-container);
+  }
+}
+
+.bar-db {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: var(--mat-sys-primary);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0 8px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.legend-note {
+  margin-inline-start: auto;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+
+  &.total {
+    background: var(--mat-sys-secondary-container);
+  }
+
+  &.db {
+    background: var(--mat-sys-primary);
+  }
+}
+
+.table-scroll {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.entries {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--mat-sys-surface-container-high);
+    font: var(--mat-sys-label-medium);
+  }
+
+  tr.failed td {
+    color: var(--mat-sys-error);
+  }
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.queries {
+  color: var(--mat-sys-on-surface-variant);
+}

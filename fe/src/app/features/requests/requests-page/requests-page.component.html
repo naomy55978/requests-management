@@ -1,4 +1,11 @@
-<h1 class="page-title">פניות</h1>
+<div class="page-header">
+  <h1 class="page-title">פניות</h1>
+  <!-- Quiet notes: how long the last loads took (D-23) -->
+  <span class="page-timings">
+    <app-timing-badge label="סיכום" [entry]="summaryTiming()" />
+    <app-timing-badge label="רשימה" [entry]="listTiming()" />
+  </span>
+</div>
 
 <!-- Own loading and error state: the list below does not wait for it -->
 <app-summary-cards

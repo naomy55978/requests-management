@@ -1,0 +1,30 @@
+// Quiet on purpose: small, muted, no border or background. It is information for whoever looks for it.
+:host {
+  display: inline-block;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  cursor: default;
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+}
+
+.cache {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+
+  &[data-cache='hit'] {
+    color: var(--app-status-completed-fg);
+  }
+
+  &[data-cache='miss'] {
+    color: var(--app-status-in-progress-fg);
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,8 +10,10 @@ import { filter } from 'rxjs';
 
 import { RequestStatus, RequestDto } from '../../../core/api/api.models';
 import { STATUS_LABELS } from '../../../core/i18n/labels';
+import { PerformanceLogService } from '../../../core/perf/performance-log.service';
 
 import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
+import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
 import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
 import { bulkRefreshesSummary, countOutcomes, toBulkResultRows } from '../bulk-result';
 import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
@@ -37,6 +39,7 @@ import { SummaryStore } from '../summary.store';
     RequestsTableComponent,
     StateMessageComponent,
     SummaryCardsComponent,
+    TimingBadgeComponent,
   ],
   // A new store for every visit: rows and filters of a previous session never show up for the next user
   providers: [RequestsListStore, SummaryStore],
@@ -51,6 +54,11 @@ export class RequestsPageComponent {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly performance = inject(PerformanceLogService);
+
+  /** How long the last list and summary loads took (null until the first answer). */
+  protected readonly listTiming = computed(() => this.performance.latest('list'));
+  protected readonly summaryTiming = computed(() => this.performance.latest('summary'));
 
   /** Page sizes offered to the user; 100 is the most the API accepts. */
   protected readonly pageSizeOptions = [10, 20, 50, 100];

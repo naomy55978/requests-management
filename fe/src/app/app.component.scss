@@ -32,6 +32,11 @@
   color: var(--mat-sys-on-primary);
 }
 
+.app-performance-panel {
+  display: block;
+  margin-top: 24px;
+}
+
 .app-content {
   flex: 1;
   width: 100%;

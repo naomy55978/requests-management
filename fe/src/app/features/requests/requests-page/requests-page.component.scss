@@ -1,6 +1,20 @@
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+}
+
 .page-title {
-  margin: 0 0 16px;
+  margin: 0;
   font: var(--mat-sys-headline-small);
+}
+
+.page-timings {
+  display: inline-flex;
+  gap: 16px;
 }
 
 .results {
