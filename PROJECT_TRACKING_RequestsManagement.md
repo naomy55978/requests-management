@@ -301,13 +301,15 @@
 - **בדיקות Integration בסביבה דלת זיכרון:** ב־SQL Server שמוגבל בזיכרון שאילתה בודדת עלולה להיתקע מעל 30 שנ' ← `500` ← בדיקה נכשלת (ראו M6 (בדיקות), סעיף 8). נראה ב־2 הרצות מקומיות בלבד; בבודק עם מחשב דל בזיכרון ייתכן כשל חד־פעמי – הרצה חוזרת עוברת (מתועד ב־README של BE).
 
 ## 11. צעדים הבאים
-1. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
-2. (ידני, אופציונלי) צילומי מסך מ־SSMS ל־`PERFORMANCE.md` – רשימה מדויקת בסיכום של M8 (Q4.updated, ‏Q5.created ו־Q6.count, לפני/אחרי; קבצי `.sqlplan` ב־`docs/performance/{before,final}/plans/`).
-3. **הצעד הבא: #41 – סקירת UI (M7 (Angular)) עם Opus** ב־`requests-management-fe` (חלקים א׳ ו־ב׳, ‏#32–#40 ו־#52, הושלמו; ראו סעיף 8). לפי CLAUDE.md: הצגת תוכנית וקבלת אישור לפני ביצוע, ורק אחרי בדיקת ה־Checkpoint הידנית של המפתחת. הערות ל־M7 (נשארות לעיון):
+1. **תיקון UI (Sonnet) – טקסט מעורב עברית/אנגלית מיושר לימין בכל מקום, כולל שמות ארגונים באנגלית.** התאים נשארים מיושרים להתחלה (ימין ב־RTL), והטקסט עצמו עטוף ב־`<bdi>` – **לא** `dir="auto"` על התא (הוא מיישר אנגלית לשמאל). להחיל על: עמודת הארגון, הכותרת, המטפל, ארגונים מובילים בכרטיסי הסיכום, דיאלוג התוצאות של Bulk ודיאלוג ההיסטוריה (`changedBy`). Commit אחד בשם `fix: …` עם `Refs naomy55978/requests-management-docs#34 #37` (ב־`requests-management-fe`).
+2. **בדיקה ידנית של המפתחת (אחרי התיקון, בלי סקריפטים רצים):** ‏409 בשתי לשוניות (`dana.cohen` / `amit.navon`); ‏Bulk עם תוצאה לכל פריט; חיפוש, סינון וכפתור "נקה" (X) עם נתונים בעברית; זמני ההיסטוריה בשעון מקומי; פאנל הביצועים סגור כברירת מחדל.
+3. **#41 – סקירת UI (M7 (Angular)) עם Opus** ב־`requests-management-fe` (חלקים א׳ ו־ב׳, ‏#32–#40 ו־#52, הושלמו; ראו סעיף 8). לפי CLAUDE.md: הצגת תוכנית וקבלת אישור לפני ביצוע. הערות ל־M7 (נשארות לעיון):
    - ה־API מוכן עם Swagger, טוקן JWT (8 שעות, כל 401 = טוקן חסר/פג), ‏409 עם `currentVersion`, ו־Bulk עם תוצאה לכל פריט.
    - **Server-Timing (D‑23, ‏D‑25):** ה־API מחזיר `Server-Timing: total;dur=…, db;dur=…;desc="N queries"[, cache;desc="hit|miss"]` כש־`ServerTiming:Enabled` (מופעל ב־Development). ה־Angular קורא אותו **דרך ה־Proxy של שרת הפיתוח (#32)** – אותו Origin, ולכן **לא נדרש `Access-Control-Expose-Headers`** ואין צורך ב־CORS. תכנון ה־UI (תג זמן קטן ופאנל מתקפל, משני) – לפי D‑23.
    - החיפוש לא רגיש לאותיות גדולות/קטנות ומחפש "מכיל" בכותרת ובשם הארגון; מומלץ debounce ואורך מינימלי (PERFORMANCE.md, סעיף 7.1).
 4. אחרי M7: **M9 (תיעוד והגשה)**. להוסיף ל־M9: האזהרה **"Failed to determine the https port for redirect"** ביומן ה־API (ה־Redirection Middleware של HTTPS בלי פורט HTTPS מוגדר) – לתקן (להגדיר פורט או להסיר `UseHttpsRedirection` בפיתוח) או לתעד כהתנהגות מוכרת ב־README.
-5. לפני הרצות אימות/מדידה ארוכות: `dotnet build-server shutdown`, לסגור אפליקציות כבדות, ו־warm-up. אחרי כל Milestone של BE: להריץ את סקריפטי האימות (`scripts/`, ראו README של BE) ואת `dotnet test`.
-6. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
-7. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
+5. (ידני, ‏10 שניות) ב־Project Board: להוסיף תצוגת Board (‏Layout → Board) – ה־CLI יוצר רק תצוגת Table.
+6. (ידני, אופציונלי) צילומי מסך מ־SSMS ל־`PERFORMANCE.md` – רשימה מדויקת בסיכום של M8 (Q4.updated, ‏Q5.created ו־Q6.count, לפני/אחרי; קבצי `.sqlplan` ב־`docs/performance/{before,final}/plans/`).
+7. לפני הרצות אימות/מדידה ארוכות: `dotnet build-server shutdown`, לסגור אפליקציות כבדות, ו־warm-up. אחרי כל Milestone של BE: להריץ את סקריפטי האימות (`scripts/`, ראו README של BE) ואת `dotnet test`.
+8. בכל משימה: להעביר את ה־Issue ל־In Progress/Done ב־Board ולסגור אותו מה־Commit – ב־BE/FE עם הפניה מלאה (`Closes naomy55978/requests-management-docs#n`), ב־Repo התיעוד `Closes #n`.
+9. עדכון קובץ זה (ב־`requests-management-docs`) בסוף כל משימה, ב־Commit נפרד ב־Repo התיעוד.
