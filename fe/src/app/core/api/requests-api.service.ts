@@ -3,7 +3,17 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { PagedResult, RequestDto, RequestListQuery, RequestStatus, StatusChangeBody, SummaryDto } from './api.models';
+import {
+  BulkItem,
+  BulkStatusBody,
+  BulkStatusResponse,
+  PagedResult,
+  RequestDto,
+  RequestListQuery,
+  RequestStatus,
+  StatusChangeBody,
+  SummaryDto,
+} from './api.models';
 
 /** HTTP access to /api/requests. No state and no UI logic here. */
 @Injectable({ providedIn: 'root' })
@@ -26,6 +36,15 @@ export class RequestsApiService {
   changeStatus(id: number, newStatus: RequestStatus, version: string): Observable<RequestDto> {
     const body: StatusChangeBody = { newStatus, version };
     return this.http.patch<RequestDto>(`${this.baseUrl}/${id}/status`, body);
+  }
+
+  /**
+   * Moves several requests to the same status in one call (up to 100). Each item succeeds or fails on its own:
+   * the 200 answer has the result of every item. 400 (the call itself is invalid) saves nothing.
+   */
+  bulkChangeStatus(newStatus: RequestStatus, items: BulkItem[]): Observable<BulkStatusResponse> {
+    const body: BulkStatusBody = { newStatus, items };
+    return this.http.post<BulkStatusResponse>(`${this.baseUrl}/bulk-status`, body);
   }
 
   /** Counts by status and priority and the top organizations in open requests (cached by the server). */

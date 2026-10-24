@@ -14,12 +14,14 @@ describe('RequestsPageComponent', () => {
   let calls: ReturnType<typeof createFakeApi>['calls'];
   let summaryCalls: ReturnType<typeof createFakeApi>['summaryCalls'];
   let statusCalls: ReturnType<typeof createFakeApi>['statusCalls'];
+  let bulkCalls: ReturnType<typeof createFakeApi>['bulkCalls'];
 
   beforeEach(async () => {
     const fake = createFakeApi();
     calls = fake.calls;
     summaryCalls = fake.summaryCalls;
     statusCalls = fake.statusCalls;
+    bulkCalls = fake.bulkCalls;
     await TestBed.configureTestingModule({
       imports: [RequestsPageComponent],
       providers: [
@@ -261,6 +263,171 @@ describe('RequestsPageComponent', () => {
         expect(calls).toHaveLength(2);
         expect(snack()).toContain('לא נמצאה');
       });
+    });
+  });
+
+  describe('Bulk change of the ticked rows', () => {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 300));
+    const rowsData = [
+      { ...fakeRequest(1), status: 'New' as const, version: 'v1', title: 'טעות בתלוש שכר' },
+      { ...fakeRequest(2), status: 'InProgress' as const, version: 'v2', title: 'Error in salary slip' },
+    ];
+
+    const box = (id: number) =>
+      element.querySelector<HTMLInputElement>(`input[aria-label="בחירת פנייה ${id}"]`) as HTMLInputElement;
+    const bar = () => element.querySelector('app-bulk-bar');
+    const barButton = (text: string) =>
+      Array.from(element.querySelectorAll<HTMLButtonElement>('app-bulk-bar button')).find((b) =>
+        b.textContent?.includes(text),
+      ) as HTMLButtonElement;
+
+    async function chooseTarget(label: string): Promise<void> {
+      element.querySelector<HTMLElement>('app-bulk-bar mat-select')?.click();
+      await fixture.whenStable();
+      Array.from(document.querySelectorAll<HTMLElement>('mat-option'))
+        .find((o) => o.textContent?.includes(label))
+        ?.click();
+      await fixture.whenStable();
+    }
+
+    async function tickBoth(): Promise<void> {
+      box(1).click();
+      box(2).click();
+      await fixture.whenStable();
+    }
+
+    beforeEach(async () => {
+      calls[0].respond(rowsData, 100); // more rows than one page, so there is a next page
+      summaryCalls[0].respond();
+      await fixture.whenStable();
+    });
+
+    afterEach(() => {
+      TestBed.inject(MatDialog).closeAll();
+      document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+    });
+
+    const answer = {
+      total: 2,
+      succeeded: 1,
+      failed: 1,
+      results: [
+        { id: 1, outcome: 'Updated' as const, request: { ...rowsData[0], status: 'Waiting' as const, version: 'v8' } },
+        { id: 2, outcome: 'Conflict' as const, currentStatus: 'Completed' as const, currentVersion: 'v9' },
+      ],
+    };
+
+    it('shows the bulk bar only while rows are ticked', async () => {
+      expect(bar()).toBeNull();
+
+      box(1).click();
+      await fixture.whenStable();
+      expect(bar()?.textContent).toContain('פנייה אחת נבחרה');
+
+      box(1).click();
+      await fixture.whenStable();
+      expect(bar()).toBeNull();
+    });
+
+    it('sends the status with the id and version of every ticked row, and shows the result of every item', async () => {
+      await tickBoth();
+      await chooseTarget('ממתינה');
+      barButton('עדכן').click();
+      await fixture.whenStable();
+
+      expect(bulkCalls).toHaveLength(1);
+      expect(bulkCalls[0]).toMatchObject({
+        newStatus: 'Waiting',
+        items: [
+          { id: 1, version: 'v1' },
+          { id: 2, version: 'v2' },
+        ],
+      });
+
+      bulkCalls[0].respond(answer);
+      await tick();
+
+      const dialog = document.querySelector('app-bulk-result-dialog');
+      expect(dialog?.querySelector('.totals')?.textContent?.replace(/\s+/g, ' ')).toContain('עודכנו 1 מתוך 2');
+      expect(dialog?.querySelectorAll('tbody tr')).toHaveLength(2);
+      expect(dialog?.textContent).toContain('עודכנה בינתיים על ידי משתמש אחר');
+    });
+
+    it('then loads the list again and refreshes the summary', async () => {
+      await tickBoth();
+      await chooseTarget('ממתינה');
+      barButton('עדכן').click();
+      bulkCalls[0].respond(answer);
+      await tick();
+
+      expect(calls).toHaveLength(2);
+      expect(summaryCalls).toHaveLength(2);
+    });
+
+    it('does not refresh the summary when the server changed nothing', async () => {
+      await tickBoth();
+      await chooseTarget('ממתינה');
+      barButton('עדכן').click();
+      bulkCalls[0].respond({
+        total: 2,
+        succeeded: 0,
+        failed: 2,
+        results: [{ id: 1, outcome: 'NotFound' }, { id: 2, outcome: 'InvalidTransition', currentStatus: 'Completed', allowedStatuses: [] }],
+      });
+      await tick();
+
+      expect(summaryCalls).toHaveLength(1);
+    });
+
+    it('empties the selection after the call (the list is loaded again)', async () => {
+      await tickBoth();
+      await chooseTarget('ממתינה');
+      barButton('עדכן').click();
+      bulkCalls[0].respond(answer);
+      await tick();
+
+      expect(bar()).toBeNull();
+    });
+
+    it('asks for confirmation before moving to completed, and sends nothing on cancel', async () => {
+      await tickBoth();
+      await chooseTarget('הושלמה');
+      barButton('עדכן').click();
+      await tick();
+
+      expect(document.querySelector('app-confirm-complete-dialog')?.textContent).toContain('2 פניות');
+      expect(bulkCalls).toHaveLength(0);
+
+      Array.from(document.querySelectorAll<HTMLButtonElement>('mat-dialog-actions button'))
+        .find((b) => b.textContent?.includes('ביטול'))
+        ?.click();
+      await tick();
+
+      expect(bulkCalls).toHaveLength(0);
+    });
+
+    it('a failed call is reported, saves nothing and keeps the rows ticked', async () => {
+      await tickBoth();
+      await chooseTarget('ממתינה');
+      barButton('עדכן').click();
+      bulkCalls[0].fail(new HttpErrorResponse({ status: 503 }));
+      await fixture.whenStable();
+
+      expect(document.querySelector('.mat-mdc-snack-bar-label')?.textContent).toContain('אין חיבור');
+      expect(document.querySelector('app-bulk-result-dialog')).toBeNull();
+      expect(bar()).not.toBeNull();
+      expect(calls).toHaveLength(1);
+    });
+
+    it('gives up the selection when the page changes', async () => {
+      box(1).click();
+      await fixture.whenStable();
+      expect(bar()).not.toBeNull();
+
+      element.querySelector<HTMLButtonElement>('button.mat-mdc-paginator-navigation-next')?.click();
+      await fixture.whenStable();
+
+      expect(bar()).toBeNull();
     });
   });
 });

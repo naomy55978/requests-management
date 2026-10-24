@@ -15,6 +15,16 @@
   background: transparent;
 }
 
+.cell-select {
+  width: 52px;
+  padding-inline: 4px 0;
+}
+
+// A ticked row is tinted, so the selection is visible at a glance
+tr.selected {
+  background: var(--mat-sys-secondary-container);
+}
+
 .cell-actions {
   width: 56px;
   padding-inline: 4px;

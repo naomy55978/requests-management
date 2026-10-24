@@ -1,6 +1,14 @@
 import { Observable, Subscriber } from 'rxjs';
 
-import { PagedResult, RequestDto, RequestListQuery, RequestStatus, SummaryDto } from '../../core/api/api.models';
+import {
+  BulkItem,
+  BulkStatusResponse,
+  PagedResult,
+  RequestDto,
+  RequestListQuery,
+  RequestStatus,
+  SummaryDto,
+} from '../../core/api/api.models';
 
 /** One status change sent to the (fake) API, answered by hand. */
 export interface FakeStatusCall {
@@ -9,6 +17,15 @@ export interface FakeStatusCall {
   version: string;
   cancelled: boolean;
   respond(request: RequestDto): void;
+  fail(error: unknown): void;
+}
+
+/** One Bulk call sent to the (fake) API, answered by hand. */
+export interface FakeBulkCall {
+  newStatus: RequestStatus;
+  items: BulkItem[];
+  cancelled: boolean;
+  respond(response: BulkStatusResponse): void;
   fail(error: unknown): void;
 }
 
@@ -84,6 +101,32 @@ export function createFakeApi() {
 
   const summaryCalls: FakeSummaryCall[] = [];
   const statusCalls: FakeStatusCall[] = [];
+  const bulkCalls: FakeBulkCall[] = [];
+
+  const bulkChangeStatus = (newStatus: RequestStatus, items: BulkItem[]) =>
+    new Observable<BulkStatusResponse>((subscriber: Subscriber<BulkStatusResponse>) => {
+      let answered = false;
+      const call: FakeBulkCall = {
+        newStatus,
+        items,
+        cancelled: false,
+        respond: (response) => {
+          answered = true;
+          subscriber.next(response);
+          subscriber.complete();
+        },
+        fail: (error) => {
+          answered = true;
+          subscriber.error(error);
+        },
+      };
+      bulkCalls.push(call);
+      return () => {
+        if (!answered) {
+          call.cancelled = true;
+        }
+      };
+    });
 
   const changeStatus = (id: number, newStatus: RequestStatus, version: string) =>
     new Observable<RequestDto>((subscriber: Subscriber<RequestDto>) => {
@@ -134,7 +177,13 @@ export function createFakeApi() {
       };
     });
 
-  return { calls, summaryCalls, statusCalls, api: { list: vi.fn(list), summary: vi.fn(summary), changeStatus: vi.fn(changeStatus) } };
+  return {
+    calls,
+    summaryCalls,
+    statusCalls,
+    bulkCalls,
+    api: { list: vi.fn(list), summary: vi.fn(summary), changeStatus: vi.fn(changeStatus), bulkChangeStatus: vi.fn(bulkChangeStatus) },
+  };
 }
 
 export function fakeRequest(id: number): RequestDto {

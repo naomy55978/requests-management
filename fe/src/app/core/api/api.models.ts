@@ -76,3 +76,41 @@ export interface StatusChangeBody {
   newStatus: RequestStatus;
   version: string;
 }
+
+/** The most items one POST /api/requests/bulk-status accepts (the API answers 400 above it). */
+export const BULK_MAX_ITEMS = 100;
+
+export type BulkOutcome = 'Updated' | 'NotFound' | 'Conflict' | 'InvalidTransition';
+
+export interface BulkItem {
+  id: number;
+  /** The version the user saw; an older one makes that item a Conflict. */
+  version: string;
+}
+
+export interface BulkStatusBody {
+  newStatus: RequestStatus;
+  items: BulkItem[];
+}
+
+/** The result of ONE item of a Bulk call. Members that do not apply to the outcome are missing. */
+export interface BulkItemResult {
+  id: number;
+  outcome: BulkOutcome;
+  /** Updated: the request as it is now, with its new version. */
+  request?: RequestDto;
+  /** Conflict and InvalidTransition: how the request looks now. */
+  currentStatus?: RequestStatus;
+  currentVersion?: string;
+  currentUpdatedAt?: string;
+  /** InvalidTransition: where the request can go from its current status. */
+  allowedStatuses?: RequestStatus[];
+}
+
+/** 200 of POST /api/requests/bulk-status: Partial Success, one result per item in the order sent (D-08, D-19). */
+export interface BulkStatusResponse {
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: BulkItemResult[];
+}

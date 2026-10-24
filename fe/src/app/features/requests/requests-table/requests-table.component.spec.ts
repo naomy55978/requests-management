@@ -137,4 +137,69 @@ describe('RequestsTableComponent', () => {
       expect(actionButton(2).disabled).toBe(false);
     });
   });
+
+  describe('selection for a Bulk change', () => {
+    const rowBox = (id: number) =>
+      element.querySelector<HTMLInputElement>(`input[aria-label="בחירת פנייה ${id}"]`) as HTMLInputElement;
+    const headerBox = () =>
+      element.querySelector<HTMLInputElement>('input[aria-label="בחירת כל הפניות בעמוד"]') as HTMLInputElement;
+
+    it('ticks the rows it is told are selected, and tints them', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      fixture.componentRef.setInput('selectedIds', new Set([2]));
+      await fixture.whenStable();
+
+      expect(rowBox(1).checked).toBe(false);
+      expect(rowBox(2).checked).toBe(true);
+      expect(element.querySelectorAll('tr.selected')).toHaveLength(1);
+    });
+
+    it('reports the row when its box is clicked', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      const toggled: number[] = [];
+      fixture.componentInstance.selectionToggle.subscribe((id) => toggled.push(id));
+
+      rowBox(2).click();
+
+      expect(toggled).toEqual([2]);
+    });
+
+    it('header box: reports "select the page" and, once all are ticked, "unselect the page"', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      const page: boolean[] = [];
+      fixture.componentInstance.selectPage.subscribe((selected) => page.push(selected));
+
+      headerBox().click();
+      fixture.componentRef.setInput('selectedIds', new Set([1, 2]));
+      await fixture.whenStable();
+      expect(headerBox().checked).toBe(true);
+      headerBox().click();
+
+      expect(page).toEqual([true, false]);
+    });
+
+    it('header box is half-ticked while only some rows are selected', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      fixture.componentRef.setInput('selectedIds', new Set([1]));
+      await fixture.whenStable();
+
+      expect(headerBox().indeterminate).toBe(true);
+      expect(headerBox().checked).toBe(false);
+    });
+
+    it('blocks the boxes while a Bulk call is on its way', async () => {
+      await render([fakeRequest(1)]);
+      fixture.componentRef.setInput('selectionDisabled', true);
+      await fixture.whenStable();
+
+      expect(rowBox(1).disabled).toBe(true);
+      expect(headerBox().disabled).toBe(true);
+    });
+
+    it('has nothing to select on an empty page', async () => {
+      await render([]);
+
+      expect(headerBox().disabled).toBe(true);
+    });
+  });
 });

@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -33,6 +34,7 @@ export interface SortChange {
   imports: [
     DatePipe,
     MatButtonModule,
+    MatCheckboxModule,
     MatIconModule,
     MatMenuModule,
     MatProgressSpinnerModule,
@@ -52,14 +54,26 @@ export class RequestsTableComponent {
   readonly busy = input(false);
   /** Rows whose status change is on its way: their action is disabled, so a change cannot be sent twice. */
   readonly pendingIds = input<ReadonlySet<number>>(new Set());
+  /** Rows ticked for a Bulk change. */
+  readonly selectedIds = input<ReadonlySet<number>>(new Set());
+  /** True while a Bulk call is on its way: the ticks cannot change then. */
+  readonly selectionDisabled = input(false);
 
   readonly sortChange = output<SortChange>();
+  /** The user ticked or unticked one row. */
+  readonly selectionToggle = output<number>();
+  /** The user ticked (true) or unticked (false) the box in the header, which stands for the whole page. */
+  readonly selectPage = output<boolean>();
   readonly statusChange = output<StatusChangeRequest>();
 
   protected readonly statusLabels = STATUS_LABELS;
   protected readonly allowedNext = allowedNext;
 
+  protected readonly allSelected = computed(() => this.items().length > 0 && this.items().every((row) => this.selectedIds().has(row.id)));
+  protected readonly someSelected = computed(() => !this.allSelected() && this.items().some((row) => this.selectedIds().has(row.id)));
+
   protected readonly columns = [
+    'select',
     'id',
     'title',
     'organizationName',

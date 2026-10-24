@@ -12,6 +12,9 @@ import { RequestStatus, RequestDto } from '../../../core/api/api.models';
 import { STATUS_LABELS } from '../../../core/i18n/labels';
 
 import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
+import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
+import { bulkRefreshesSummary, countOutcomes, toBulkResultRows } from '../bulk-result';
+import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
 import { ConfirmCompleteDialogComponent } from '../confirm-complete-dialog/confirm-complete-dialog.component';
 import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
@@ -24,6 +27,7 @@ import { SummaryStore } from '../summary.store';
 @Component({
   selector: 'app-requests-page',
   imports: [
+    BulkBarComponent,
     MatCardModule,
     MatPaginatorModule,
     MatProgressBarModule,
@@ -68,6 +72,54 @@ export class RequestsPageComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => this.sendStatusChange(row, status));
+  }
+
+  /**
+   * The user chose a status for the ticked rows in the bulk bar. Like a single change, only "completed" is confirmed first.
+   */
+  protected applyBulk(status: RequestStatus): void {
+    if (status !== 'Completed') {
+      this.sendBulk(status);
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmCompleteDialogComponent, { data: { count: this.store.selectedIds().size } })
+      .afterClosed()
+      .pipe(
+        filter((confirmed) => confirmed === true),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.sendBulk(status));
+  }
+
+  /** Sends the Bulk call and shows the result of every item; the store reloads the list, the summary is refreshed here. */
+  private sendBulk(status: RequestStatus): void {
+    this.store
+      .bulkChangeStatus(status)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((outcome) => {
+        if (outcome.kind === 'error') {
+          // The call itself failed (e.g. 400, no connection): nothing was saved and the rows stay ticked
+          this.snackBar.open(outcome.message, 'סגור', { duration: 8000 });
+          return;
+        }
+
+        const { response, titles } = outcome;
+        const data: BulkResultDialogData = {
+          newStatus: status,
+          total: response.total,
+          succeeded: response.succeeded,
+          failed: response.failed,
+          counts: countOutcomes(response.results),
+          rows: toBulkResultRows(response.results, titles),
+        };
+        this.dialog.open(BulkResultDialogComponent, { data, width: '720px', maxWidth: '95vw' });
+
+        if (bulkRefreshesSummary(response)) {
+          this.summaryStore.refresh();
+        }
+      });
   }
 
   /** Sends the change, tells the user what happened, and refreshes the summary when the server's data changed. */

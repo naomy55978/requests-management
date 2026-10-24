@@ -20,7 +20,9 @@ import {
 } from 'rxjs';
 
 import {
+  BULK_MAX_ITEMS,
   PagedResult,
+  REQUEST_STATUSES,
   RequestDto,
   RequestListQuery,
   RequestSortField,
@@ -29,6 +31,8 @@ import {
 } from '../../core/api/api.models';
 import { describeHttpError } from '../../core/api/error-messages';
 import { RequestsApiService } from '../../core/api/requests-api.service';
+import { allowedNext } from '../../core/api/status-transitions';
+import { BulkChangeOutcome } from './bulk-result';
 import { isDateRangeValid } from './date-only';
 import {
   EMPTY_OPTION_FILTERS,
@@ -97,6 +101,32 @@ export class RequestsListStore {
   /** Requests whose status change is on its way. The UI disables their action, so a change cannot be sent twice. */
   readonly pendingIds = signal<ReadonlySet<number>>(new Set());
 
+  /**
+   * The requests ticked for a Bulk change. Only rows of the page on screen can be selected: the version of a row is
+   * known only while it is on screen, and a selection the user cannot see would be easy to send by mistake (D-39).
+   * The selection is emptied whenever a new query starts (page, sort, filter, reload).
+   */
+  readonly selectedIds = signal<ReadonlySet<number>>(new Set());
+  /** True while a Bulk call is on its way. */
+  readonly bulkPending = signal(false);
+
+  /** The selected rows as they are on screen now (with their current versions). */
+  readonly selectedItems = computed(() => {
+    const ids = this.selectedIds();
+    return this.items().filter((item) => ids.has(item.id));
+  });
+
+  readonly allOnPageSelected = computed(() => this.items().length > 0 && this.selectedItems().length === this.items().length);
+
+  /**
+   * The statuses a Bulk change can offer: every status that at least one selected row can move to. A row that cannot
+   * make the chosen move is not hidden by this: the server answers InvalidTransition for it and the user sees why.
+   */
+  readonly bulkTargets = computed<RequestStatus[]>(() => {
+    const reachable = new Set(this.selectedItems().flatMap((item) => allowedNext(item.status)));
+    return REQUEST_STATUSES.filter((status) => reachable.has(status));
+  });
+
   /** True when a filter or search narrows the list (to offer "clear filters" on an empty result). */
   readonly filtersActive = computed(() => hasActiveFilters(this.query()));
 
@@ -142,6 +172,7 @@ export class RequestsListStore {
           // The rows on screen stay until the new ones arrive; only the flags change
           this.loading.set(true);
           this.error.set(null);
+          this.selectedIds.set(new Set());
         }),
         switchMap((query) =>
           this.api.list(query).pipe(
@@ -224,6 +255,59 @@ export class RequestsListStore {
         tap((outcome) => this.applyOutcome(row.id, outcome)),
         finalize(() => this.setPending(row.id, false)),
       );
+    });
+  }
+
+  toggleSelection(id: number): void {
+    this.selectedIds.update((ids) => {
+      const next = new Set(ids);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  /** Selects every row of the page, or none. */
+  selectPage(selected: boolean): void {
+    this.selectedIds.set(selected ? new Set(this.items().map((item) => item.id)) : new Set());
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  /**
+   * Moves the selected rows to one status with a single Bulk call (cold: nothing is sent until the caller subscribes).
+   * The answer has a result for every item; the list is loaded again afterwards (which also empties the selection),
+   * so the rows show the new statuses and the fresh versions of the conflicts. If the call itself fails nothing was
+   * saved: the selection stays, so the user can try again. A call that is already on its way is not sent again.
+   */
+  bulkChangeStatus(newStatus: RequestStatus): Observable<BulkChangeOutcome> {
+    return defer(() => {
+      // The page size is at most BULK_MAX_ITEMS, so the limit can only be reached by a bug; the slice makes sure
+      const rows = this.selectedItems().slice(0, BULK_MAX_ITEMS);
+      if (rows.length === 0 || this.bulkPending()) {
+        return EMPTY;
+      }
+      this.bulkPending.set(true);
+      const titles = new Map(rows.map((row) => [row.id, row.title]));
+
+      return this.api
+        .bulkChangeStatus(
+          newStatus,
+          rows.map((row) => ({ id: row.id, version: row.version })),
+        )
+        .pipe(
+          map((response): BulkChangeOutcome => ({ kind: 'done', response, titles })),
+          catchError((error: unknown) => of<BulkChangeOutcome>({ kind: 'error', message: describeHttpError(error) })),
+          tap((outcome) => {
+            if (outcome.kind === 'done') {
+              this.reload();
+            }
+          }),
+          finalize(() => this.bulkPending.set(false)),
+        );
     });
   }
 

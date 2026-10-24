@@ -1,0 +1,26 @@
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.bulk-count {
+  font: var(--mat-sys-title-small);
+}
+
+.bulk-target {
+  width: 200px;
+}
+
+.bulk-note {
+  font: var(--mat-sys-body-small);
+}
+
+.bulk-apply mat-spinner {
+  display: inline-block;
+  margin-inline-end: 8px;
+}

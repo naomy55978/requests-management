@@ -14,6 +14,17 @@
 />
 
 <mat-card class="results" appearance="outlined">
+  <!-- Only while rows are ticked -->
+  @if (store.selectedIds().size > 0) {
+    <app-bulk-bar
+      [count]="store.selectedIds().size"
+      [targets]="store.bulkTargets()"
+      [busy]="store.bulkPending()"
+      (apply)="applyBulk($event)"
+      (clear)="store.clearSelection()"
+    />
+  }
+
   <!-- Always takes its space, so the table does not jump when loading starts -->
   <mat-progress-bar class="results-progress" mode="indeterminate" [class.active]="store.loading()" />
 
@@ -24,6 +35,10 @@
     [sortDir]="store.query().sortDir"
     [busy]="store.loading()"
     [pendingIds]="store.pendingIds()"
+    [selectedIds]="store.selectedIds()"
+    [selectionDisabled]="store.bulkPending()"
+    (selectionToggle)="store.toggleSelection($event)"
+    (selectPage)="store.selectPage($event)"
     (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
     (statusChange)="changeStatus($event)"
   />

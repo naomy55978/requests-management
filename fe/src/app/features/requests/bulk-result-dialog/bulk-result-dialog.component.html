@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>תוצאות העדכון ל«{{ targetLabel }}»</h2>
+
+<mat-dialog-content>
+  <p class="totals" role="status">
+    עודכנו <strong>{{ data.succeeded }}</strong> מתוך <strong>{{ data.total }}</strong>
+    @if (data.failed > 0) {
+      · לא עודכנו <strong>{{ data.failed }}</strong>
+    }
+  </p>
+
+  <ul class="counts">
+    @for (entry of data.counts; track entry.outcome) {
+      <li class="count" [attr.data-outcome]="entry.outcome">{{ entry.label }}: {{ entry.count }}</li>
+    }
+  </ul>
+
+  <div class="table-scroll">
+    <table class="results">
+      <caption class="visually-hidden">תוצאה לכל פנייה</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">כותרת</th>
+          <th scope="col">תוצאה</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of data.rows; track row.id) {
+          <tr [class.failed]="!row.success" [attr.data-outcome]="row.outcome">
+            <td class="cell-id">{{ row.id }}</td>
+            <!-- Hebrew or English: bdi keeps each title in its own direction -->
+            <td class="cell-title"><bdi>{{ row.title }}</bdi></td>
+            <td>
+              <span class="mark" aria-hidden="true">{{ row.success ? '✓' : '✕' }}</span>
+              {{ row.text }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button type="button" mat-dialog-close cdkFocusInitial>סגור</button>
+</mat-dialog-actions>

@@ -48,4 +48,15 @@ describe('ConfirmCompleteDialogComponent', () => {
     expect(closed).toHaveBeenCalledTimes(1);
     expect(closed).not.toHaveBeenCalledWith(true);
   });
+
+  it('for Bulk it says how many requests, instead of one title', async () => {
+    TestBed.configureTestingModule({ imports: [MatDialogModule] });
+    TestBed.inject(MatDialog).open(ConfirmCompleteDialogComponent, { data: { count: 7 } });
+    await new Promise((resolve) => setTimeout(resolve));
+
+    const text = document.querySelector('mat-dialog-container')?.textContent ?? '';
+    expect(text).toContain('7 פניות');
+    expect(text).toContain('סופי');
+    expect(text).not.toContain('#');
+  });
 });

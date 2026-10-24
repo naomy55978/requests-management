@@ -2,13 +2,15 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 
+/** One request (id and title), or several (count) when the change comes from Bulk. */
 export interface ConfirmCompleteData {
-  id: number;
-  title: string;
+  id?: number;
+  title?: string;
+  count?: number;
 }
 
 /**
- * Asks the user to confirm moving a request to "completed". Completed is final (D-05): there is no way back,
+ * Asks the user to confirm moving one request, or the selected requests, to "completed". Completed is final (D-05): there is no way back,
  * so this is the only status change that is confirmed. Closes with `true` when confirmed; a cancel closes it without `true`.
  */
 @Component({
@@ -19,4 +21,5 @@ export interface ConfirmCompleteData {
 })
 export class ConfirmCompleteDialogComponent {
   protected readonly data = inject<ConfirmCompleteData>(MAT_DIALOG_DATA);
+  protected readonly bulk = this.data.count !== undefined;
 }

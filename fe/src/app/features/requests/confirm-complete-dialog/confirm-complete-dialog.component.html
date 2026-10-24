@@ -1,15 +1,26 @@
-<h2 mat-dialog-title>סימון הפנייה כהושלמה</h2>
+<h2 mat-dialog-title>{{ bulk ? 'סימון הפניות כהושלמו' : 'סימון הפנייה כהושלמה' }}</h2>
 
 <mat-dialog-content>
   <p class="request">
-    <span class="request-id">#{{ data.id }}</span>
-    <!-- The title can be Hebrew or English: bdi keeps its own direction inside the RTL dialog -->
-    <bdi>{{ data.title }}</bdi>
+    @if (bulk) {
+      {{ data.count }} פניות שנבחרו יועברו לסטטוס &quot;הושלמה&quot;.
+    } @else {
+      <span class="request-id">#{{ data.id }}</span>
+      <!-- The title can be Hebrew or English: bdi keeps its own direction inside the RTL dialog -->
+      <bdi>{{ data.title }}</bdi>
+    }
   </p>
-  <p>הסטטוס &quot;הושלמה&quot; הוא סופי: לאחר השמירה לא ניתן לשנות את הסטטוס של הפנייה.</p>
+  <p>
+    הסטטוס &quot;הושלמה&quot; הוא סופי: לאחר השמירה לא ניתן לשנות את הסטטוס של {{ bulk ? 'הפניות' : 'הפנייה' }}.
+    @if (bulk) {
+      פניות שאי אפשר להעביר להושלמה (למשל כבר הושלמו) יסומנו בתוצאות.
+    }
+  </p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button type="button" mat-dialog-close>ביטול</button>
-  <button mat-flat-button type="button" [mat-dialog-close]="true" cdkFocusInitial>סמן כהושלמה</button>
+  <button mat-flat-button type="button" [mat-dialog-close]="true" cdkFocusInitial>
+    {{ bulk ? 'סמן כהושלמו' : 'סמן כהושלמה' }}
+  </button>
 </mat-dialog-actions>

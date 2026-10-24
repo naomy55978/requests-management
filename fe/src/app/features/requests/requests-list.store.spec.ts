@@ -513,4 +513,226 @@ describe('RequestsListStore', () => {
       expect(store.pendingIds().size).toBe(0);
     });
   });
+
+  describe('selection and Bulk change', () => {
+    const rows = [
+      { ...fakeRequest(1), status: 'New' as const, version: 'v1' },
+      { ...fakeRequest(2), status: 'InProgress' as const, version: 'v2' },
+      { ...fakeRequest(3), status: 'Completed' as const, version: 'v3' },
+    ];
+
+    function withRows() {
+      const setup = setUp();
+      setup.calls[0].respond(rows, 3);
+      return setup;
+    }
+
+    describe('selection', () => {
+      it('ticks and unticks single rows', () => {
+        const { store } = withRows();
+
+        store.toggleSelection(1);
+        store.toggleSelection(2);
+        expect([...store.selectedIds()]).toEqual([1, 2]);
+
+        store.toggleSelection(1);
+        expect([...store.selectedIds()]).toEqual([2]);
+      });
+
+      it('selects the whole page, or none', () => {
+        const { store } = withRows();
+
+        store.selectPage(true);
+        expect(store.selectedItems()).toHaveLength(3);
+        expect(store.allOnPageSelected()).toBe(true);
+
+        store.selectPage(false);
+        expect(store.selectedIds().size).toBe(0);
+        expect(store.allOnPageSelected()).toBe(false);
+      });
+
+      it('is not "all selected" for an empty page', () => {
+        const { store, calls } = setUp();
+        calls[0].respond([], 0);
+
+        expect(store.allOnPageSelected()).toBe(false);
+      });
+
+      it.each([
+        ['changes the page', (s: RequestsListStore) => s.changePage(2, 20)],
+        ['changes the sort', (s: RequestsListStore) => s.sortBy('title', 'asc')],
+        ['reloads', (s: RequestsListStore) => s.reload()],
+      ])('is emptied when the user %s', (_name, act) => {
+        const { store } = withRows();
+        store.selectPage(true);
+
+        act(store);
+
+        expect(store.selectedIds().size).toBe(0);
+      });
+
+      it('is emptied when a filter or the search changes', () => {
+        vi.useFakeTimers();
+        try {
+          const { store } = withRows();
+          store.selectPage(true);
+
+          store.setFilters({ ...EMPTY_FILTERS, status: ['New'] });
+
+          expect(store.selectedIds().size).toBe(0);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('is kept when only a single row changed its status', () => {
+        const { store, statusCalls } = withRows();
+        store.toggleSelection(1);
+
+        store.changeStatus(rows[0], 'Waiting').subscribe();
+        statusCalls[0].respond({ ...rows[0], status: 'Waiting', version: 'v9' });
+
+        expect([...store.selectedIds()]).toEqual([1]);
+      });
+    });
+
+    describe('target statuses', () => {
+      it('offer every status that at least one selected row can move to', () => {
+        const { store } = withRows();
+
+        store.toggleSelection(1); // New -> InProgress, Waiting
+        expect(store.bulkTargets()).toEqual(['InProgress', 'Waiting']);
+
+        store.toggleSelection(2); // InProgress -> Waiting, Completed
+        expect(store.bulkTargets()).toEqual(['InProgress', 'Waiting', 'Completed']);
+      });
+
+      it('offer nothing when only completed rows are selected', () => {
+        const { store } = withRows();
+
+        store.toggleSelection(3);
+
+        expect(store.bulkTargets()).toEqual([]);
+      });
+
+      it('offer nothing when nothing is selected', () => {
+        expect(withRows().store.bulkTargets()).toEqual([]);
+      });
+    });
+
+    describe('sending', () => {
+      it('sends the status and the id and current version of every selected row, only when subscribed', () => {
+        const { store, bulkCalls } = withRows();
+        store.toggleSelection(1);
+        store.toggleSelection(2);
+
+        const outcome$ = store.bulkChangeStatus('Waiting');
+        expect(bulkCalls).toHaveLength(0);
+
+        outcome$.subscribe();
+        expect(bulkCalls).toHaveLength(1);
+        expect(bulkCalls[0].newStatus).toBe('Waiting');
+        expect(bulkCalls[0].items).toEqual([
+          { id: 1, version: 'v1' },
+          { id: 2, version: 'v2' },
+        ]);
+      });
+
+      it('sends nothing when no row is selected', () => {
+        const { store, bulkCalls } = withRows();
+        const seen = vi.fn();
+
+        store.bulkChangeStatus('Waiting').subscribe({ next: seen, complete: seen });
+
+        expect(bulkCalls).toHaveLength(0);
+        expect(seen).toHaveBeenCalledTimes(1);
+      });
+
+      it('sends a page of 100 rows in one call (the limit of the API)', () => {
+        const setup = setUp();
+        const page = Array.from({ length: 100 }, (_, i) => ({ ...fakeRequest(i + 1), version: 'v' + i }));
+        setup.calls[0].respond(page, 100);
+        setup.store.selectPage(true);
+
+        setup.store.bulkChangeStatus('InProgress').subscribe();
+
+        expect(setup.bulkCalls[0].items).toHaveLength(100);
+      });
+
+      it('does not send a second call while the first is on its way', () => {
+        const { store, bulkCalls } = withRows();
+        store.toggleSelection(1);
+        store.bulkChangeStatus('Waiting').subscribe();
+        expect(store.bulkPending()).toBe(true);
+
+        store.bulkChangeStatus('Waiting').subscribe();
+
+        expect(bulkCalls).toHaveLength(1);
+      });
+    });
+
+    describe('the answer', () => {
+      const answer = {
+        total: 2,
+        succeeded: 1,
+        failed: 1,
+        results: [
+          { id: 1, outcome: 'Updated' as const, request: { ...rows[0], status: 'Waiting' as const, version: 'v8' } },
+          { id: 2, outcome: 'Conflict' as const, currentStatus: 'Completed' as const, currentVersion: 'v9' },
+        ],
+      };
+
+      it('is passed on with the titles of the rows, and the list is loaded again', () => {
+        const { store, calls, bulkCalls } = withRows();
+        store.toggleSelection(1);
+        store.toggleSelection(2);
+        const before = calls.length;
+        const outcomes: unknown[] = [];
+
+        store.bulkChangeStatus('Waiting').subscribe((o) => outcomes.push(o));
+        bulkCalls[0].respond(answer);
+
+        expect(outcomes).toEqual([{ kind: 'done', response: answer, titles: new Map([[1, 'Request 1'], [2, 'Request 2']]) }]);
+        expect(calls).toHaveLength(before + 1);
+        expect(store.bulkPending()).toBe(false);
+      });
+
+      it('empties the selection through the reload', () => {
+        const { store, bulkCalls } = withRows();
+        store.toggleSelection(1);
+
+        store.bulkChangeStatus('Waiting').subscribe();
+        bulkCalls[0].respond({ ...answer, total: 1, results: [answer.results[0]] });
+
+        expect(store.selectedIds().size).toBe(0);
+      });
+
+      it('reloads even when every item failed, so the conflicts show their fresh data', () => {
+        const { store, calls, bulkCalls } = withRows();
+        store.toggleSelection(2);
+        const before = calls.length;
+
+        store.bulkChangeStatus('Waiting').subscribe();
+        bulkCalls[0].respond({ total: 1, succeeded: 0, failed: 1, results: [answer.results[1]] });
+
+        expect(calls).toHaveLength(before + 1);
+      });
+
+      it('a failed call saved nothing: reports it in Hebrew, keeps the selection and does not reload', () => {
+        const { store, calls, bulkCalls } = withRows();
+        store.toggleSelection(1);
+        const before = calls.length;
+        const outcomes: { kind: string; message?: string }[] = [];
+
+        store.bulkChangeStatus('Waiting').subscribe((o) => outcomes.push(o));
+        bulkCalls[0].fail(new HttpErrorResponse({ status: 400, error: { errors: { items: ['x'] } } }));
+
+        expect(outcomes).toEqual([expect.objectContaining({ kind: 'error' })]);
+        expect(outcomes[0].message).toBeTruthy();
+        expect([...store.selectedIds()]).toEqual([1]);
+        expect(calls).toHaveLength(before);
+        expect(store.bulkPending()).toBe(false);
+      });
+    });
+  });
 });
