@@ -15,7 +15,11 @@ export function describeHttpError(error: unknown): string {
   }
 
   switch (error.status) {
+    // 0: the browser got no answer; 502/503/504: a proxy or gateway in front of the API got none
     case 0:
+    case 502:
+    case 503:
+    case 504:
       return 'אין חיבור לשרת. ודאו שה־API פועל ונסו שוב.';
     case 400:
       return describeValidationError(error);

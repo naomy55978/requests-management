@@ -7,6 +7,12 @@
   overflow: hidden;
 }
 
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 64px 16px;
+}
+
 .results-progress {
   height: 4px;
   visibility: hidden;

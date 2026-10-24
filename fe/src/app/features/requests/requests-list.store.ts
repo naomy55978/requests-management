@@ -56,6 +56,8 @@ export const DEFAULT_QUERY: RequestListQuery = {
 /** A change to the query. Returning the same object means "nothing changed" and sends no request. */
 type QueryChange = (query: RequestListQuery) => RequestListQuery;
 
+export type ListViewState = 'loading' | 'error' | 'empty' | 'data';
+
 type LoadOutcome = { result: PagedResult<RequestDto>; error?: undefined } | { error: string; result?: undefined };
 
 /**
@@ -82,6 +84,20 @@ export class RequestsListStore {
 
   /** True when a filter or search narrows the list (to offer "clear filters" on an empty result). */
   readonly filtersActive = computed(() => hasActiveFilters(this.query()));
+
+  /**
+   * What the list area shows. Rows already on screen stay visible while the next page loads ('data'; the
+   * `loading` flag only dims them), so 'loading' means there is nothing to show yet.
+   */
+  readonly viewState = computed<ListViewState>(() => {
+    if (this.error()) {
+      return 'error';
+    }
+    if (this.items().length > 0) {
+      return 'data';
+    }
+    return this.loading() ? 'loading' : 'empty';
+  });
 
   constructor() {
     // Typed text: wait for a pause in typing, so fast typing sends one request and not one per keystroke

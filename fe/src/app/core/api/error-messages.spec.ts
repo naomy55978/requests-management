@@ -7,8 +7,8 @@ function httpError(status: number, body: unknown = null): HttpErrorResponse {
 }
 
 describe('describeHttpError', () => {
-  it('says the server is unreachable when there is no response (status 0)', () => {
-    expect(describeHttpError(httpError(0))).toContain('אין חיבור לשרת');
+  it.each([0, 502, 503, 504])('says the server is unreachable when there is no answer (status %i)', (status) => {
+    expect(describeHttpError(httpError(status))).toContain('אין חיבור לשרת');
   });
 
   it('names the invalid fields of a 400 in Hebrew, never the English server text', () => {
@@ -35,7 +35,7 @@ describe('describeHttpError', () => {
 
   it('adds the trace id to a server error, so the failed request can be found in the log', () => {
     expect(describeHttpError(httpError(500, { traceId: '00-abc' }))).toContain('00-abc');
-    expect(describeHttpError(httpError(503))).toContain('שגיאה בשרת');
+    expect(describeHttpError(httpError(500))).toContain('שגיאה בשרת');
   });
 
   it('handles errors that did not come from HTTP', () => {

@@ -6,6 +6,7 @@
   <!-- Always takes its space, so the table does not jump when loading starts -->
   <mat-progress-bar class="results-progress" mode="indeterminate" [class.active]="store.loading()" />
 
+  <!-- The header stays in every state, so the user keeps the sort controls and the layout does not jump -->
   <app-requests-table
     [items]="store.items()"
     [sortBy]="store.query().sortBy"
@@ -13,6 +14,29 @@
     [busy]="store.loading()"
     (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
   />
+
+  @switch (store.viewState()) {
+    @case ('loading') {
+      <div class="loading" role="status" aria-label="טוען פניות">
+        <mat-spinner diameter="40" />
+      </div>
+    }
+    @case ('error') {
+      <app-state-message kind="error" [message]="store.error() ?? ''" actionLabel="נסה שוב" (action)="store.reload()" />
+    }
+    @case ('empty') {
+      @if (store.filtersActive()) {
+        <app-state-message
+          kind="empty"
+          message="לא נמצאו פניות שמתאימות לסינון ולחיפוש."
+          actionLabel="נקה סינון"
+          (action)="clearFilters()"
+        />
+      } @else {
+        <app-state-message kind="empty" message="אין פניות להצגה." />
+      }
+    }
+  }
 
   <mat-paginator
     [length]="store.totalCount()"

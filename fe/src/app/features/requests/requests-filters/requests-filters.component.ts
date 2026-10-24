@@ -114,7 +114,8 @@ export class RequestsFiltersComponent {
       .subscribe(() => this.filtersChange.emit(this.toFilters()));
   }
 
-  protected clear(): void {
+  /** Empties every field (also called by the page's "clear filters" button on an empty result). */
+  clear(): void {
     this.form.reset();
   }
 

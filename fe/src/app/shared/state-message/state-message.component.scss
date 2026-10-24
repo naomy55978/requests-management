@@ -1,0 +1,24 @@
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.state-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.state[data-kind='error'] .state-icon {
+  color: var(--mat-sys-error);
+}
+
+.state-message {
+  margin: 0;
+  max-width: 480px;
+  font: var(--mat-sys-body-large);
+}

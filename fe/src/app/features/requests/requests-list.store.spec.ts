@@ -270,6 +270,57 @@ describe('RequestsListStore', () => {
     });
   });
 
+  describe('view state', () => {
+    it('is "loading" until the first answer, when there is nothing to show yet', () => {
+      const { store } = setUp();
+
+      expect(store.viewState()).toBe('loading');
+    });
+
+    it('is "data" when rows arrived, and stays "data" while the next page loads', () => {
+      const { store, calls } = setUp();
+      calls[0].respond([fakeRequest(1)], 50);
+      expect(store.viewState()).toBe('data');
+
+      store.changePage(2, 20);
+
+      expect(store.loading()).toBe(true);
+      expect(store.viewState()).toBe('data');
+    });
+
+    it('is "empty" for an answer without rows', () => {
+      const { store, calls } = setUp();
+
+      calls[0].respond([], 0);
+
+      expect(store.viewState()).toBe('empty');
+    });
+
+    it('is "error" after a failed load, and "loading" again while the retry runs', () => {
+      const { store, calls } = setUp();
+      calls[0].fail(new HttpErrorResponse({ status: 500 }));
+      expect(store.viewState()).toBe('error');
+
+      store.reload();
+      expect(store.viewState()).toBe('loading');
+
+      calls[1].respond([fakeRequest(1)], 1);
+      expect(store.viewState()).toBe('data');
+    });
+
+    it('tells whether a filter is behind an empty result', () => {
+      const { store, calls } = setUp();
+      calls[0].respond([], 0);
+      expect(store.filtersActive()).toBe(false);
+
+      store.setFilters({ ...EMPTY_FILTERS, priority: ['High'] });
+      calls[1].respond([], 0);
+
+      expect(store.viewState()).toBe('empty');
+      expect(store.filtersActive()).toBe(true);
+    });
+  });
+
   it('keeps working after a failed load: reload repeats the same query', () => {
     const { store, calls } = setUp();
     calls[0].fail(new HttpErrorResponse({ status: 500 }));

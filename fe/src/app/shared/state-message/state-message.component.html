@@ -1,0 +1,13 @@
+<!-- An error interrupts the user (role alert); an empty result only informs (role status) -->
+<div class="state" [attr.data-kind]="kind()" [attr.role]="kind() === 'error' ? 'alert' : 'status'">
+  <mat-icon class="state-icon" [svgIcon]="kind() === 'error' ? 'error' : 'inbox'" />
+  <p class="state-message">{{ message() }}</p>
+  @if (actionLabel(); as label) {
+    <button mat-stroked-button type="button" (click)="action.emit()">
+      @if (kind() === 'error') {
+        <mat-icon svgIcon="refresh" />
+      }
+      {{ label }}
+    </button>
+  }
+</div>
