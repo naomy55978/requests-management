@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { PagedResult, RequestDto, RequestListQuery, SummaryDto } from './api.models';
+import { PagedResult, RequestDto, RequestListQuery, RequestStatus, StatusChangeBody, SummaryDto } from './api.models';
 
 /** HTTP access to /api/requests. No state and no UI logic here. */
 @Injectable({ providedIn: 'root' })
@@ -17,6 +17,15 @@ export class RequestsApiService {
    */
   list(query: RequestListQuery): Observable<PagedResult<RequestDto>> {
     return this.http.get<PagedResult<RequestDto>>(this.baseUrl, { params: toHttpParams(query) });
+  }
+
+  /**
+   * Moves a request to a new status. `version` is the one the user saw: if someone else changed the request since,
+   * the server answers 409 (and 422 for a transition that is not allowed). 200 is the updated request, with its new version.
+   */
+  changeStatus(id: number, newStatus: RequestStatus, version: string): Observable<RequestDto> {
+    const body: StatusChangeBody = { newStatus, version };
+    return this.http.patch<RequestDto>(`${this.baseUrl}/${id}/status`, body);
   }
 
   /** Counts by status and priority and the top organizations in open requests (cached by the server). */

@@ -1,6 +1,16 @@
 import { Observable, Subscriber } from 'rxjs';
 
-import { PagedResult, RequestDto, RequestListQuery, SummaryDto } from '../../core/api/api.models';
+import { PagedResult, RequestDto, RequestListQuery, RequestStatus, SummaryDto } from '../../core/api/api.models';
+
+/** One status change sent to the (fake) API, answered by hand. */
+export interface FakeStatusCall {
+  id: number;
+  newStatus: RequestStatus;
+  version: string;
+  cancelled: boolean;
+  respond(request: RequestDto): void;
+  fail(error: unknown): void;
+}
 
 /** One call to the (fake) summary endpoint, answered by hand like {@link FakeCall}. */
 export interface FakeSummaryCall {
@@ -73,6 +83,33 @@ export function createFakeApi() {
     });
 
   const summaryCalls: FakeSummaryCall[] = [];
+  const statusCalls: FakeStatusCall[] = [];
+
+  const changeStatus = (id: number, newStatus: RequestStatus, version: string) =>
+    new Observable<RequestDto>((subscriber: Subscriber<RequestDto>) => {
+      let answered = false;
+      const call: FakeStatusCall = {
+        id,
+        newStatus,
+        version,
+        cancelled: false,
+        respond: (request) => {
+          answered = true;
+          subscriber.next(request);
+          subscriber.complete();
+        },
+        fail: (error) => {
+          answered = true;
+          subscriber.error(error);
+        },
+      };
+      statusCalls.push(call);
+      return () => {
+        if (!answered) {
+          call.cancelled = true;
+        }
+      };
+    });
 
   const summary = () =>
     new Observable<SummaryDto>((subscriber: Subscriber<SummaryDto>) => {
@@ -97,7 +134,7 @@ export function createFakeApi() {
       };
     });
 
-  return { calls, summaryCalls, api: { list: vi.fn(list), summary: vi.fn(summary) } };
+  return { calls, summaryCalls, statusCalls, api: { list: vi.fn(list), summary: vi.fn(summary), changeStatus: vi.fn(changeStatus) } };
 }
 
 export function fakeRequest(id: number): RequestDto {

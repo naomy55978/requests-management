@@ -1,11 +1,15 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  EMPTY,
+  Observable,
   Subject,
   catchError,
   debounceTime,
+  defer,
   distinctUntilChanged,
   filter,
+  finalize,
   map,
   merge,
   of,
@@ -15,7 +19,14 @@ import {
   tap,
 } from 'rxjs';
 
-import { PagedResult, RequestDto, RequestListQuery, RequestSortField, SortDirection } from '../../core/api/api.models';
+import {
+  PagedResult,
+  RequestDto,
+  RequestListQuery,
+  RequestSortField,
+  RequestStatus,
+  SortDirection,
+} from '../../core/api/api.models';
 import { describeHttpError } from '../../core/api/error-messages';
 import { RequestsApiService } from '../../core/api/requests-api.service';
 import { isDateRangeValid } from './date-only';
@@ -33,6 +44,7 @@ import {
   withOptionFilters,
   withTextFilters,
 } from './request-filters';
+import { StatusChangeOutcome, toStatusUpdateFailure, withCurrentState } from './status-update-failure';
 
 export const DEFAULT_PAGE_SIZE = 20;
 
@@ -81,6 +93,9 @@ export class RequestsListStore {
   readonly loading = signal(false);
   /** Hebrew message of the last failed load; null when the last load succeeded. */
   readonly error = signal<string | null>(null);
+
+  /** Requests whose status change is on its way. The UI disables their action, so a change cannot be sent twice. */
+  readonly pendingIds = signal<ReadonlySet<number>>(new Set());
 
   /** True when a filter or search narrows the list (to offer "clear filters" on an empty result). */
   readonly filtersActive = computed(() => hasActiveFilters(this.query()));
@@ -184,8 +199,72 @@ export class RequestsListStore {
     );
   }
 
+  /**
+   * Moves one request to a new status (cold: nothing is sent until the caller subscribes). The answer is turned
+   * into an outcome and never into an error, and the row on screen is updated in place:
+   *  - 200: the row is replaced by the updated request (new version);
+   *  - 409 / 422: the row takes the current status and version from the answer, so the user can try again
+   *    right away. No extra GET: the only thing that can change in this system is the status (D-37);
+   *  - 404: the request is gone, the list is loaded again.
+   * A request that is already on its way is not sent again.
+   */
+  changeStatus(row: RequestDto, newStatus: RequestStatus): Observable<StatusChangeOutcome> {
+    return defer(() => {
+      if (this.pendingIds().has(row.id)) {
+        return EMPTY;
+      }
+      this.setPending(row.id, true);
+
+      // The version on screen now, which may be newer than the row the caller holds
+      const version = (this.items().find((item) => item.id === row.id) ?? row).version;
+
+      return this.api.changeStatus(row.id, newStatus, version).pipe(
+        map((request): StatusChangeOutcome => ({ kind: 'updated', request })),
+        catchError((error: unknown) => of<StatusChangeOutcome>(toStatusUpdateFailure(error))),
+        tap((outcome) => this.applyOutcome(row.id, outcome)),
+        finalize(() => this.setPending(row.id, false)),
+      );
+    });
+  }
+
   /** Loads the current query again (retry after an error, refresh after an update). */
   reload(): void {
     this.changes$.next((query) => ({ ...query }));
+  }
+
+  private setPending(id: number, pending: boolean): void {
+    this.pendingIds.update((ids) => {
+      const next = new Set(ids);
+      if (pending) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  private applyOutcome(id: number, outcome: StatusChangeOutcome): void {
+    switch (outcome.kind) {
+      case 'updated':
+        this.replaceItem(outcome.request);
+        break;
+      case 'conflict':
+      case 'invalid-transition': {
+        const current = outcome.current;
+        if (current) {
+          this.items.update((items) => items.map((item) => (item.id === id ? withCurrentState(item, current) : item)));
+        }
+        break;
+      }
+      case 'not-found':
+        this.reload();
+        break;
+    }
+  }
+
+  private replaceItem(request: RequestDto): void {
+    // The row stays where it is, even if it no longer matches the filters, until the list is loaded again
+    this.items.update((items) => items.map((item) => (item.id === request.id ? request : item)));
   }
 }

@@ -370,4 +370,147 @@ describe('RequestsListStore', () => {
 
     expect(store.items().map((r) => r.id)).toEqual([7]);
   });
+
+  describe('changing the status of a row', () => {
+    function withRows() {
+      const setup = setUp();
+      const row = { ...fakeRequest(1), version: 'v1' };
+      setup.calls[0].respond([row, fakeRequest(2)], 2);
+      return { ...setup, row };
+    }
+
+    it('sends the new status with the version that is on screen, only when subscribed', () => {
+      const { store, statusCalls, row } = withRows();
+
+      const outcome$ = store.changeStatus(row, 'InProgress');
+      expect(statusCalls).toHaveLength(0);
+
+      outcome$.subscribe();
+      expect(statusCalls).toEqual([expect.objectContaining({ id: 1, newStatus: 'InProgress', version: 'v1' })]);
+    });
+
+    it('200: replaces the row in place with the answer (new status and version) and reports "updated"', () => {
+      const { store, statusCalls, row } = withRows();
+      const outcomes: unknown[] = [];
+      store.changeStatus(row, 'InProgress').subscribe((o) => outcomes.push(o));
+
+      const updated = { ...row, status: 'InProgress' as const, version: 'v2', updatedAt: '2026-10-24T09:00:00Z' };
+      statusCalls[0].respond(updated);
+
+      expect(store.items()).toEqual([updated, fakeRequest(2)]);
+      expect(outcomes).toEqual([{ kind: 'updated', request: updated }]);
+    });
+
+    it('marks the row as pending while the request is on its way, and only then', () => {
+      const { store, statusCalls, row } = withRows();
+      store.changeStatus(row, 'InProgress').subscribe();
+
+      expect(store.pendingIds().has(1)).toBe(true);
+      expect(store.pendingIds().has(2)).toBe(false);
+
+      statusCalls[0].respond({ ...row, status: 'InProgress', version: 'v2' });
+      expect(store.pendingIds().size).toBe(0);
+    });
+
+    it('does not send the same change twice while the first is on its way (double submit)', () => {
+      const { store, statusCalls, row } = withRows();
+      store.changeStatus(row, 'InProgress').subscribe();
+      const second = vi.fn();
+      store.changeStatus(row, 'Waiting').subscribe({ next: second, complete: second });
+
+      expect(statusCalls).toHaveLength(1);
+      // The second call ends at once without an outcome
+      expect(second).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows a new change after the first one has finished', () => {
+      const { store, statusCalls, row } = withRows();
+      store.changeStatus(row, 'InProgress').subscribe();
+      statusCalls[0].respond({ ...row, status: 'InProgress', version: 'v2' });
+
+      store.changeStatus(store.items()[0], 'Completed').subscribe();
+
+      expect(statusCalls).toHaveLength(2);
+      expect(statusCalls[1].version).toBe('v2');
+    });
+
+    it('409: refreshes the row from the answer (status, version, time) and says it was a conflict', () => {
+      const { store, statusCalls, row } = withRows();
+      const outcomes: { kind: string }[] = [];
+      store.changeStatus(row, 'InProgress').subscribe((o) => outcomes.push(o));
+
+      statusCalls[0].fail(
+        new HttpErrorResponse({
+          status: 409,
+          error: { currentStatus: 'Waiting', currentVersion: 'v9', currentUpdatedAt: '2026-10-24T08:00:00Z' },
+        }),
+      );
+
+      expect(outcomes.map((o) => o.kind)).toEqual(['conflict']);
+      expect(store.items()[0]).toMatchObject({ id: 1, status: 'Waiting', version: 'v9', updatedAt: '2026-10-24T08:00:00Z' });
+      expect(store.pendingIds().size).toBe(0);
+    });
+
+    it('409: the user can retry at once, with the refreshed version', () => {
+      const { store, statusCalls, row } = withRows();
+      store.changeStatus(row, 'Completed').subscribe();
+      statusCalls[0].fail(
+        new HttpErrorResponse({ status: 409, error: { currentStatus: 'InProgress', currentVersion: 'v9', currentUpdatedAt: 'x' } }),
+      );
+
+      store.changeStatus(store.items()[0], 'Completed').subscribe();
+
+      expect(statusCalls[1]).toMatchObject({ id: 1, newStatus: 'Completed', version: 'v9' });
+    });
+
+    it('422: refreshes the row from the answer and reports the allowed statuses', () => {
+      const { store, statusCalls, row } = withRows();
+      const outcomes: { kind: string; allowedStatuses?: string[] }[] = [];
+      store.changeStatus(row, 'Completed').subscribe((o) => outcomes.push(o));
+
+      statusCalls[0].fail(
+        new HttpErrorResponse({
+          status: 422,
+          error: { currentStatus: 'New', requestedStatus: 'Completed', allowedStatuses: ['InProgress', 'Waiting'], currentVersion: 'v5' },
+        }),
+      );
+
+      expect(outcomes).toEqual([expect.objectContaining({ kind: 'invalid-transition', allowedStatuses: ['InProgress', 'Waiting'] })]);
+      expect(store.items()[0]).toMatchObject({ status: 'New', version: 'v5' });
+    });
+
+    it('404: loads the list again', () => {
+      const { store, calls, statusCalls, row } = withRows();
+      const before = calls.length;
+      const outcomes: { kind: string }[] = [];
+      store.changeStatus(row, 'InProgress').subscribe((o) => outcomes.push(o));
+
+      statusCalls[0].fail(new HttpErrorResponse({ status: 404 }));
+
+      expect(outcomes.map((o) => o.kind)).toEqual(['not-found']);
+      expect(calls).toHaveLength(before + 1);
+    });
+
+    it('any other failure leaves the row as it is and clears the pending mark', () => {
+      const { store, statusCalls, row } = withRows();
+      const outcomes: { kind: string }[] = [];
+      store.changeStatus(row, 'InProgress').subscribe((o) => outcomes.push(o));
+
+      statusCalls[0].fail(new HttpErrorResponse({ status: 503 }));
+
+      expect(outcomes.map((o) => o.kind)).toEqual(['error']);
+      expect(store.items()[0]).toEqual(row);
+      expect(store.pendingIds().size).toBe(0);
+    });
+
+    it('frees the row when the caller gives up before the answer (e.g. the page is closed)', () => {
+      const { store, statusCalls, row } = withRows();
+      const subscription = store.changeStatus(row, 'InProgress').subscribe();
+
+      subscription.unsubscribe();
+
+      expect(statusCalls[0].cancelled).toBe(true);
+      expect(store.pendingIds().size).toBe(0);
+    });
+  });
 });

@@ -70,3 +70,9 @@ export interface SummaryDto {
   /** The organizations with the most open (not completed) requests, most first. */
   topOrganizations: { organizationName: string; openRequests: number }[];
 }
+
+/** Body of PATCH /api/requests/{id}/status. `version` is the one the user saw; the server rejects an older one (409). */
+export interface StatusChangeBody {
+  newStatus: RequestStatus;
+  version: string;
+}

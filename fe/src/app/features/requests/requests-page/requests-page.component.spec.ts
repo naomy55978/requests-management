@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 
 import { RequestsApiService } from '../../../core/api/requests-api.service';
@@ -12,11 +13,13 @@ describe('RequestsPageComponent', () => {
   let element: HTMLElement;
   let calls: ReturnType<typeof createFakeApi>['calls'];
   let summaryCalls: ReturnType<typeof createFakeApi>['summaryCalls'];
+  let statusCalls: ReturnType<typeof createFakeApi>['statusCalls'];
 
   beforeEach(async () => {
     const fake = createFakeApi();
     calls = fake.calls;
     summaryCalls = fake.summaryCalls;
+    statusCalls = fake.statusCalls;
     await TestBed.configureTestingModule({
       imports: [RequestsPageComponent],
       providers: [
@@ -147,6 +150,117 @@ describe('RequestsPageComponent', () => {
 
       expect(summaryCalls).toHaveLength(2);
       expect(calls).toHaveLength(1);
+    });
+  });
+
+  describe('changing the status from the row menu', () => {
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 300));
+    const snack = () => document.querySelector('.mat-mdc-snack-bar-label')?.textContent ?? '';
+
+    async function pick(label: string): Promise<void> {
+      element.querySelector<HTMLButtonElement>('button[aria-label="פעולות לפנייה 1"]')?.click();
+      await fixture.whenStable();
+      const item = Array.from(document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-item')).find((i) =>
+        i.textContent?.includes(label),
+      );
+      item?.click();
+      await fixture.whenStable();
+    }
+
+    beforeEach(async () => {
+      calls[0].respond([{ ...fakeRequest(1), status: 'InProgress', version: 'v1' }], 1);
+      summaryCalls[0].respond();
+      await fixture.whenStable();
+    });
+
+    afterEach(() => {
+      TestBed.inject(MatDialog).closeAll();
+      document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+    });
+
+    it('sends the change at once for a status that is not final, and updates the row in place', async () => {
+      await pick('ממתינה');
+
+      expect(statusCalls).toEqual([expect.objectContaining({ id: 1, newStatus: 'Waiting', version: 'v1' })]);
+      statusCalls[0].respond({ ...fakeRequest(1), status: 'Waiting', version: 'v2' });
+      await fixture.whenStable();
+
+      expect(element.querySelector('tr.mat-mdc-row')?.textContent).toContain('ממתינה');
+      expect(snack()).toContain('עודכנה');
+    });
+
+    it('asks for confirmation before moving to completed, and sends nothing if the user cancels', async () => {
+      await pick('הושלמה');
+      await tick();
+
+      expect(document.querySelector('app-confirm-complete-dialog')).not.toBeNull();
+      expect(statusCalls).toHaveLength(0);
+
+      Array.from(document.querySelectorAll<HTMLButtonElement>('mat-dialog-actions button'))
+        .find((b) => b.textContent?.includes('ביטול'))
+        ?.click();
+      await tick();
+
+      expect(statusCalls).toHaveLength(0);
+    });
+
+    it('sends the change to completed once the user confirms', async () => {
+      await pick('הושלמה');
+      await tick();
+
+      Array.from(document.querySelectorAll<HTMLButtonElement>('mat-dialog-actions button'))
+        .find((b) => b.textContent?.includes('סמן כהושלמה'))
+        ?.click();
+      await tick();
+
+      expect(statusCalls).toEqual([expect.objectContaining({ id: 1, newStatus: 'Completed' })]);
+    });
+
+    describe('refreshing the summary (the server drops its cache when data changes)', () => {
+      it('after a change that went through', async () => {
+        await pick('ממתינה');
+        statusCalls[0].respond({ ...fakeRequest(1), status: 'Waiting', version: 'v2' });
+        await fixture.whenStable();
+
+        expect(summaryCalls).toHaveLength(2);
+      });
+
+      it('after a 409, because someone else changed the data', async () => {
+        await pick('ממתינה');
+        statusCalls[0].fail(
+          new HttpErrorResponse({ status: 409, error: { currentStatus: 'Completed', currentVersion: 'v9', currentUpdatedAt: '2026-10-24T08:00:00Z' } }),
+        );
+        await fixture.whenStable();
+
+        expect(summaryCalls).toHaveLength(2);
+        expect(snack()).toContain('עודכנה בינתיים על ידי משתמש אחר');
+        // The row shows what the server says now, so the user sees why and can try again
+        expect(element.querySelector('tr.mat-mdc-row')?.textContent).toContain('הושלמה');
+      });
+
+      it('not after a 422, where nothing changed', async () => {
+        await pick('ממתינה');
+        statusCalls[0].fail(
+          new HttpErrorResponse({
+            status: 422,
+            error: { currentStatus: 'Completed', requestedStatus: 'Waiting', allowedStatuses: [], currentVersion: 'v9' },
+          }),
+        );
+        await fixture.whenStable();
+
+        expect(summaryCalls).toHaveLength(1);
+        expect(snack()).toContain('אינו מותר');
+      });
+
+      it('not after a 404, and the list is loaded again', async () => {
+        await pick('ממתינה');
+        statusCalls[0].fail(new HttpErrorResponse({ status: 404 }));
+        await fixture.whenStable();
+
+        expect(summaryCalls).toHaveLength(1);
+        expect(calls).toHaveLength(2);
+        expect(snack()).toContain('לא נמצאה');
+      });
     });
   });
 });

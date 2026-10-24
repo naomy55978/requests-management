@@ -60,6 +60,35 @@
       <td mat-cell *matCellDef="let row" class="cell-date">{{ row.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
     </ng-container>
 
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef class="cell-actions"><span class="visually-hidden">פעולות</span></th>
+      <td mat-cell *matCellDef="let row" class="cell-actions">
+        <button
+          mat-icon-button
+          type="button"
+          [matMenuTriggerFor]="menu"
+          [disabled]="pendingIds().has(row.id)"
+          [attr.aria-label]="'פעולות לפנייה ' + row.id"
+        >
+          @if (pendingIds().has(row.id)) {
+            <mat-spinner diameter="20" aria-label="מעדכן סטטוס" />
+          } @else {
+            <mat-icon svgIcon="more" />
+          }
+        </button>
+        <mat-menu #menu="matMenu">
+          @for (status of allowedNext(row.status); track status) {
+            <button mat-menu-item type="button" (click)="statusChange.emit({ row, status })">
+              העבר ל«{{ statusLabels[status] }}»
+            </button>
+          } @empty {
+            <!-- Completed is final (D-05) -->
+            <button mat-menu-item type="button" disabled>הפנייה הושלמה – אין מעברים אפשריים</button>
+          }
+        </mat-menu>
+      </td>
+    </ng-container>
+
     <tr mat-header-row *matHeaderRowDef="columns"></tr>
     <tr mat-row *matRowDef="let row; columns: columns"></tr>
   </table>

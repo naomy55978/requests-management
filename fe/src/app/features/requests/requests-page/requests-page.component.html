@@ -23,7 +23,9 @@
     [sortBy]="store.query().sortBy"
     [sortDir]="store.query().sortDir"
     [busy]="store.loading()"
+    [pendingIds]="store.pendingIds()"
     (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
+    (statusChange)="changeStatus($event)"
   />
 
   @switch (store.viewState()) {

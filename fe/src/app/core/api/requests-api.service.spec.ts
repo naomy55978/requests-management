@@ -91,4 +91,12 @@ describe('RequestsApiService', () => {
 
     expect(total).toBe(7);
   });
+
+  it('changes a status with PATCH /api/requests/{id}/status and the version the user saw', () => {
+    service.changeStatus(42, 'InProgress', 'AAAAAAAAB9E=').subscribe();
+
+    const request = backend.expectOne('/api/requests/42/status');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ newStatus: 'InProgress', version: 'AAAAAAAAB9E=' });
+  });
 });
