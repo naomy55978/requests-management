@@ -29,9 +29,12 @@
   height: 44px;
 }
 
-.demo-hint {
-  margin: 20px 0 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-  text-align: center;
+// Chrome paints autofilled fields light blue. An inset shadow in the field's own color is the only thing
+// autofill does not override, so the field keeps looking like the others.
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--mat-sys-surface-container-highest, var(--mat-sys-surface)) inset;
+  -webkit-text-fill-color: var(--mat-sys-on-surface);
+  caret-color: var(--mat-sys-on-surface);
 }

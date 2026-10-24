@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { environment } from '../../../environments/environment';
 import { describeLoginError } from '../../core/api/error-messages';
 import { AuthService } from '../../core/auth/auth.service';
 import { safeReturnUrl } from '../../core/auth/safe-return-url';
@@ -31,9 +30,6 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-
-  /** The demo credentials hint is shown in development builds only. */
-  protected readonly showDemoHint = environment.showDemoHint;
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     userName: ['', [Validators.required, Validators.maxLength(50)]],

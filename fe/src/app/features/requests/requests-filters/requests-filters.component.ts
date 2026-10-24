@@ -52,6 +52,9 @@ export class RequestsFiltersComponent {
   /** Emits the complete form value after every change. */
   readonly filtersChange = output<RequestFilters>();
 
+  /** Emits the form value after the "x" button of a text field emptied it: to be sent now, without the typing pause. */
+  readonly filtersApplyNow = output<RequestFilters>();
+
   protected readonly searchMaxLength = SEARCH_MAX_LENGTH;
   protected readonly searchMinLength = SEARCH_MIN_LENGTH;
   protected readonly organizationMaxLength = ORGANIZATION_MAX_LENGTH;
@@ -89,6 +92,13 @@ export class RequestsFiltersComponent {
     return hasEnteredFilters(this.toFilters());
   });
 
+  /** Which text fields have a value, to show their "x" button. */
+  protected readonly hasText = computed(() => {
+    this.changes();
+    const { search, organization, assignedTo } = this.form.getRawValue();
+    return { search: search !== '', organization: organization !== '', assignedTo: assignedTo !== '' };
+  });
+
   protected readonly hasDates = computed(() => {
     this.changes();
     const { start, end } = this.form.controls.range.getRawValue();
@@ -117,6 +127,13 @@ export class RequestsFiltersComponent {
   /** Empties every field (also called by the page's "clear filters" button on an empty result). */
   clear(): void {
     this.form.reset();
+  }
+
+  /** Empties one text field, sends the list at once and puts the cursor back in the field. */
+  protected clearText(name: 'search' | 'organization' | 'assignedTo', field: HTMLInputElement): void {
+    this.form.controls[name].reset();
+    this.filtersApplyNow.emit(this.toFilters());
+    field.focus();
   }
 
   protected clearDates(): void {

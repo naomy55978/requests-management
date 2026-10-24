@@ -10,7 +10,7 @@
         <!-- User name and password are Latin text: dir="ltr" keeps characters like "!" at the end where they were typed -->
         <mat-form-field>
           <mat-label>שם משתמש</mat-label>
-          <input matInput formControlName="userName" dir="ltr" autocomplete="username" maxlength="50" />
+          <input matInput formControlName="userName" dir="ltr" autocomplete="username" spellcheck="false" maxlength="50" />
           @if (form.controls.userName.hasError('required')) {
             <mat-error>יש להזין שם משתמש</mat-error>
           }
@@ -54,11 +54,6 @@
         </button>
       </form>
 
-      @if (showDemoHint) {
-        <p class="demo-hint">
-          משתמש דמו: <bdi dir="ltr">dana.cohen</bdi> · סיסמה: <bdi dir="ltr">Demo123!</bdi>
-        </p>
-      }
     </mat-card-content>
   </mat-card>
 </section>

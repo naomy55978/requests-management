@@ -3,7 +3,18 @@
     <mat-form-field class="field-search">
       <mat-label>חיפוש בכותרת ובשם הארגון</mat-label>
       <mat-icon matPrefix svgIcon="search" />
-      <input matInput formControlName="search" autocomplete="off" [attr.maxlength]="searchMaxLength" />
+      <input
+        #searchInput
+        matInput
+        formControlName="search"
+        autocomplete="off"
+        [attr.maxlength]="searchMaxLength"
+      />
+      @if (hasText().search) {
+        <button matIconSuffix mat-icon-button type="button" aria-label="נקה" (click)="clearText('search', searchInput)">
+          <mat-icon svgIcon="close" />
+        </button>
+      }
       @if (searchTooShort()) {
         <mat-hint>יש להקליד לפחות {{ searchMinLength }} תווים</mat-hint>
       }
@@ -11,7 +22,24 @@
 
     <mat-form-field>
       <mat-label>ארגון</mat-label>
-      <input matInput formControlName="organization" autocomplete="off" [attr.maxlength]="organizationMaxLength" />
+      <input
+        #organizationInput
+        matInput
+        formControlName="organization"
+        autocomplete="off"
+        [attr.maxlength]="organizationMaxLength"
+      />
+      @if (hasText().organization) {
+        <button
+          matIconSuffix
+          mat-icon-button
+          type="button"
+          aria-label="נקה"
+          (click)="clearText('organization', organizationInput)"
+        >
+          <mat-icon svgIcon="close" />
+        </button>
+      }
       <mat-hint>מתחיל ב…</mat-hint>
     </mat-form-field>
 
@@ -19,12 +47,25 @@
       <mat-form-field>
         <mat-label>מטפל</mat-label>
         <input
+          #assignedToInput
           matInput
           formControlName="assignedTo"
           dir="ltr"
           autocomplete="off"
           [attr.maxlength]="assignedToMaxLength"
         />
+        <!-- Not while "without a handler" is checked: the field is disabled and its text has no meaning -->
+        @if (hasText().assignedTo && !form.controls.assignedTo.disabled) {
+          <button
+            matIconSuffix
+            mat-icon-button
+            type="button"
+            aria-label="נקה"
+            (click)="clearText('assignedTo', assignedToInput)"
+          >
+            <mat-icon svgIcon="close" />
+          </button>
+        }
       </mat-form-field>
       <mat-checkbox formControlName="unassigned">ללא מטפל</mat-checkbox>
     </div>

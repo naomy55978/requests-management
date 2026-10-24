@@ -151,14 +151,21 @@ export class RequestsListStore {
       });
   }
 
-  /** The current values of the filter form. Call it on every change; the store decides what to send and when. */
-  setFilters(filters: RequestFilters): void {
+  /**
+   * The current values of the filter form. Call it on every change; the store decides what to send and when.
+   * `immediate` is for an explicit action (the "x" button of a text field): the typed text is sent now and not
+   * after the typing pause. The pause still runs, but then finds the query unchanged and sends nothing.
+   */
+  setFilters(filters: RequestFilters, options: { immediate?: boolean } = {}): void {
     // "Clear filters" has nothing to wait for: one request now, not one now and one after the typing pause.
     // It goes first: when the form value follows, the query is already empty and that value changes nothing.
     if (isEmptyFilters(filters)) {
       this.changes$.next((query) =>
         withOptionFilters(withTextFilters(query, EMPTY_TEXT_FILTERS), EMPTY_OPTION_FILTERS),
       );
+    } else if (options.immediate) {
+      const text = normalizeTextFilters(pickTextFilters(filters));
+      this.changes$.next((query) => withTextFilters(query, text));
     }
 
     this.filters$.next(filters);

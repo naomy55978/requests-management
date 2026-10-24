@@ -1,6 +1,9 @@
 <h1 class="page-title">פניות</h1>
 
-<app-requests-filters (filtersChange)="store.setFilters($event)" />
+<app-requests-filters
+  (filtersChange)="store.setFilters($event)"
+  (filtersApplyNow)="store.setFilters($event, { immediate: true })"
+/>
 
 <mat-card class="results" appearance="outlined">
   <!-- Always takes its space, so the table does not jump when loading starts -->

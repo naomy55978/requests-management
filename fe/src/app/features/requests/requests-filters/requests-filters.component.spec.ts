@@ -140,4 +140,60 @@ describe('RequestsFiltersComponent', () => {
     expect(input('search').value).toBe('');
     expect(clearButton().disabled).toBe(true);
   });
+
+  describe('"x" button of the text fields', () => {
+    const fields = ['search', 'organization', 'assignedTo'] as const;
+
+    function clearButton(name: string): HTMLButtonElement | null {
+      return input(name).closest('mat-form-field')?.querySelector<HTMLButtonElement>('button[aria-label="נקה"]') ?? null;
+    }
+
+    it('is shown only while the field has a value', async () => {
+      for (const name of fields) {
+        expect(clearButton(name)).toBeNull();
+        await type(name, 'abc');
+        expect(clearButton(name)).not.toBeNull();
+        await type(name, '');
+        expect(clearButton(name)).toBeNull();
+      }
+    });
+
+    it('empties the field, reports it for an immediate load and returns the focus to the field', async () => {
+      document.body.appendChild(element);
+      for (const name of fields) {
+        await type(name, 'abc');
+        const applyNow: RequestFilters[] = [];
+        const subscription = fixture.componentInstance.filtersApplyNow.subscribe((filters) => applyNow.push(filters));
+
+        clearButton(name)?.click();
+        await fixture.whenStable();
+        subscription.unsubscribe();
+
+        expect(input(name).value).toBe('');
+        expect(applyNow).toEqual([EMPTY_FILTERS]);
+        expect(document.activeElement).toBe(input(name));
+      }
+      element.remove();
+    });
+
+    it('keeps the other fields as they are', async () => {
+      await type('search', 'logo');
+      await type('organization', 'Acme');
+      const applyNow: RequestFilters[] = [];
+      fixture.componentInstance.filtersApplyNow.subscribe((filters) => applyNow.push(filters));
+
+      clearButton('search')?.click();
+      await fixture.whenStable();
+
+      expect(applyNow).toEqual([{ ...EMPTY_FILTERS, organization: 'Acme' }]);
+    });
+
+    it('is not offered for the handler while "without a handler" is checked', async () => {
+      await type('assignedTo', 'dana');
+      form().controls.unassigned.setValue(true);
+      await fixture.whenStable();
+
+      expect(clearButton('assignedTo')).toBeNull();
+    });
+  });
 });

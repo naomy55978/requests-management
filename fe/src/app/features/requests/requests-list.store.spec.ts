@@ -270,6 +270,39 @@ describe('RequestsListStore', () => {
     });
   });
 
+  describe('immediate filters (the "x" button of a text field)', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('sends the cleared text at once, and nothing more after the typing pause', () => {
+      const { store, calls } = setUp();
+      calls[0].respond();
+      store.setFilters({ ...EMPTY_FILTERS, search: 'logo', organization: 'Acme' });
+      vi.advanceTimersByTime(TEXT_DEBOUNCE_MS);
+      const before = calls.length;
+
+      store.setFilters({ ...EMPTY_FILTERS, organization: 'Acme' }, { immediate: true });
+      expect(calls).toHaveLength(before + 1);
+      expect(calls[before].query).toMatchObject({ search: '', organization: 'Acme', page: 1 });
+
+      vi.advanceTimersByTime(TEXT_DEBOUNCE_MS * 2);
+      expect(calls).toHaveLength(before + 1);
+    });
+
+    it('without the option the same change waits for the typing pause', () => {
+      const { store, calls } = setUp();
+      calls[0].respond();
+      store.setFilters({ ...EMPTY_FILTERS, search: 'logo' });
+      vi.advanceTimersByTime(TEXT_DEBOUNCE_MS);
+      const before = calls.length;
+
+      store.setFilters({ ...EMPTY_FILTERS, organization: 'Acme' });
+      expect(calls).toHaveLength(before);
+      vi.advanceTimersByTime(TEXT_DEBOUNCE_MS);
+      expect(calls).toHaveLength(before + 1);
+    });
+  });
+
   describe('view state', () => {
     it('is "loading" until the first answer, when there is nothing to show yet', () => {
       const { store } = setUp();

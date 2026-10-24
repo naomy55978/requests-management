@@ -86,9 +86,21 @@ describe('LoginComponent', () => {
     expect(navigateByUrl).not.toHaveBeenCalled();
   });
 
-  it('shows the demo credentials in development builds', async () => {
+  it('never shows credentials on the login screen', async () => {
     await setUp(null);
 
-    expect(element.querySelector('.demo-hint')?.textContent).toContain('Demo123!');
+    expect(element.querySelector('.demo-hint')).toBeNull();
+    expect(element.textContent).not.toContain('Demo123!');
+    expect(element.textContent).not.toContain('dana.cohen');
+  });
+
+  it('turns off spellcheck and sets the autofill hints on the inputs', async () => {
+    await setUp(null);
+
+    const user = element.querySelector('input[formControlName="userName"]');
+    const password = element.querySelector('input[formControlName="password"]');
+    expect(user?.getAttribute('spellcheck')).toBe('false');
+    expect(user?.getAttribute('autocomplete')).toBe('username');
+    expect(password?.getAttribute('autocomplete')).toBe('current-password');
   });
 });
