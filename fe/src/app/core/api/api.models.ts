@@ -61,3 +61,12 @@ export interface LoginResponse {
   userName: string;
   displayName: string;
 }
+
+/** GET /api/requests/summary: counts over the whole table (the server caches it for 60 seconds, D-11). */
+export interface SummaryDto {
+  total: number;
+  byStatus: { status: RequestStatus; count: number }[];
+  byPriority: { priority: RequestPriority; count: number }[];
+  /** The organizations with the most open (not completed) requests, most first. */
+  topOrganizations: { organizationName: string; openRequests: number }[];
+}

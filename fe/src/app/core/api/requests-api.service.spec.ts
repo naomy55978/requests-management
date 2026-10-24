@@ -80,4 +80,15 @@ describe('RequestsApiService', () => {
 
     expect(request.cancelled).toBe(true);
   });
+
+  it('reads the summary from /api/requests/summary', () => {
+    let total = 0;
+    service.summary().subscribe((summary) => (total = summary.total));
+
+    const request = backend.expectOne('/api/requests/summary');
+    expect(request.request.method).toBe('GET');
+    request.flush({ total: 7, byStatus: [], byPriority: [], topOrganizations: [] });
+
+    expect(total).toBe(7);
+  });
 });

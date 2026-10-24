@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { PagedResult, RequestDto, RequestListQuery } from './api.models';
+import { PagedResult, RequestDto, RequestListQuery, SummaryDto } from './api.models';
 
 /** HTTP access to /api/requests. No state and no UI logic here. */
 @Injectable({ providedIn: 'root' })
@@ -17,6 +17,11 @@ export class RequestsApiService {
    */
   list(query: RequestListQuery): Observable<PagedResult<RequestDto>> {
     return this.http.get<PagedResult<RequestDto>>(this.baseUrl, { params: toHttpParams(query) });
+  }
+
+  /** Counts by status and priority and the top organizations in open requests (cached by the server). */
+  summary(): Observable<SummaryDto> {
+    return this.http.get<SummaryDto>(`${this.baseUrl}/summary`);
   }
 }
 

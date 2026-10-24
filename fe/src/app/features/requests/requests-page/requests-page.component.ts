@@ -8,6 +8,8 @@ import { StateMessageComponent } from '../../../shared/state-message/state-messa
 import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
+import { SummaryCardsComponent } from '../summary-cards/summary-cards.component';
+import { SummaryStore } from '../summary.store';
 
 /** The requests screen: puts the parts together and connects them to the store. */
 @Component({
@@ -20,14 +22,16 @@ import { RequestsTableComponent } from '../requests-table/requests-table.compone
     RequestsFiltersComponent,
     RequestsTableComponent,
     StateMessageComponent,
+    SummaryCardsComponent,
   ],
   // A new store for every visit: rows and filters of a previous session never show up for the next user
-  providers: [RequestsListStore],
+  providers: [RequestsListStore, SummaryStore],
   templateUrl: './requests-page.component.html',
   styleUrl: './requests-page.component.scss',
 })
 export class RequestsPageComponent {
   protected readonly store = inject(RequestsListStore);
+  protected readonly summaryStore = inject(SummaryStore);
 
   private readonly filters = viewChild.required(RequestsFiltersComponent);
 

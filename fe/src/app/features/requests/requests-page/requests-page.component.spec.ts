@@ -11,10 +11,12 @@ describe('RequestsPageComponent', () => {
   let fixture: ComponentFixture<RequestsPageComponent>;
   let element: HTMLElement;
   let calls: ReturnType<typeof createFakeApi>['calls'];
+  let summaryCalls: ReturnType<typeof createFakeApi>['summaryCalls'];
 
   beforeEach(async () => {
     const fake = createFakeApi();
     calls = fake.calls;
+    summaryCalls = fake.summaryCalls;
     await TestBed.configureTestingModule({
       imports: [RequestsPageComponent],
       providers: [
@@ -111,5 +113,40 @@ describe('RequestsPageComponent', () => {
     await fixture.whenStable();
 
     expect(element.querySelectorAll('th.mat-mdc-header-cell').length).toBeGreaterThan(0);
+  });
+
+  describe('summary cards', () => {
+    it('are loaded next to the list and have their own loading state', async () => {
+      expect(summaryCalls).toHaveLength(1);
+      expect(element.querySelectorAll('.placeholder')).toHaveLength(4);
+
+      summaryCalls[0].respond();
+      await fixture.whenStable();
+
+      expect(element.textContent).toContain('1,234');
+    });
+
+    it('do not block the list: the rows show while the summary is still loading', async () => {
+      calls[0].respond([fakeRequest(1)], 1);
+      await fixture.whenStable();
+
+      expect(rows()).toHaveLength(1);
+      expect(element.querySelectorAll('.placeholder')).toHaveLength(4);
+    });
+
+    it('failing does not break the list, and "try again" loads only the summary', async () => {
+      calls[0].respond([fakeRequest(1)], 1);
+      summaryCalls[0].fail(new HttpErrorResponse({ status: 503 }));
+      await fixture.whenStable();
+
+      expect(rows()).toHaveLength(1);
+      expect(element.querySelector('app-summary-cards [role="alert"]')).not.toBeNull();
+
+      element.querySelector<HTMLButtonElement>('app-summary-cards button')?.click();
+      await fixture.whenStable();
+
+      expect(summaryCalls).toHaveLength(2);
+      expect(calls).toHaveLength(1);
+    });
   });
 });

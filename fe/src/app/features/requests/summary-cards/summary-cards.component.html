@@ -1,0 +1,66 @@
+<section class="summary" aria-label="סיכום פניות" [class.refreshing]="loading() && view() === 'data'">
+  @switch (view()) {
+    @case ('error') {
+      <mat-card appearance="outlined" class="summary-error" role="alert">
+        <span>{{ error() }}</span>
+        <button mat-button type="button" (click)="retry.emit()">נסה שוב</button>
+      </mat-card>
+    }
+    @case ('loading') {
+      <!-- Placeholders in the shape of the cards, so the page does not jump when the numbers arrive -->
+      <div class="summary-grid" role="status" aria-label="טוען סיכום">
+        @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+          <mat-card appearance="outlined" class="card placeholder"></mat-card>
+        }
+      </div>
+    }
+    @case ('data') {
+      @if (summary(); as data) {
+        <div class="summary-grid">
+          <mat-card appearance="outlined" class="card">
+            <h2 class="card-title">סה״כ פניות</h2>
+            <p class="total">{{ data.total | number }}</p>
+          </mat-card>
+
+          <mat-card appearance="outlined" class="card">
+            <h2 class="card-title">לפי סטטוס</h2>
+            <ul class="rows">
+              @for (item of data.byStatus; track item.status) {
+                <li>
+                  <app-status-chip [status]="item.status" />
+                  <span class="count">{{ item.count | number }}</span>
+                </li>
+              }
+            </ul>
+          </mat-card>
+
+          <mat-card appearance="outlined" class="card">
+            <h2 class="card-title">לפי עדיפות</h2>
+            <ul class="rows">
+              @for (item of data.byPriority; track item.priority) {
+                <li>
+                  <app-priority-chip [priority]="item.priority" />
+                  <span class="count">{{ item.count | number }}</span>
+                </li>
+              }
+            </ul>
+          </mat-card>
+
+          <mat-card appearance="outlined" class="card card-orgs">
+            <h2 class="card-title">ארגונים מובילים בפניות פתוחות</h2>
+            <ol class="orgs">
+              @for (org of topOrganizations(); track org.organizationName) {
+                <li>
+                  <!-- Names are Hebrew or English: bdi keeps each in its own direction inside the RTL page -->
+                  <bdi class="org-name">{{ org.organizationName }}</bdi>
+                  <span class="org-bar" aria-hidden="true"><span [style.width.%]="org.share"></span></span>
+                  <span class="count">{{ org.openRequests | number }}</span>
+                </li>
+              }
+            </ol>
+          </mat-card>
+        </div>
+      }
+    }
+  }
+</section>

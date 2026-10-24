@@ -1,5 +1,13 @@
 <h1 class="page-title">פניות</h1>
 
+<!-- Own loading and error state: the list below does not wait for it -->
+<app-summary-cards
+  [summary]="summaryStore.summary()"
+  [loading]="summaryStore.loading()"
+  [error]="summaryStore.error()"
+  (retry)="summaryStore.refresh()"
+/>
+
 <app-requests-filters
   (filtersChange)="store.setFilters($event)"
   (filtersApplyNow)="store.setFilters($event, { immediate: true })"
