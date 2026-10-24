@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -35,6 +36,7 @@ export interface SortChange {
     DatePipe,
     MatButtonModule,
     MatCheckboxModule,
+    MatDividerModule,
     MatIconModule,
     MatMenuModule,
     MatProgressSpinnerModule,
@@ -64,6 +66,8 @@ export class RequestsTableComponent {
   readonly selectionToggle = output<number>();
   /** The user ticked (true) or unticked (false) the box in the header, which stands for the whole page. */
   readonly selectPage = output<boolean>();
+  /** The user asked for the status history of a row. */
+  readonly historyRequest = output<RequestDto>();
   readonly statusChange = output<StatusChangeRequest>();
 
   protected readonly statusLabels = STATUS_LABELS;

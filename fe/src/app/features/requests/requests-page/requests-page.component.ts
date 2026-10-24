@@ -16,6 +16,7 @@ import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
 import { bulkRefreshesSummary, countOutcomes, toBulkResultRows } from '../bulk-result';
 import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
 import { ConfirmCompleteDialogComponent } from '../confirm-complete-dialog/confirm-complete-dialog.component';
+import { RequestHistoryDialogComponent } from '../request-history-dialog/request-history-dialog.component';
 import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
 import { RequestsTableComponent, StatusChangeRequest } from '../requests-table/requests-table.component';
@@ -120,6 +121,10 @@ export class RequestsPageComponent {
           this.summaryStore.refresh();
         }
       });
+  }
+
+  protected openHistory(row: RequestDto): void {
+    this.dialog.open(RequestHistoryDialogComponent, { data: { id: row.id, title: row.title }, width: '560px', maxWidth: '95vw' });
   }
 
   /** Sends the change, tells the user what happened, and refreshes the summary when the server's data changed. */

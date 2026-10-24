@@ -94,7 +94,7 @@ describe('RequestsTableComponent', () => {
         { ...fakeRequest(3), status: 'Waiting' },
       ]);
 
-      expect(itemTexts(await openMenu(1))).toEqual(['העבר ל«בטיפול»', 'העבר ל«ממתינה»']);
+      expect(itemTexts(await openMenu(1))).toEqual(['העבר ל«בטיפול»', 'העבר ל«ממתינה»', 'היסטוריה']);
       document.body.click();
       await fixture.whenStable();
     });
@@ -102,17 +102,31 @@ describe('RequestsTableComponent', () => {
     it('offers "waiting" and "completed" for a request in progress', async () => {
       await render([{ ...fakeRequest(2), status: 'InProgress' }]);
 
-      expect(itemTexts(await openMenu(2))).toEqual(['העבר ל«ממתינה»', 'העבר ל«הושלמה»']);
+      expect(itemTexts(await openMenu(2))).toEqual(['העבר ל«ממתינה»', 'העבר ל«הושלמה»', 'היסטוריה']);
     });
 
-    it('offers nothing for a completed request: one disabled line that says so', async () => {
+    it('offers no status for a completed request: one disabled line that says so (the history stays)', async () => {
       await render([{ ...fakeRequest(4), status: 'Completed' }]);
 
       const items = await openMenu(4);
 
-      expect(items).toHaveLength(1);
+      expect(items).toHaveLength(2);
       expect(items[0].disabled).toBe(true);
       expect(items[0].textContent).toContain('הושלמה');
+      expect(items[1].textContent).toContain('היסטוריה');
+      expect(items[1].disabled).toBe(false);
+    });
+
+    it('reports the row when the user asks for its history', async () => {
+      const row = { ...fakeRequest(1), status: 'Completed' as const };
+      await render([row]);
+      const asked: number[] = [];
+      fixture.componentInstance.historyRequest.subscribe((r) => asked.push(r.id));
+
+      const items = await openMenu(1);
+      items[1].click();
+
+      expect(asked).toEqual([1]);
     });
 
     it('reports the row and the status the user picked, and sends nothing itself', async () => {

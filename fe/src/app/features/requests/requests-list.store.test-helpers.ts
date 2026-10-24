@@ -7,6 +7,7 @@ import {
   RequestDto,
   RequestListQuery,
   RequestStatus,
+  StatusHistoryEntry,
   SummaryDto,
 } from '../../core/api/api.models';
 
@@ -182,7 +183,14 @@ export function createFakeApi() {
     summaryCalls,
     statusCalls,
     bulkCalls,
-    api: { list: vi.fn(list), summary: vi.fn(summary), changeStatus: vi.fn(changeStatus), bulkChangeStatus: vi.fn(bulkChangeStatus) },
+    api: {
+      list: vi.fn(list),
+      summary: vi.fn(summary),
+      changeStatus: vi.fn(changeStatus),
+      bulkChangeStatus: vi.fn(bulkChangeStatus),
+      // The history dialog just waits for an answer that never comes
+      history: vi.fn(() => new Observable<StatusHistoryEntry[]>()),
+    },
   };
 }
 

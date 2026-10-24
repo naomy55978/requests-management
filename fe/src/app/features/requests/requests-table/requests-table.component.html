@@ -105,6 +105,11 @@
             <!-- Completed is final (D-05) -->
             <button mat-menu-item type="button" disabled>הפנייה הושלמה – אין מעברים אפשריים</button>
           }
+          <mat-divider />
+          <button mat-menu-item type="button" (click)="historyRequest.emit(row)">
+            <mat-icon svgIcon="history" />
+            היסטוריה
+          </button>
         </mat-menu>
       </td>
     </ng-container>

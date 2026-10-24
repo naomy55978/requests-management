@@ -12,6 +12,7 @@ import {
   RequestListQuery,
   RequestStatus,
   StatusChangeBody,
+  StatusHistoryEntry,
   SummaryDto,
 } from './api.models';
 
@@ -45,6 +46,11 @@ export class RequestsApiService {
   bulkChangeStatus(newStatus: RequestStatus, items: BulkItem[]): Observable<BulkStatusResponse> {
     const body: BulkStatusBody = { newStatus, items };
     return this.http.post<BulkStatusResponse>(`${this.baseUrl}/bulk-status`, body);
+  }
+
+  /** Every status change of a request, oldest first (empty if it was never changed). 404 if there is no such request. */
+  history(id: number): Observable<StatusHistoryEntry[]> {
+    return this.http.get<StatusHistoryEntry[]>(`${this.baseUrl}/${id}/history`);
   }
 
   /** Counts by status and priority and the top organizations in open requests (cached by the server). */

@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>היסטוריית סטטוס · <span class="request-id">#{{ data.id }}</span></h2>
+
+<mat-dialog-content>
+  <!-- Hebrew or English: bdi keeps the title in its own direction inside the RTL dialog -->
+  <p class="request-title"><bdi>{{ data.title }}</bdi></p>
+
+  @switch (view()) {
+    @case ('loading') {
+      <div class="loading" role="status" aria-label="טוען היסטוריה">
+        <mat-spinner diameter="32" />
+      </div>
+    }
+    @case ('error') {
+      <app-state-message kind="error" [message]="errorMessage() ?? ''" actionLabel="נסה שוב" (action)="history.reload()" />
+    }
+    @case ('empty') {
+      <app-state-message kind="empty" message="לא בוצעו שינויי סטטוס בפנייה זו." />
+    }
+    @case ('data') {
+      <ol class="timeline">
+        @for (entry of entries(); track $index) {
+          <li class="entry">
+            <!-- changedAt is UTC; the date pipe shows it in the user's local time -->
+            <time class="when" [attr.datetime]="entry.changedAt">{{ entry.changedAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+            <span class="change">
+              <app-status-chip [status]="entry.previousStatus" />
+              <span class="arrow" aria-hidden="true">←</span>
+              <app-status-chip [status]="entry.newStatus" />
+            </span>
+            <span class="by">על ידי <bdi dir="ltr">{{ entry.changedBy }}</bdi></span>
+          </li>
+        }
+      </ol>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close cdkFocusInitial>סגור</button>
+</mat-dialog-actions>

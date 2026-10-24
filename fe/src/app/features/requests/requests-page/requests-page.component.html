@@ -41,6 +41,7 @@
     (selectPage)="store.selectPage($event)"
     (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
     (statusChange)="changeStatus($event)"
+    (historyRequest)="openHistory($event)"
   />
 
   @switch (store.viewState()) {

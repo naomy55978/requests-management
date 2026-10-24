@@ -430,4 +430,23 @@ describe('RequestsPageComponent', () => {
       expect(bar()).toBeNull();
     });
   });
+
+  it('opens the history of a request from its menu', async () => {
+    calls[0].respond([{ ...fakeRequest(1), title: 'טעות בתלוש שכר' }], 1);
+    await fixture.whenStable();
+
+    element.querySelector<HTMLButtonElement>('button[aria-label="פעולות לפנייה 1"]')?.click();
+    await fixture.whenStable();
+    Array.from(document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-item'))
+      .find((item) => item.textContent?.includes('היסטוריה'))
+      ?.click();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const dialog = document.querySelector('app-request-history-dialog');
+    expect(dialog?.textContent).toContain('#1');
+    expect(dialog?.textContent).toContain('טעות בתלוש שכר');
+
+    TestBed.inject(MatDialog).closeAll();
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
 });

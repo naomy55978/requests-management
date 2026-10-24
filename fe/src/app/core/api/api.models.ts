@@ -114,3 +114,12 @@ export interface BulkStatusResponse {
   failed: number;
   results: BulkItemResult[];
 }
+
+/** One status change of a request (GET /api/requests/{id}/history, oldest first). `changedAt` is UTC. */
+export interface StatusHistoryEntry {
+  previousStatus: RequestStatus;
+  newStatus: RequestStatus;
+  changedAt: string;
+  /** The user name of whoever made the change (taken from the token by the server). */
+  changedBy: string;
+}
