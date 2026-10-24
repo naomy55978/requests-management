@@ -1,0 +1,64 @@
+<section class="login">
+  <mat-card class="login-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>התחברות</mat-card-title>
+      <mat-card-subtitle>מערכת ניהול פניות</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- User name and password are Latin text: dir="ltr" keeps characters like "!" at the end where they were typed -->
+        <mat-form-field>
+          <mat-label>שם משתמש</mat-label>
+          <input matInput formControlName="userName" dir="ltr" autocomplete="username" maxlength="50" />
+          @if (form.controls.userName.hasError('required')) {
+            <mat-error>יש להזין שם משתמש</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>סיסמה</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            dir="ltr"
+            autocomplete="current-password"
+            maxlength="100"
+            [type]="passwordVisible() ? 'text' : 'password'"
+          />
+          <button
+            matSuffix
+            mat-button
+            type="button"
+            class="password-toggle"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ passwordVisible() ? 'הסתר' : 'הצג' }}
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>יש להזין סיסמה</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage(); as message) {
+          <p class="login-error" role="alert">{{ message }}</p>
+        }
+
+        <button mat-flat-button type="submit" class="login-submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            התחברות
+          }
+        </button>
+      </form>
+
+      @if (showDemoHint) {
+        <p class="demo-hint">
+          משתמש דמו: <bdi dir="ltr">dana.cohen</bdi> · סיסמה: <bdi dir="ltr">Demo123!</bdi>
+        </p>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

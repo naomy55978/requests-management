@@ -17,6 +17,19 @@
   font: var(--mat-sys-title-large);
 }
 
+.app-spacer {
+  flex: 1;
+}
+
+.app-user {
+  font: var(--mat-sys-body-medium);
+}
+
+// Text buttons are primary-colored by default, which is invisible on the primary toolbar
+.app-toolbar button {
+  --mat-button-text-label-text-color: var(--mat-sys-on-primary);
+}
+
 .app-content {
   flex: 1;
   width: 100%;

@@ -1,5 +1,10 @@
 <mat-toolbar class="app-toolbar">
   <span class="app-title">ניהול פניות</span>
+  <span class="app-spacer"></span>
+  @if (auth.displayName(); as name) {
+    <span class="app-user">{{ name }}</span>
+    <button mat-button type="button" (click)="auth.logout()">התנתקות</button>
+  }
 </mat-toolbar>
 
 <main class="app-content">
