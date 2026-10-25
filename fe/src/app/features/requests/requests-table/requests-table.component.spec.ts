@@ -38,6 +38,27 @@ describe('RequestsTableComponent', () => {
     expect(row).toContain('dana.cohen');
   });
 
+  describe('free text in Hebrew or English', () => {
+    const english = { ...fakeRequest(1), title: 'Cannot login to portal', organizationName: 'Globex Corp', assignedTo: 'dana.cohen' };
+
+    it('is wrapped in <bdi>, and the cell is not given dir="auto" (which would align English to the left)', async () => {
+      await render([english]);
+
+      const cell = (column: string) => element.querySelector(`td.mat-column-${column}`);
+      expect(cell('title')?.querySelector('.cell-text > bdi.bidi-fit')?.textContent).toBe('Cannot login to portal');
+      expect(cell('organizationName')?.querySelector('.cell-text > bdi.bidi-fit')?.textContent).toBe('Globex Corp');
+      expect(cell('assignedTo')?.querySelector('bdi')?.textContent).toBe('dana.cohen');
+      expect(element.querySelector('tbody [dir="auto"]')).toBeNull();
+    });
+
+    it('keeps the full text in a title attribute, for when the cell cuts it', async () => {
+      await render([english]);
+
+      expect(element.querySelector('td.mat-column-title')?.getAttribute('title')).toBe('Cannot login to portal');
+      expect(element.querySelector('td.mat-column-organizationName')?.getAttribute('title')).toBe('Globex Corp');
+    });
+  });
+
   it('says "not assigned" for a request without a handler', async () => {
     await render([fakeRequest(1)]);
 

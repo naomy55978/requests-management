@@ -85,7 +85,15 @@ describe('BulkResultDialogComponent', () => {
   it('keeps each title in its own direction (bdi), for Hebrew and English alike', async () => {
     const dialog = await open();
 
-    expect(dialog.querySelectorAll('.cell-title bdi')).toHaveLength(4);
+    expect(dialog.querySelectorAll('.cell-title bdi.bidi-fit')).toHaveLength(4);
+  });
+
+  it('keeps the full title in a title attribute, for when the cell cuts it', async () => {
+    const dialog = await open();
+
+    dialog.querySelectorAll('.cell-title').forEach((cell) => {
+      expect(cell.getAttribute('title')).toBe(cell.querySelector('bdi')?.textContent);
+    });
   });
 
   it('does not talk about failures when everything worked', async () => {

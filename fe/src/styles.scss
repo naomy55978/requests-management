@@ -42,6 +42,19 @@ html {
   --app-priority-low-fg: #374151;
 }
 
+// Free text that can be Hebrew or English (titles, organization names) sits in a <bdi class="bidi-fit"> inside a
+// container aligned to the start (right in RTL). The <bdi> takes the direction of its own text; inline-block with
+// nowrap and max-width lets a long name be cut with an ellipsis at the end of the text, and vertical-align keeps the
+// row height the same for Hebrew and English.
+bdi.bidi-fit {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
 html,
 body {
   height: 100%;

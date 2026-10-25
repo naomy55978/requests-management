@@ -51,8 +51,9 @@
             <ol class="orgs">
               @for (org of topOrganizations(); track org.organizationName) {
                 <li>
-                  <!-- Names are Hebrew or English: bdi keeps each in its own direction inside the RTL page -->
-                  <bdi class="org-name">{{ org.organizationName }}</bdi>
+                  <!-- Names are Hebrew or English. The grid item is this span (a <bdi> that is itself a grid item would be
+                       blockified and lose its own direction); the <bdi> inside keeps the name's direction -->
+                  <span class="org-name" [attr.title]="org.organizationName"><bdi class="bidi-fit">{{ org.organizationName }}</bdi></span>
                   <span class="org-bar" aria-hidden="true"><span [style.width.%]="org.share"></span></span>
                   <span class="count">{{ org.openRequests | number }}</span>
                 </li>

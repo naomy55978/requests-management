@@ -29,7 +29,7 @@
           <tr [class.failed]="!row.success" [attr.data-outcome]="row.outcome">
             <td class="cell-id">{{ row.id }}</td>
             <!-- Hebrew or English: bdi keeps each title in its own direction -->
-            <td class="cell-title"><bdi>{{ row.title }}</bdi></td>
+            <td class="cell-title" [attr.title]="row.title"><bdi class="bidi-fit">{{ row.title }}</bdi></td>
             <td>
               <span class="mark" aria-hidden="true">{{ row.success ? '✓' : '✕' }}</span>
               {{ row.text }}

@@ -38,14 +38,15 @@
     <ng-container matColumnDef="title">
       <th mat-header-cell *matHeaderCellDef mat-sort-header="title">כותרת</th>
       <td mat-cell *matCellDef="let row" [attr.title]="row.title">
-        <span class="cell-text cell-title" dir="auto">{{ row.title }}</span>
+        <!-- Hebrew or English: bdi gives the text its own direction, while the cell stays aligned to the start (right) -->
+        <span class="cell-text cell-title"><bdi class="bidi-fit">{{ row.title }}</bdi></span>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="organizationName">
       <th mat-header-cell *matHeaderCellDef>ארגון</th>
       <td mat-cell *matCellDef="let row" [attr.title]="row.organizationName">
-        <span class="cell-text" dir="auto">{{ row.organizationName }}</span>
+        <span class="cell-text"><bdi class="bidi-fit">{{ row.organizationName }}</bdi></span>
       </td>
     </ng-container>
 
@@ -63,7 +64,7 @@
       <th mat-header-cell *matHeaderCellDef>מטפל</th>
       <td mat-cell *matCellDef="let row">
         @if (row.assignedTo) {
-          <span dir="ltr">{{ row.assignedTo }}</span>
+          <bdi>{{ row.assignedTo }}</bdi>
         } @else {
           <span class="unassigned">לא משויכת</span>
         }

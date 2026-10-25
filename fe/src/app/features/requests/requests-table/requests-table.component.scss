@@ -44,14 +44,12 @@ tr.selected {
   color: var(--mat-sys-on-surface-variant);
 }
 
-// Free text can be Hebrew or English. dir="auto" gives each cell the direction of its own text, so a long English
-// title is cut at its END with the ellipsis (in an RTL cell it would be cut at its beginning).
+// Free text can be Hebrew or English. The cell stays aligned to the start (right in RTL) for both; the <bdi> inside
+// it (.bidi-fit, styles.scss) gives the text its own direction, so a long English title is cut at its END with the
+// ellipsis. dir="auto" on the cell would have aligned English text to the left.
 .cell-text {
   display: block;
   max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .cell-title {

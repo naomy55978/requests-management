@@ -44,6 +44,15 @@ describe('SummaryCardsComponent', () => {
     expect(text).toContain('Cedar Software Ltd');
   });
 
+  it('puts each organization name in a <bdi> inside a span (the grid item), with the full name as title', async () => {
+    await show({ summary: fakeSummary() });
+
+    const names = Array.from(element.querySelectorAll<HTMLElement>('.orgs .org-name'));
+    expect(names.map((n) => n.tagName)).toEqual(['SPAN', 'SPAN']);
+    expect(names.map((n) => n.querySelector(':scope > bdi.bidi-fit')?.textContent)).toEqual(['גליל לוגיסטיקה בע״מ', 'Cedar Software Ltd']);
+    expect(names.map((n) => n.getAttribute('title'))).toEqual(['גליל לוגיסטיקה בע״מ', 'Cedar Software Ltd']);
+  });
+
   it('draws the organization bars relative to the largest one', async () => {
     await show({ summary: fakeSummary() });
 
