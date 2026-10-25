@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { fakeRequest } from './requests-list.store.test-helpers';
-import { refreshesSummary, toStatusUpdateFailure, withCurrentState } from './status-update-failure';
+import { toStatusUpdateFailure, withCurrentState } from './status-update-failure';
 
 function problem(status: number, body: Record<string, unknown> | null = {}): HttpErrorResponse {
   return new HttpErrorResponse({ status, error: body });
@@ -72,19 +72,6 @@ describe('toStatusUpdateFailure', () => {
     expect(toStatusUpdateFailure(problem(503))).toMatchObject({ kind: 'error', message: expect.stringContaining('אין חיבור') });
     expect(toStatusUpdateFailure(problem(400))).toMatchObject({ kind: 'error' });
     expect(toStatusUpdateFailure(new Error('boom'))).toMatchObject({ kind: 'error' });
-  });
-});
-
-describe('refreshesSummary', () => {
-  it('is true after a change and after a 409, because the server dropped its cache', () => {
-    expect(refreshesSummary({ kind: 'updated', request: fakeRequest(1) })).toBe(true);
-    expect(refreshesSummary({ kind: 'conflict', message: '', current: null })).toBe(true);
-  });
-
-  it('is false when nothing changed on the server', () => {
-    expect(refreshesSummary({ kind: 'invalid-transition', message: '', current: null, allowedStatuses: [] })).toBe(false);
-    expect(refreshesSummary({ kind: 'not-found', message: '' })).toBe(false);
-    expect(refreshesSummary({ kind: 'error', message: '' })).toBe(false);
   });
 });
 

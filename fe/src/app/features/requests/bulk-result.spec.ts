@@ -1,5 +1,5 @@
-import { BulkItemResult, BulkStatusResponse } from '../../core/api/api.models';
-import { bulkRefreshesSummary, countOutcomes, toBulkResultRows } from './bulk-result';
+import { BulkItemResult } from '../../core/api/api.models';
+import { countOutcomes, toBulkResultRows } from './bulk-result';
 import { fakeRequest } from './requests-list.store.test-helpers';
 
 // One result of every outcome, in the shape the API sends them (docs/API.md)
@@ -104,26 +104,5 @@ describe('countOutcomes', () => {
 
   it('is empty for no results', () => {
     expect(countOutcomes([])).toEqual([]);
-  });
-});
-
-describe('bulkRefreshesSummary', () => {
-  const response = (...results: BulkItemResult[]): BulkStatusResponse => ({
-    total: results.length,
-    succeeded: results.filter((r) => r.outcome === 'Updated').length,
-    failed: results.filter((r) => r.outcome !== 'Updated').length,
-    results,
-  });
-
-  it('is true when something was updated', () => {
-    expect(bulkRefreshesSummary(response(updated, notFound))).toBe(true);
-  });
-
-  it('is true when only conflicts came back (the data is different from what the user saw)', () => {
-    expect(bulkRefreshesSummary(response(conflict, invalid))).toBe(true);
-  });
-
-  it('is false when nothing changed on the server', () => {
-    expect(bulkRefreshesSummary(response(invalid, notFound))).toBe(false);
   });
 });

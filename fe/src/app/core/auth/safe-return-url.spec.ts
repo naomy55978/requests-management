@@ -1,7 +1,12 @@
 import { DEFAULT_URL, safeReturnUrl } from './safe-return-url';
 
 describe('safeReturnUrl', () => {
-  it.each(['/requests', '/requests?page=2&sortBy=title', '/requests/5#top'])('accepts the internal path %s', (url) => {
+  it('sends the user to the dashboard when there is no return URL (D-43)', () => {
+    expect(DEFAULT_URL).toBe('/dashboard');
+    expect(safeReturnUrl(null)).toBe('/dashboard');
+  });
+
+  it.each(['/requests', '/dashboard', '/requests?page=2&sortBy=title', '/requests/5#top'])('accepts the internal path %s', (url) => {
     expect(safeReturnUrl(url)).toBe(url);
   });
 

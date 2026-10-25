@@ -1,5 +1,6 @@
 /** Where to go when there is no (valid) return URL. */
-export const DEFAULT_URL = '/requests';
+/** The dashboard is the first screen after login (D-43). */
+export const DEFAULT_URL = '/dashboard';
 
 /**
  * The `returnUrl` query parameter can be set by anyone who crafts a link, so only internal paths are accepted:

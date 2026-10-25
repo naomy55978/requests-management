@@ -15,16 +15,14 @@ import { PerformanceLogService } from '../../../core/perf/performance-log.servic
 import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
 import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
 import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
-import { bulkRefreshesSummary, countOutcomes, toBulkResultRows } from '../bulk-result';
+import { countOutcomes, toBulkResultRows } from '../bulk-result';
 import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
 import { ConfirmCompleteDialogComponent } from '../confirm-complete-dialog/confirm-complete-dialog.component';
 import { RequestHistoryDialogComponent } from '../request-history-dialog/request-history-dialog.component';
 import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
 import { RequestsTableComponent, StatusChangeRequest } from '../requests-table/requests-table.component';
-import { StatusChangeOutcome, refreshesSummary } from '../status-update-failure';
-import { SummaryCardsComponent } from '../summary-cards/summary-cards.component';
-import { SummaryStore } from '../summary.store';
+import { StatusChangeOutcome } from '../status-update-failure';
 
 /** The requests screen: puts the parts together and connects them to the store. */
 @Component({
@@ -38,17 +36,15 @@ import { SummaryStore } from '../summary.store';
     RequestsFiltersComponent,
     RequestsTableComponent,
     StateMessageComponent,
-    SummaryCardsComponent,
     TimingBadgeComponent,
   ],
   // A new store for every visit: rows and filters of a previous session never show up for the next user
-  providers: [RequestsListStore, SummaryStore],
+  providers: [RequestsListStore],
   templateUrl: './requests-page.component.html',
   styleUrl: './requests-page.component.scss',
 })
 export class RequestsPageComponent {
   protected readonly store = inject(RequestsListStore);
-  protected readonly summaryStore = inject(SummaryStore);
 
   private readonly filters = viewChild.required(RequestsFiltersComponent);
   private readonly dialog = inject(MatDialog);
@@ -56,9 +52,8 @@ export class RequestsPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly performance = inject(PerformanceLogService);
 
-  /** How long the last list and summary loads took (null until the first answer). */
+  /** How long the last list load took (null until the first answer). */
   protected readonly listTiming = computed(() => this.performance.latest('list'));
-  protected readonly summaryTiming = computed(() => this.performance.latest('summary'));
 
   /** Page sizes offered to the user; 100 is the most the API accepts. */
   protected readonly pageSizeOptions = [10, 20, 50, 100];
@@ -102,7 +97,7 @@ export class RequestsPageComponent {
       .subscribe(() => this.sendBulk(status));
   }
 
-  /** Sends the Bulk call and shows the result of every item; the store reloads the list, the summary is refreshed here. */
+  /** Sends the Bulk call and shows the result of every item; the store reloads the list. */
   private sendBulk(status: RequestStatus): void {
     this.store
       .bulkChangeStatus(status)
@@ -124,10 +119,6 @@ export class RequestsPageComponent {
           rows: toBulkResultRows(response.results, titles),
         };
         this.dialog.open(BulkResultDialogComponent, { data, width: '720px', maxWidth: '95vw' });
-
-        if (bulkRefreshesSummary(response)) {
-          this.summaryStore.refresh();
-        }
       });
   }
 
@@ -135,17 +126,13 @@ export class RequestsPageComponent {
     this.dialog.open(RequestHistoryDialogComponent, { data: { id: row.id, title: row.title }, width: '560px', maxWidth: '95vw' });
   }
 
-  /** Sends the change, tells the user what happened, and refreshes the summary when the server's data changed. */
+  /** Sends the change and tells the user what happened. */
   private sendStatusChange(row: RequestDto, status: RequestStatus): void {
     this.store
       .changeStatus(row, status)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((outcome) => {
         this.snackBar.open(this.describe(outcome), 'סגור', { duration: outcome.kind === 'updated' ? 4000 : 8000 });
-        // The server dropped its summary cache (D-11, D-20), so the numbers on screen are old now
-        if (refreshesSummary(outcome)) {
-          this.summaryStore.refresh();
-        }
       });
   }
 

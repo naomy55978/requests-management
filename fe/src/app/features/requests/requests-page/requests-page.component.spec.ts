@@ -13,14 +13,12 @@ describe('RequestsPageComponent', () => {
   let fixture: ComponentFixture<RequestsPageComponent>;
   let element: HTMLElement;
   let calls: ReturnType<typeof createFakeApi>['calls'];
-  let summaryCalls: ReturnType<typeof createFakeApi>['summaryCalls'];
   let statusCalls: ReturnType<typeof createFakeApi>['statusCalls'];
   let bulkCalls: ReturnType<typeof createFakeApi>['bulkCalls'];
 
   beforeEach(async () => {
     const fake = createFakeApi();
     calls = fake.calls;
-    summaryCalls = fake.summaryCalls;
     statusCalls = fake.statusCalls;
     bulkCalls = fake.bulkCalls;
     await TestBed.configureTestingModule({
@@ -121,39 +119,8 @@ describe('RequestsPageComponent', () => {
     expect(element.querySelectorAll('th.mat-mdc-header-cell').length).toBeGreaterThan(0);
   });
 
-  describe('summary cards', () => {
-    it('are loaded next to the list and have their own loading state', async () => {
-      expect(summaryCalls).toHaveLength(1);
-      expect(element.querySelectorAll('.placeholder')).toHaveLength(4);
-
-      summaryCalls[0].respond();
-      await fixture.whenStable();
-
-      expect(element.textContent).toContain('1,234');
-    });
-
-    it('do not block the list: the rows show while the summary is still loading', async () => {
-      calls[0].respond([fakeRequest(1)], 1);
-      await fixture.whenStable();
-
-      expect(rows()).toHaveLength(1);
-      expect(element.querySelectorAll('.placeholder')).toHaveLength(4);
-    });
-
-    it('failing does not break the list, and "try again" loads only the summary', async () => {
-      calls[0].respond([fakeRequest(1)], 1);
-      summaryCalls[0].fail(new HttpErrorResponse({ status: 503 }));
-      await fixture.whenStable();
-
-      expect(rows()).toHaveLength(1);
-      expect(element.querySelector('app-summary-cards [role="alert"]')).not.toBeNull();
-
-      element.querySelector<HTMLButtonElement>('app-summary-cards button')?.click();
-      await fixture.whenStable();
-
-      expect(summaryCalls).toHaveLength(2);
-      expect(calls).toHaveLength(1);
-    });
+  it('has no summary cards: they live on the dashboard (D-43)', () => {
+    expect(element.querySelector('app-summary-cards')).toBeNull();
   });
 
   describe('changing the status from the row menu', () => {
@@ -172,7 +139,6 @@ describe('RequestsPageComponent', () => {
 
     beforeEach(async () => {
       calls[0].respond([{ ...fakeRequest(1), status: 'InProgress', version: 'v1' }], 1);
-      summaryCalls[0].respond();
       await fixture.whenStable();
     });
 
@@ -219,29 +185,20 @@ describe('RequestsPageComponent', () => {
       expect(statusCalls).toEqual([expect.objectContaining({ id: 1, newStatus: 'Completed' })]);
     });
 
-    describe('refreshing the summary (the server drops its cache when data changes)', () => {
-      it('after a change that went through', async () => {
-        await pick('ממתינה');
-        statusCalls[0].respond({ ...fakeRequest(1), status: 'Waiting', version: 'v2' });
-        await fixture.whenStable();
-
-        expect(summaryCalls).toHaveLength(2);
-      });
-
-      it('after a 409, because someone else changed the data', async () => {
+    describe('when the server refuses the change', () => {
+      it('shows the current state of the row after a 409', async () => {
         await pick('ממתינה');
         statusCalls[0].fail(
           new HttpErrorResponse({ status: 409, error: { currentStatus: 'Completed', currentVersion: 'v9', currentUpdatedAt: '2026-10-24T08:00:00Z' } }),
         );
         await fixture.whenStable();
 
-        expect(summaryCalls).toHaveLength(2);
         expect(snack()).toContain('עודכנה בינתיים על ידי משתמש אחר');
         // The row shows what the server says now, so the user sees why and can try again
         expect(element.querySelector('tr.mat-mdc-row')?.textContent).toContain('הושלמה');
       });
 
-      it('not after a 422, where nothing changed', async () => {
+      it('explains a 422, where nothing changed', async () => {
         await pick('ממתינה');
         statusCalls[0].fail(
           new HttpErrorResponse({
@@ -251,16 +208,14 @@ describe('RequestsPageComponent', () => {
         );
         await fixture.whenStable();
 
-        expect(summaryCalls).toHaveLength(1);
         expect(snack()).toContain('אינו מותר');
       });
 
-      it('not after a 404, and the list is loaded again', async () => {
+      it('loads the list again after a 404', async () => {
         await pick('ממתינה');
         statusCalls[0].fail(new HttpErrorResponse({ status: 404 }));
         await fixture.whenStable();
 
-        expect(summaryCalls).toHaveLength(1);
         expect(calls).toHaveLength(2);
         expect(snack()).toContain('לא נמצאה');
       });
@@ -299,7 +254,6 @@ describe('RequestsPageComponent', () => {
 
     beforeEach(async () => {
       calls[0].respond(rowsData, 100); // more rows than one page, so there is a next page
-      summaryCalls[0].respond();
       await fixture.whenStable();
     });
 
@@ -354,7 +308,7 @@ describe('RequestsPageComponent', () => {
       expect(dialog?.textContent).toContain('עודכנה בינתיים על ידי משתמש אחר');
     });
 
-    it('then loads the list again and refreshes the summary', async () => {
+    it('then loads the list again', async () => {
       await tickBoth();
       await chooseTarget('ממתינה');
       barButton('עדכן').click();
@@ -362,22 +316,6 @@ describe('RequestsPageComponent', () => {
       await tick();
 
       expect(calls).toHaveLength(2);
-      expect(summaryCalls).toHaveLength(2);
-    });
-
-    it('does not refresh the summary when the server changed nothing', async () => {
-      await tickBoth();
-      await chooseTarget('ממתינה');
-      barButton('עדכן').click();
-      bulkCalls[0].respond({
-        total: 2,
-        succeeded: 0,
-        failed: 2,
-        results: [{ id: 1, outcome: 'NotFound' }, { id: 2, outcome: 'InvalidTransition', currentStatus: 'Completed', allowedStatuses: [] }],
-      });
-      await tick();
-
-      expect(summaryCalls).toHaveLength(1);
     });
 
     it('empties the selection after the call (the list is loaded again)', async () => {
@@ -456,7 +394,7 @@ describe('RequestsPageComponent', () => {
       expect(element.querySelector('app-timing-badge .badge')).toBeNull();
     });
 
-    it('show the last list and summary load, quietly, next to the title', async () => {
+    it('show the last list load, quietly, next to the title', async () => {
       const log = TestBed.inject(PerformanceLogService);
       log.record({
         at: new Date(),
@@ -466,14 +404,6 @@ describe('RequestsPageComponent', () => {
         clientMs: 20,
         timing: { totalMs: 42, dbMs: 30, queryCount: 2, cache: null },
       });
-      log.record({
-        at: new Date(),
-        kind: 'summary',
-        method: 'GET',
-        status: 200,
-        clientMs: 3,
-        timing: { totalMs: 1.2, dbMs: 0, queryCount: 0, cache: 'hit' },
-      });
       await fixture.whenStable();
 
       // Label, time and cache are separate elements (the gap between them is CSS), so they are read one by one
@@ -481,7 +411,6 @@ describe('RequestsPageComponent', () => {
         ['.label', '.value', '.cache'].map((part) => badge.querySelector(part)?.textContent ?? null),
       );
       expect(badges).toEqual([
-        ['סיכום', '1.2 ms', 'HIT'],
         ['רשימה', '42 ms', null],
       ]);
     });

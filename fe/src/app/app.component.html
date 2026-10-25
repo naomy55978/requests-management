@@ -1,7 +1,11 @@
 <mat-toolbar class="app-toolbar">
   <span class="app-title">ניהול פניות</span>
-  <span class="app-spacer"></span>
   @if (auth.displayName(); as name) {
+    <nav class="app-nav" aria-label="ניווט ראשי">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">לוח בקרה</a>
+      <a mat-button routerLink="/requests" routerLinkActive="active" ariaCurrentWhenActive="page">פניות</a>
+    </nav>
+    <span class="app-spacer"></span>
     <button
       mat-button
       type="button"
@@ -14,6 +18,8 @@
     </button>
     <span class="app-user">{{ name }}</span>
     <button mat-button type="button" (click)="auth.logout()">התנתקות</button>
+  } @else {
+    <span class="app-spacer"></span>
   }
 </mat-toolbar>
 

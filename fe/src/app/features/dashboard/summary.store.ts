@@ -10,10 +10,11 @@ type LoadOutcome = { summary: SummaryDto; error?: undefined } | { error: string;
 
 /**
  * State of the summary cards. It has its own loading and error state and its own request, so a slow or failed
- * summary never blocks the list (and the other way round). `refresh()` loads it again: the page calls it after a
- * status change, because the server has dropped its cache then (D-11, D-20) and the numbers are different.
+ * summary never blocks anything else. It loads when the dashboard opens, and `refresh()` loads it again (retry after
+ * an error, or the refresh button): there is no automatic refresh, and a status change on the requests screen needs
+ * none, because the next visit to the dashboard loads fresh numbers (the server dropped its cache then, D-11, D-20).
  *
- * Provided by the page component, like the list store (D-27).
+ * Provided by the dashboard page component, like the list store (D-27).
  */
 @Injectable()
 export class SummaryStore {

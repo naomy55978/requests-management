@@ -47,14 +47,6 @@ export function countOutcomes(results: readonly BulkItemResult[]): { outcome: Bu
   })).filter((entry) => entry.count > 0);
 }
 
-/**
- * The summary is refreshed when the server's data changed (an update) or turned out to be different from what
- * the user saw (a conflict): in both cases the server has dropped its cache (D-11, D-20).
- */
-export function bulkRefreshesSummary(response: BulkStatusResponse): boolean {
-  return response.results.some((result) => result.outcome === 'Updated' || result.outcome === 'Conflict');
-}
-
 function describeResult(result: BulkItemResult): string {
   switch (result.outcome) {
     case 'Updated':

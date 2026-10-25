@@ -72,7 +72,7 @@ describe('LoginComponent', () => {
     await submit('dana.cohen', 'Demo123!');
     backend.expectOne('/api/auth/login').flush(fakeSession());
 
-    expect(navigateByUrl).toHaveBeenCalledWith('/requests');
+    expect(navigateByUrl).toHaveBeenCalledWith('/dashboard');
   });
 
   it('shows a friendly message for wrong credentials and stays on the screen', async () => {

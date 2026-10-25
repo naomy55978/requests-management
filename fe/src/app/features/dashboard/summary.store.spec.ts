@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 
 import { RequestsApiService } from '../../core/api/requests-api.service';
-import { createFakeApi, fakeSummary } from './requests-list.store.test-helpers';
+import { createFakeApi, fakeSummary } from '../requests/requests-list.store.test-helpers';
 import { SummaryStore } from './summary.store';
 
 describe('SummaryStore', () => {

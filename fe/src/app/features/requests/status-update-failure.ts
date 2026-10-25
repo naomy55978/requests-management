@@ -58,11 +58,6 @@ export function toStatusUpdateFailure(error: unknown): StatusUpdateFailure {
   }
 }
 
-/** The summary is refreshed when the server may have changed data (and so dropped its cache): after a change and after a 409. */
-export function refreshesSummary(outcome: StatusChangeOutcome): boolean {
-  return outcome.kind === 'updated' || outcome.kind === 'conflict';
-}
-
 /** The row as the server says it is now. A member that is missing keeps the value the row has. */
 export function withCurrentState(row: RequestDto, current: CurrentRequestState): RequestDto {
   return { ...row, status: current.status, version: current.version, updatedAt: current.updatedAt ?? row.updatedAt };

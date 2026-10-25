@@ -17,6 +17,11 @@
   font: var(--mat-sys-title-large);
 }
 
+.app-nav {
+  display: flex;
+  gap: 4px;
+}
+
 .app-spacer {
   flex: 1;
 }
@@ -27,9 +32,16 @@
 
 // Text buttons are primary-colored by default, which is invisible on the primary toolbar.
 // The color is set directly: the Material token alone loses against the theme's own rule.
-.app-toolbar button {
+.app-toolbar button,
+.app-toolbar a {
   --mat-button-text-label-text-color: var(--mat-sys-on-primary);
   color: var(--mat-sys-on-primary);
+}
+
+// The screen the user is on: a bar under the link (not only color, so it is visible to everyone)
+.app-nav a.active {
+  box-shadow: inset 0 -3px 0 var(--mat-sys-on-primary);
+  border-radius: 0;
 }
 
 .app-performance-panel {

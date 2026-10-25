@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { fakeSession } from './core/auth/auth.test-helpers';
 import { AppComponent } from './app.component';
@@ -62,6 +62,52 @@ describe('AppComponent', () => {
       const { element } = await render(false);
 
       expect(button(element)).toBeNull();
+    });
+  });
+
+  describe('navigation', () => {
+    async function render(loggedIn: boolean, url = '/dashboard') {
+      await TestBed.configureTestingModule({
+        imports: [AppComponent],
+        // Routes without a component: only the URL matters for the active link
+        providers: [provideRouter([{ path: 'dashboard', children: [] }, { path: 'requests', children: [] }]), provideHttpClient()],
+      }).compileComponents();
+      if (loggedIn) {
+        sessionStorage.setItem('rm.session', JSON.stringify(fakeSession()));
+      }
+      const fixture = TestBed.createComponent(AppComponent);
+      await TestBed.inject(Router).navigateByUrl(url);
+      await fixture.whenStable();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    const links = (element: HTMLElement) => Array.from(element.querySelectorAll<HTMLAnchorElement>('nav.app-nav a'));
+
+    it('offers "לוח בקרה" and "פניות" to a logged-in user', async () => {
+      const element = await render(true);
+
+      expect(links(element).map((a) => [a.textContent?.trim(), a.getAttribute('href')])).toEqual([
+        ['לוח בקרה', '/dashboard'],
+        ['פניות', '/requests'],
+      ]);
+    });
+
+    it('has no navigation before the user is logged in', async () => {
+      const element = await render(false, '/dashboard');
+
+      expect(element.querySelector('nav.app-nav')).toBeNull();
+    });
+
+    it.each([
+      ['/dashboard', 'לוח בקרה'],
+      ['/requests', 'פניות'],
+    ])('marks only the screen the user is on (%s)', async (url, label) => {
+      const element = await render(true, url);
+
+      const active = links(element).filter((a) => a.classList.contains('active'));
+      expect(active.map((a) => a.textContent?.trim())).toEqual([label]);
+      expect(active[0].getAttribute('aria-current')).toBe('page');
+      expect(links(element).filter((a) => a.hasAttribute('aria-current'))).toHaveLength(1);
     });
   });
 });
