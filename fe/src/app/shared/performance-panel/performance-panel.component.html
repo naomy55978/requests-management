@@ -1,6 +1,6 @@
 <section class="panel" id="performance-panel" aria-labelledby="performance-title">
   <header class="panel-header">
-    <h2 id="performance-title" class="panel-title">ביצועים – בקשות אחרונות</h2>
+    <h2 id="performance-title" class="panel-title" #heading tabindex="-1">ביצועים – בקשות אחרונות</h2>
     @if (averageText(); as average) {
       <span class="panel-note">{{ entries().length }} בקשות · ממוצע {{ average }}</span>
     }

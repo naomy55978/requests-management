@@ -58,6 +58,40 @@ describe('AppComponent', () => {
       expect(element.querySelector('app-performance-panel')).toBeNull();
     });
 
+    it('moves focus to the panel heading when it opens, so the user sees it wherever the page is scrolled', async () => {
+      const { fixture, element } = await render(true);
+
+      button(element)?.click();
+      await fixture.whenStable();
+
+      const heading = element.querySelector('app-performance-panel h2');
+      expect(heading).not.toBeNull();
+      expect(document.activeElement).toBe(heading);
+    });
+
+    it('points the button at the panel it controls', async () => {
+      const { fixture, element } = await render(true);
+
+      button(element)?.click();
+      await fixture.whenStable();
+
+      const controlled = button(element)?.getAttribute('aria-controls');
+      expect(controlled).toBeTruthy();
+      expect(element.querySelector(`#${controlled}`)).toBe(element.querySelector('app-performance-panel section'));
+    });
+
+    it('gives focus back to the button when the panel closes', async () => {
+      const { fixture, element } = await render(true);
+
+      button(element)?.click();
+      await fixture.whenStable();
+      button(element)?.click();
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-performance-panel')).toBeNull();
+      expect(document.activeElement).toBe(button(element));
+    });
+
     it('has no button before the user is logged in', async () => {
       const { element } = await render(false);
 

@@ -10,6 +10,7 @@
       mat-button
       type="button"
       class="app-performance"
+      #performanceButton
       aria-controls="performance-panel"
       [attr.aria-expanded]="performanceOpen()"
       (click)="togglePerformance()"
@@ -24,9 +25,10 @@
 </mat-toolbar>
 
 <main class="app-content">
-  <router-outlet />
-
+  <!-- Above the screen, not below it: below a 20-row table it opened out of sight, and the button seemed to do nothing -->
   @if (performanceOpen() && auth.displayName()) {
     <app-performance-panel class="app-performance-panel" />
   }
+
+  <router-outlet />
 </main>

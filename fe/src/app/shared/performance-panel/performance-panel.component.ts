@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, ElementRef, afterNextRender, computed, inject, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 import { formatMs } from '../../core/perf/format-ms';
@@ -47,6 +47,13 @@ const MISSING = '–';
 })
 export class PerformancePanelComponent {
   private readonly log = inject(PerformanceLogService);
+  private readonly heading = viewChild.required<ElementRef<HTMLElement>>('heading');
+
+  constructor() {
+    // The panel is opened by a button far from where it appears (and the page may be scrolled): moving focus here
+    // brings it into view and tells a screen reader user that something opened.
+    afterNextRender(() => this.heading().nativeElement.focus());
+  }
 
   protected readonly entries = this.log.entries;
 
