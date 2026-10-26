@@ -14,6 +14,8 @@
 | [requests-management-be](https://github.com/naomy55978/requests-management-be) | Backend: ‏API, ‏BL, ‏DAL, ‏DTO, בדיקות, סקריפטי אימות ומדידה, CI |
 | [requests-management-fe](https://github.com/naomy55978/requests-management-fe) | Frontend: אפליקציית Angular, בדיקות, CI |
 
+> **[סיכום הפרויקט – PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**: הפרויקט כולו במבט אחד, עם תרשימים – ארכיטקטורה, מודל הנתונים, השרת והלקוח, החלטות מרכזיות, תהליך העבודה ומבנה התיקיות.
+
 ## תוכן העניינים
 1. [טכנולוגיות וגרסאות](#טכנולוגיות-וגרסאות)
 2. [הרצה](#הרצה)
