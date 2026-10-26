@@ -137,7 +137,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// Not in Development (D-48): the API runs there on plain http (the "http" profile, behind the Angular dev proxy),
+// with no HTTPS port to redirect to, so the middleware would only log "Failed to determine the https port".
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
