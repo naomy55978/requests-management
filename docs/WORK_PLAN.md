@@ -41,8 +41,8 @@ Closes naomy55978/requests-management-docs#12
 | M6 | בדיקות | בדיקות ירוקות ב־CI | 5 ש' | M2–M5 |
 | M7 | Angular | UI מלא | 12 ש' | M2–M5 |
 | M8 | ביצועים | PERFORMANCE.md + כותרת Server-Timing | 5 ש' | M1–M2 |
-| M9 | תיעוד והגשה | הגשה מלאה | 4.75 ש' (במקור 4) | הכל |
-| | **סה"כ** | | **50.5 ש'** | |
+| M9 | תיעוד והגשה | הגשה מלאה | 5.25 ש' (במקור 4) | הכל |
+| | **סה"כ** | | **51 ש'** | |
 
 M0 כולל 0.75 ש' שלא תוכננו מראש עבור פיצול הפתרון לשלושה Repos (#50).
 
@@ -154,16 +154,16 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | ניתוח Bottleneck וכתיבת docs/PERFORMANCE.md | 1 | [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | §6 (Bottleneck והצעת שיפור), §1 (תיעוד מניעת טעינה מלאה), §11 |
 | [#51](https://github.com/naomy55978/requests-management-docs/issues/51) | כותרת `Server-Timing` בתשובות ה־API (חלק ה־Backend של D‑23) | 1.5 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | §6 (מדידה בזמן ריצה), §11 |
 
-### M9 – תיעוד והגשה (4.75 ש', במקור 4)
+### M9 – תיעוד והגשה (5.25 ש', במקור 4)
 
-> **עדכון הערכה (26.10.2026):** ‏#48 ‏1 ← 1.75 ש' – הבדיקה מקצה לקצה רצה על LocalDB "קר", שבו ה־Migration וה־Seed לבדם לוקחים דקות, וכוללת את שני תיקוני ההרצה שנמצאו (D‑48).
+> **עדכון הערכה (26.10.2026):** ‏#48 ‏1 ← 2.25 ש' – הבדיקה מקצה לקצה רצה על LocalDB "קר" וכוללת את שני תיקוני ההרצה שנמצאו (D‑48; 1.75 ש'), ועוד 0.5 ש' לחימום בעלייה (קוד, שש בדיקות, מדידה חוזרת ותיעוד) שנוסף אחרי שהמדידה הראשונה הראתה 22.1 שנ' בבקשה הראשונה לסיכום.
 
 | Issue | משימה | מאמץ | תלוי ב־ | סעיף במבדק |
 |---|---|---|---|---|
 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45) | README בעברית: הקמה, הרצה, טכנולוגיות ומבנה | 1.25 | [#31](https://github.com/naomy55978/requests-management-docs/issues/31), [#41](https://github.com/naomy55978/requests-management-docs/issues/41) | §11 תיעוד הפתרון |
 | [#46](https://github.com/naomy55978/requests-management-docs/issues/46) | השלמת DECISIONS.md: חלופות, מגבלה ידועה ושיפור | 0.75 | [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | §11 (שתי החלטות וחלופות, מגבלה ושיפור) |
 | [#47](https://github.com/naomy55978/requests-management-docs/issues/47) | תיעוד השימוש בכלי AI | 0.5 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45) | §11 (פירוט שימוש בכלי AI) |
-| [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | בדיקה מקצה לקצה מ-clone נקי | 1.75 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45) | אופן ההגשה (אפשר בחינה והרצה) |
+| [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | בדיקה מקצה לקצה מ-clone נקי | 2.25 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45) | אופן ההגשה (אפשר בחינה והרצה) |
 | [#49](https://github.com/naomy55978/requests-management-docs/issues/49) | גישת הבודקים לשלושת ה-Repos ורשימת הגשה | 0.5 | [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | אופן ההגשה (נגישות הפתרון, לא ZIP) |
 
 ## מטריצת מעקב: דרישה ← משימות
