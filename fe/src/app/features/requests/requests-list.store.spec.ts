@@ -566,18 +566,9 @@ describe('RequestsListStore', () => {
 
         store.selectPage(true);
         expect(store.selectedItems()).toHaveLength(3);
-        expect(store.allOnPageSelected()).toBe(true);
 
         store.selectPage(false);
         expect(store.selectedIds().size).toBe(0);
-        expect(store.allOnPageSelected()).toBe(false);
-      });
-
-      it('is not "all selected" for an empty page', () => {
-        const { store, calls } = setUp();
-        calls[0].respond([], 0);
-
-        expect(store.allOnPageSelected()).toBe(false);
       });
 
       it.each([

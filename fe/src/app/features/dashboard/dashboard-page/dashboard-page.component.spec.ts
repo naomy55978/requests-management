@@ -4,16 +4,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { provideAppIcons } from '../../../core/icons/app-icons';
 import { PerformanceLogService } from '../../../core/perf/performance-log.service';
-import { createFakeApi, fakeSummary } from '../../requests/requests-list.store.test-helpers';
+import { createFakeSummaryApi, fakeSummary } from '../summary.test-helpers';
 import { DashboardPageComponent } from './dashboard-page.component';
 
 describe('DashboardPageComponent', () => {
   let fixture: ComponentFixture<DashboardPageComponent>;
   let element: HTMLElement;
-  let summaryCalls: ReturnType<typeof createFakeApi>['summaryCalls'];
+  let summaryCalls: ReturnType<typeof createFakeSummaryApi>['summaryCalls'];
 
   beforeEach(async () => {
-    const fake = createFakeApi();
+    const fake = createFakeSummaryApi();
     summaryCalls = fake.summaryCalls;
     await TestBed.configureTestingModule({
       imports: [DashboardPageComponent],

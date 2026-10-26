@@ -116,8 +116,6 @@ export class RequestsListStore {
     return this.items().filter((item) => ids.has(item.id));
   });
 
-  readonly allOnPageSelected = computed(() => this.items().length > 0 && this.selectedItems().length === this.items().length);
-
   /**
    * The statuses a Bulk change can offer: every status that at least one selected row can move to. A row that cannot
    * make the chosen move is not hidden by this: the server answers InvalidTransition for it and the user sees why.

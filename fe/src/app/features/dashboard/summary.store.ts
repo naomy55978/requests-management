@@ -57,7 +57,7 @@ export class SummaryStore {
       });
   }
 
-  /** Loads the summary again (retry after an error, refresh after a status change). */
+  /** Loads the summary again (retry after an error, or the refresh button). */
   refresh(): void {
     this.refresh$.next();
   }

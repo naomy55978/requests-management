@@ -1,19 +1,19 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 
 import { SummaryDto } from '../../../core/api/api.models';
 import { PriorityChipComponent } from '../../../shared/priority-chip/priority-chip.component';
+import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
 import { StatusChipComponent } from '../../../shared/status-chip/status-chip.component';
 
 /**
  * The summary: total, counts by status and priority, and the organizations with the most open requests.
- * Shows what it is given and has its own loading and error state; the list below does not wait for it.
+ * Shows what it is given and has its own loading and error state (the dashboard page owns the request).
  */
 @Component({
   selector: 'app-summary-cards',
-  imports: [DecimalPipe, MatButtonModule, MatCardModule, StatusChipComponent, PriorityChipComponent],
+  imports: [DecimalPipe, MatCardModule, StateMessageComponent, StatusChipComponent, PriorityChipComponent],
   templateUrl: './summary-cards.component.html',
   styleUrl: './summary-cards.component.scss',
 })

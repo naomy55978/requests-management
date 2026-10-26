@@ -8,7 +8,6 @@ import {
   RequestListQuery,
   RequestStatus,
   StatusHistoryEntry,
-  SummaryDto,
 } from '../../core/api/api.models';
 
 /** One status change sent to the (fake) API, answered by hand. */
@@ -28,34 +27,6 @@ export interface FakeBulkCall {
   cancelled: boolean;
   respond(response: BulkStatusResponse): void;
   fail(error: unknown): void;
-}
-
-/** One call to the (fake) summary endpoint, answered by hand like {@link FakeCall}. */
-export interface FakeSummaryCall {
-  cancelled: boolean;
-  respond(summary?: SummaryDto): void;
-  fail(error: unknown): void;
-}
-
-export function fakeSummary(): SummaryDto {
-  return {
-    total: 1234,
-    byStatus: [
-      { status: 'New', count: 100 },
-      { status: 'InProgress', count: 200 },
-      { status: 'Waiting', count: 300 },
-      { status: 'Completed', count: 634 },
-    ],
-    byPriority: [
-      { priority: 'Low', count: 400 },
-      { priority: 'Medium', count: 500 },
-      { priority: 'High', count: 334 },
-    ],
-    topOrganizations: [
-      { organizationName: 'גליל לוגיסטיקה בע״מ', openRequests: 40 },
-      { organizationName: 'Cedar Software Ltd', openRequests: 20 },
-    ],
-  };
 }
 
 /** One call the store made to the (fake) API, which the test answers by hand. */
@@ -100,7 +71,6 @@ export function createFakeApi() {
       };
     });
 
-  const summaryCalls: FakeSummaryCall[] = [];
   const statusCalls: FakeStatusCall[] = [];
   const bulkCalls: FakeBulkCall[] = [];
 
@@ -155,37 +125,12 @@ export function createFakeApi() {
       };
     });
 
-  const summary = () =>
-    new Observable<SummaryDto>((subscriber: Subscriber<SummaryDto>) => {
-      let answered = false;
-      const call: FakeSummaryCall = {
-        cancelled: false,
-        respond: (data = fakeSummary()) => {
-          answered = true;
-          subscriber.next(data);
-          subscriber.complete();
-        },
-        fail: (error) => {
-          answered = true;
-          subscriber.error(error);
-        },
-      };
-      summaryCalls.push(call);
-      return () => {
-        if (!answered) {
-          call.cancelled = true;
-        }
-      };
-    });
-
   return {
     calls,
-    summaryCalls,
     statusCalls,
     bulkCalls,
     api: {
       list: vi.fn(list),
-      summary: vi.fn(summary),
       changeStatus: vi.fn(changeStatus),
       bulkChangeStatus: vi.fn(bulkChangeStatus),
       // The history dialog just waits for an answer that never comes

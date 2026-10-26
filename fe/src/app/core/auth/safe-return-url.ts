@@ -1,5 +1,4 @@
-/** Where to go when there is no (valid) return URL. */
-/** The dashboard is the first screen after login (D-43). */
+/** Where to go when there is no (valid) return URL: the dashboard, the first screen after login (D-43). */
 export const DEFAULT_URL = '/dashboard';
 
 /**

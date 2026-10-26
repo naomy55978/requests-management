@@ -17,7 +17,7 @@ import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.
 import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
 import { countOutcomes, toBulkResultRows } from '../bulk-result';
 import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
-import { ConfirmCompleteDialogComponent } from '../confirm-complete-dialog/confirm-complete-dialog.component';
+import { ConfirmCompleteData, ConfirmCompleteDialogComponent } from '../confirm-complete-dialog/confirm-complete-dialog.component';
 import { RequestHistoryDialogComponent } from '../request-history-dialog/request-history-dialog.component';
 import { RequestsFiltersComponent } from '../requests-filters/requests-filters.component';
 import { RequestsListStore } from '../requests-list.store';
@@ -70,43 +70,34 @@ export class RequestsPageComponent {
   /** Page sizes offered to the user; 100 is the most the API accepts. */
   protected readonly pageSizeOptions = [10, 20, 50, 100];
 
-  /**
-   * The user picked a status in a row's menu. Completed is final (D-05), so only that change is confirmed first;
-   * the others are sent at once.
-   */
+  /** The user picked a status in a row's menu. */
   protected changeStatus({ row, status }: StatusChangeRequest): void {
-    if (status !== 'Completed') {
-      this.sendStatusChange(row, status);
-      return;
-    }
+    this.confirmThenSend(status, { id: row.id, title: row.title }, () => this.sendStatusChange(row, status));
+  }
 
-    this.dialog
-      .open(ConfirmCompleteDialogComponent, { data: { id: row.id, title: row.title } })
-      .afterClosed()
-      .pipe(
-        filter((confirmed) => confirmed === true),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(() => this.sendStatusChange(row, status));
+  /** The user chose a status for the ticked rows in the bulk bar. */
+  protected applyBulk(status: RequestStatus): void {
+    this.confirmThenSend(status, { count: this.store.selectedIds().size }, () => this.sendBulk(status));
   }
 
   /**
-   * The user chose a status for the ticked rows in the bulk bar. Like a single change, only "completed" is confirmed first.
+   * Completed is final (D-05), so only a move to it is confirmed first (one row or Bulk alike); the other
+   * statuses are sent at once. A cancel sends nothing.
    */
-  protected applyBulk(status: RequestStatus): void {
+  private confirmThenSend(status: RequestStatus, subject: ConfirmCompleteData, send: () => void): void {
     if (status !== 'Completed') {
-      this.sendBulk(status);
+      send();
       return;
     }
 
     this.dialog
-      .open(ConfirmCompleteDialogComponent, { data: { count: this.store.selectedIds().size } })
+      .open(ConfirmCompleteDialogComponent, { data: subject })
       .afterClosed()
       .pipe(
         filter((confirmed) => confirmed === true),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => this.sendBulk(status));
+      .subscribe(send);
   }
 
   /** Sends the Bulk call and shows the result of every item; the store reloads the list. */

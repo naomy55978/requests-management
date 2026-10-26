@@ -64,6 +64,21 @@ bdi.bidi-fit {
   clip-path: inset(50%);
 }
 
+// The title row of a screen: the title on one side, quiet tools (time badge, refresh) on the other
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
 html,
 body {
   height: 100%;

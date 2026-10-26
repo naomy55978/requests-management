@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SummaryDto } from '../../../core/api/api.models';
-import { fakeSummary } from '../../requests/requests-list.store.test-helpers';
+import { fakeSummary } from '../summary.test-helpers';
 import { SummaryCardsComponent } from './summary-cards.component';
 
 describe('SummaryCardsComponent', () => {

@@ -92,16 +92,6 @@
   }
 }
 
-.summary-error {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 16px;
-  color: var(--mat-sys-on-error-container);
-  background: var(--mat-sys-error-container);
-}
-
 @media (max-width: 640px) {
   .card-orgs {
     grid-column: span 1;

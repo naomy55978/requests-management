@@ -1,4 +1,4 @@
-import { RequestPriority, RequestSortField, RequestStatus } from '../api/api.models';
+import { RequestPriority, RequestStatus } from '../api/api.models';
 
 // Hebrew texts for the values the API sends as English strings. One place, so a label is never repeated.
 
@@ -36,11 +36,3 @@ export const FIELD_LABELS: Record<string, string> = {
 export function describeSelectedCount(count: number): string {
   return count === 1 ? 'פנייה אחת נבחרה' : `${count} פניות נבחרו`;
 }
-
-export const SORT_FIELD_LABELS: Record<RequestSortField, string> = {
-  createdAt: 'נוצרה',
-  updatedAt: 'עודכנה',
-  priority: 'עדיפות',
-  status: 'סטטוס',
-  title: 'כותרת',
-};
