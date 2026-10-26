@@ -31,7 +31,21 @@ dotnet build RequestsManagement.sln
 
 - **ההרצה הראשונה עשויה להימשך מספר דקות** (הקמת המסד + יצירת 100,000 פניות, ב־LocalDB "קר" נמדדו אף 2–3 דקות). בזמן זה ה־API עדיין לא מאזין, וב־Console מופיעה ההודעה `Seeding 100,000 requests - this may take a few minutes on first run`. הרצות הבאות מדלגות על היצירה ועולות תוך שניות.
 - ברירת המחדל: ‏SQL Server LocalDB – ‏`(localdb)\MSSQLLocalDB`.
+- **מיד אחרי ההרצה הראשונה** המסד עדיין "קר": במחשב עם מעט זיכרון פנוי הבקשות הראשונות עלולות להיות איטיות, ובמקרה קיצוני להיכשל ב־timeout (30 שנ'). במסך תופיע הודעת שגיאה עם "נסה שוב" – ניסיון חוזר עובר, כי המסד כבר בזיכרון. כדאי לסגור אפליקציות כבדות לפני ההרצה הראשונה (החלטה D‑48).
 - מופע אחר: לדרוס את `ConnectionStrings:RequestsDb` באמצעות user-secrets או משתנה הסביבה `ConnectionStrings__RequestsDb`.
+- **בלי LocalDB (למשל Mac/Linux):** SQL Server 2022 בקונטיינר – זה אותו Image שמולו רצות הבדיקות ב־CI. **הפקודה לא הורצה במחשב הפיתוח** (אין בו Docker – החלטות D‑09, D‑47):
+
+```
+docker run -d --name requests-sql -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<סיסמה חזקה>" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+```
+
+ואז, לפני `dotnet run`:
+
+```
+export ConnectionStrings__RequestsDb="Server=localhost,1433;Database=RequestsManagement;User Id=sa;Password=<אותה סיסמה>;TrustServerCertificate=True"
+```
+
+(ב־PowerShell: ‏`$env:ConnectionStrings__RequestsDb = "..."`). לבדיקות האוטומטיות – אותה מחרוזת בלי `Database=…` במשתנה `TESTS_SQL_CONNECTION` (ראו "חיבור ל־SQL Server" למטה).
 - כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` (מופעלים ב־`appsettings.Development.json`).
 - יצירה מחדש של הנתונים:
 
@@ -54,7 +68,7 @@ dotnet run --project src/RequestsManagement.API --launch-profile http
 **כל ה־Endpoints דורשים טוקן**, מלבד ההתחברות עצמה (החלטה D‑10).
 
 1. ב־Swagger UI: ‏`POST /api/auth/login` עם משתמש דמו, למשל `{"userName": "dana.cohen", "password": "Demo123!"}`.
-   לכל משתמשי הדמו אותה סיסמה – **`Demo123!`** (נתוני דמו בלבד). שמות משתמשים נוספים מופיעים בשדה `assignedTo` של הפניות.
+   לכל משתמשי הדמו אותה סיסמה – **`Demo123!`** (נתוני דמו בלבד). משתמש שני, למשל לבדיקת `409` בשתי לשוניות: ‏`amit.navon`. שמות משתמשים נוספים מופיעים בשדה `assignedTo` של הפניות.
 2. להעתיק את `accessToken` מהתשובה, ללחוץ **Authorize** ולהדביק אותו.
 
 הטוקן תקף 8 שעות; לאחר מכן כל קריאה מחזירה `401`. מפתח החתימה ב־`appsettings.Development.json` מיועד לפיתוח בלבד – בכל סביבה אחרת יש לספק `Jwt__SigningKey` (לפחות 32 בתים), אחרת ה־API לא יעלה.
