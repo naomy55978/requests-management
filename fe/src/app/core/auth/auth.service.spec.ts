@@ -67,6 +67,24 @@ describe('AuthService', () => {
       vi.advanceTimersByTime(61_000);
 
       expect(auth.isAuthenticated()).toBe(false);
+      expect(auth.token).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('drops an expired session everywhere: no user name for the toolbar, nothing left in storage', () => {
+    vi.useFakeTimers();
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(fakeSession(60_000)));
+      const auth = createService();
+      expect(auth.displayName()).toBe('Dana Cohen');
+
+      vi.advanceTimersByTime(61_000);
+      auth.isAuthenticated();
+
+      expect(auth.displayName()).toBeNull();
+      expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
     } finally {
       vi.useRealTimers();
     }

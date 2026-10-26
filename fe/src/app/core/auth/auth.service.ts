@@ -19,17 +19,17 @@ export class AuthService {
 
   private readonly session = signal<LoginResponse | null>(readStoredSession());
 
-  /** Display name of the logged-in user, for the toolbar. */
+  /** Display name of the logged-in user, for the toolbar. Null once the session is gone (logout, expiry). */
   readonly displayName = computed(() => this.session()?.displayName ?? null);
 
   /** The token to send, or null when there is none or it has expired. */
   get token(): string | null {
-    const current = this.session();
-    return current && !isExpired(current) ? current.accessToken : null;
+    return this.validSession()?.accessToken ?? null;
   }
 
+  /** True while there is a session that has not expired (what the route guard asks). */
   isAuthenticated(): boolean {
-    return this.token !== null;
+    return this.validSession() !== null;
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
@@ -55,6 +55,21 @@ export class AuthService {
       return;
     }
     void this.router.navigate(['/login'], { queryParams: { returnUrl: currentUrl } });
+  }
+
+  /**
+   * The ONE place that decides whether the session is still valid. A session whose time has passed is dropped here,
+   * so everything that shows the user (the toolbar's name, navigation and logout button) goes away with it, and not
+   * only the guard and the interceptor. Time passing is not a signal, so this runs when something asks (a navigation
+   * or an API call); it must not be called from a computed.
+   */
+  private validSession(): LoginResponse | null {
+    const current = this.session();
+    if (current && isExpired(current)) {
+      this.clear();
+      return null;
+    }
+    return current;
   }
 
   private store(response: LoginResponse): void {

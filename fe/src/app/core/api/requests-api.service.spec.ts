@@ -92,6 +92,29 @@ describe('RequestsApiService', () => {
     expect(total).toBe(7);
   });
 
+  it('moves several requests with POST /api/requests/bulk-status, sending the id and version of each', () => {
+    let succeeded = 0;
+    service
+      .bulkChangeStatus('Waiting', [
+        { id: 1, version: 'v1' },
+        { id: 2, version: 'v2' },
+      ])
+      .subscribe((response) => (succeeded = response.succeeded));
+
+    const request = backend.expectOne('/api/requests/bulk-status');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      newStatus: 'Waiting',
+      items: [
+        { id: 1, version: 'v1' },
+        { id: 2, version: 'v2' },
+      ],
+    });
+    request.flush({ total: 2, succeeded: 2, failed: 0, results: [] });
+
+    expect(succeeded).toBe(2);
+  });
+
   it('changes a status with PATCH /api/requests/{id}/status and the version the user saw', () => {
     service.changeStatus(42, 'InProgress', 'AAAAAAAAB9E=').subscribe();
 
