@@ -45,7 +45,14 @@
           <p class="login-error" role="alert">{{ message }}</p>
         }
 
-        <button mat-flat-button type="submit" class="login-submit" [disabled]="submitting()">
+        <!-- While submitting the button holds only a spinner: the label keeps a name for screen readers -->
+        <button
+          mat-flat-button
+          type="submit"
+          class="login-submit"
+          [disabled]="submitting()"
+          [attr.aria-label]="submitting() ? 'מתחבר…' : null"
+        >
           @if (submitting()) {
             <mat-spinner diameter="20" />
           } @else {
@@ -53,7 +60,6 @@
           }
         </button>
       </form>
-
     </mat-card-content>
   </mat-card>
 </section>

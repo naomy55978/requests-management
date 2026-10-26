@@ -32,6 +32,11 @@ export const FIELD_LABELS: Record<string, string> = {
   password: 'סיסמה',
 };
 
+/** How many requests are ticked, in Hebrew ("one request was selected" / "5 requests were selected"). */
+export function describeSelectedCount(count: number): string {
+  return count === 1 ? 'פנייה אחת נבחרה' : `${count} פניות נבחרו`;
+}
+
 export const SORT_FIELD_LABELS: Record<RequestSortField, string> = {
   createdAt: 'נוצרה',
   updatedAt: 'עודכנה',

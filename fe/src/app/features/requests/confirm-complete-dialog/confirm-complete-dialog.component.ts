@@ -2,6 +2,8 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 
+import { describeSelectedCount } from '../../../core/i18n/labels';
+
 /** One request (id and title), or several (count) when the change comes from Bulk. */
 export interface ConfirmCompleteData {
   id?: number;
@@ -22,4 +24,7 @@ export interface ConfirmCompleteData {
 export class ConfirmCompleteDialogComponent {
   protected readonly data = inject<ConfirmCompleteData>(MAT_DIALOG_DATA);
   protected readonly bulk = this.data.count !== undefined;
+  /** Hebrew has a singular form: one selected request is "the request", not "the requests". */
+  protected readonly plural = this.bulk && this.data.count !== 1;
+  protected readonly selectedText = describeSelectedCount(this.data.count ?? 0);
 }

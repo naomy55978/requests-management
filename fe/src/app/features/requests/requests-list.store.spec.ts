@@ -451,6 +451,28 @@ describe('RequestsListStore', () => {
       expect(store.pendingIds().size).toBe(0);
     });
 
+    it('409 without a usable current state: loads the list again, so the message "refreshed" is true', () => {
+      const { store, calls, statusCalls, row } = withRows();
+      const before = calls.length;
+      const outcomes: { kind: string }[] = [];
+      store.changeStatus(row, 'InProgress').subscribe((o) => outcomes.push(o));
+
+      statusCalls[0].fail(new HttpErrorResponse({ status: 409, error: { title: 'Conflict' } }));
+
+      expect(outcomes.map((o) => o.kind)).toEqual(['conflict']);
+      expect(calls).toHaveLength(before + 1);
+    });
+
+    it('409 with the current state: refreshes the row and does not load the list', () => {
+      const { store, calls, statusCalls, row } = withRows();
+      const before = calls.length;
+      store.changeStatus(row, 'InProgress').subscribe();
+
+      statusCalls[0].fail(new HttpErrorResponse({ status: 409, error: { currentStatus: 'Waiting', currentVersion: 'v9' } }));
+
+      expect(calls).toHaveLength(before);
+    });
+
     it('409: the user can retry at once, with the refreshed version', () => {
       const { store, statusCalls, row } = withRows();
       store.changeStatus(row, 'Completed').subscribe();

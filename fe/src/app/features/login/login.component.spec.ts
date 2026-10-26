@@ -75,6 +75,21 @@ describe('LoginComponent', () => {
     expect(navigateByUrl).toHaveBeenCalledWith('/dashboard');
   });
 
+  it('names the button for screen readers while the login is on its way (it shows only a spinner then)', async () => {
+    await setUp(null);
+    const button = () => element.querySelector<HTMLButtonElement>('button[type="submit"]');
+    expect(button()?.getAttribute('aria-label')).toBeNull();
+
+    await submit('dana.cohen', 'Demo123!');
+
+    expect(button()?.disabled).toBe(true);
+    expect(button()?.getAttribute('aria-label')).toBe('מתחבר…');
+
+    backend.expectOne('/api/auth/login').flush(null, { status: 401, statusText: 'Unauthorized' });
+    await fixture.whenStable();
+    expect(button()?.getAttribute('aria-label')).toBeNull();
+  });
+
   it('shows a friendly message for wrong credentials and stays on the screen', async () => {
     await setUp(null);
 

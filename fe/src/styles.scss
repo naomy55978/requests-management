@@ -55,6 +55,15 @@ bdi.bidi-fit {
   vertical-align: top;
 }
 
+// Text for screen readers only (a table caption, a live region)
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
 html,
 body {
   height: 100%;

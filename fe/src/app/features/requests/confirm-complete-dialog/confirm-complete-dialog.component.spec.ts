@@ -49,14 +49,37 @@ describe('ConfirmCompleteDialogComponent', () => {
     expect(closed).not.toHaveBeenCalledWith(true);
   });
 
-  it('for Bulk it says how many requests, instead of one title', async () => {
-    TestBed.configureTestingModule({ imports: [MatDialogModule] });
-    TestBed.inject(MatDialog).open(ConfirmCompleteDialogComponent, { data: { count: 7 } });
+  it('marks "cancel" as the element to focus first, so a stray Enter cannot confirm the final change', async () => {
+    open();
     await new Promise((resolve) => setTimeout(resolve));
 
-    const text = document.querySelector('mat-dialog-container')?.textContent ?? '';
-    expect(text).toContain('7 פניות');
+    // Material focuses the element with cdkFocusInitial. The real focus is checked in a browser: the unit test
+    // environment has no layout, so Material cannot find a focusable button there and falls back to the dialog itself.
+    const initial = Array.from(document.querySelectorAll<HTMLButtonElement>('mat-dialog-actions button[cdkFocusInitial]'));
+    expect(initial.map((b) => b.textContent?.trim())).toEqual(['ביטול']);
+  });
+
+  async function openBulk(count: number): Promise<string> {
+    TestBed.configureTestingModule({ imports: [MatDialogModule] });
+    TestBed.inject(MatDialog).open(ConfirmCompleteDialogComponent, { data: { count } });
+    await new Promise((resolve) => setTimeout(resolve));
+    return document.querySelector('mat-dialog-container')?.textContent ?? '';
+  }
+
+  it('for Bulk it says how many requests, instead of one title', async () => {
+    const text = await openBulk(7);
+
+    expect(text).toContain('7 פניות נבחרו ויועברו');
     expect(text).toContain('סופי');
     expect(text).not.toContain('#');
+  });
+
+  it('for Bulk with one request it speaks in the singular, like the bulk bar', async () => {
+    const text = await openBulk(1);
+
+    expect(text).toContain('פנייה אחת נבחרה ותועבר');
+    expect(text).not.toContain('1 פניות');
+    expect(text).toContain('סמן כהושלמה');
+    expect(text).not.toContain('הפניות');
   });
 });

@@ -1,9 +1,9 @@
-<h2 mat-dialog-title>{{ bulk ? 'סימון הפניות כהושלמו' : 'סימון הפנייה כהושלמה' }}</h2>
+<h2 mat-dialog-title>{{ plural ? 'סימון הפניות כהושלמו' : 'סימון הפנייה כהושלמה' }}</h2>
 
 <mat-dialog-content>
   <p class="request">
     @if (bulk) {
-      {{ data.count }} פניות שנבחרו יועברו לסטטוס &quot;הושלמה&quot;.
+      {{ selectedText }} {{ plural ? 'ויועברו' : 'ותועבר' }} לסטטוס &quot;הושלמה&quot;.
     } @else {
       <span class="request-id">#{{ data.id }}</span>
       <!-- The title can be Hebrew or English: bdi keeps its own direction inside the RTL dialog -->
@@ -11,16 +11,17 @@
     }
   </p>
   <p>
-    הסטטוס &quot;הושלמה&quot; הוא סופי: לאחר השמירה לא ניתן לשנות את הסטטוס של {{ bulk ? 'הפניות' : 'הפנייה' }}.
+    הסטטוס &quot;הושלמה&quot; הוא סופי: לאחר השמירה לא ניתן לשנות את הסטטוס של {{ plural ? 'הפניות' : 'הפנייה' }}.
     @if (bulk) {
-      פניות שאי אפשר להעביר להושלמה (למשל כבר הושלמו) יסומנו בתוצאות.
+      {{ plural ? 'פניות שאי אפשר להעביר להושלמה (למשל כבר הושלמו) יסומנו בתוצאות.' : 'אם אי אפשר להעביר אותה להושלמה (למשל כבר הושלמה), זה יסומן בתוצאה.' }}
     }
   </p>
 </mat-dialog-content>
 
+<!-- Focus starts on "cancel": completed is final, so a stray Enter right after the dialog opens must not confirm it -->
 <mat-dialog-actions align="end">
-  <button mat-button type="button" mat-dialog-close>ביטול</button>
-  <button mat-flat-button type="button" [mat-dialog-close]="true" cdkFocusInitial>
-    {{ bulk ? 'סמן כהושלמו' : 'סמן כהושלמה' }}
+  <button mat-button type="button" mat-dialog-close cdkFocusInitial>ביטול</button>
+  <button mat-flat-button type="button" [mat-dialog-close]="true">
+    {{ plural ? 'סמן כהושלמו' : 'סמן כהושלמה' }}
   </button>
 </mat-dialog-actions>

@@ -235,7 +235,8 @@ export class RequestsListStore {
    * into an outcome and never into an error, and the row on screen is updated in place:
    *  - 200: the row is replaced by the updated request (new version);
    *  - 409 / 422: the row takes the current status and version from the answer, so the user can try again
-   *    right away. No extra GET: the only thing that can change in this system is the status (D-37);
+   *    right away. No extra GET: the only thing that can change in this system is the status (D-37). An answer
+   *    without that state (not expected from this API) loads the list again instead;
    *  - 404: the request is gone, the list is loaded again.
    * A request that is already on its way is not sent again.
    */
@@ -338,6 +339,10 @@ export class RequestsListStore {
         const current = outcome.current;
         if (current) {
           this.items.update((items) => items.map((item) => (item.id === id ? withCurrentState(item, current) : item)));
+        } else {
+          // The answer did not say how the request looks now, so the row cannot be refreshed from it. Loading the list
+          // again is what the message "the data was refreshed" promises, and the user can retry with a fresh version.
+          this.reload();
         }
         break;
       }

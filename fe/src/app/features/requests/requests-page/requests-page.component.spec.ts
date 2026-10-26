@@ -119,6 +119,49 @@ describe('RequestsPageComponent', () => {
     expect(element.querySelectorAll('th.mat-mdc-header-cell').length).toBeGreaterThan(0);
   });
 
+  describe('announcement for screen readers', () => {
+    const announcement = () => element.querySelector('p[role="status"].visually-hidden')?.textContent?.trim();
+
+    it('says nothing while the first page loads', () => {
+      expect(announcement()).toBe('');
+    });
+
+    it('says how many requests were found once a load finished with rows', async () => {
+      calls[0].respond([fakeRequest(1), fakeRequest(2)], 1234);
+      await fixture.whenStable();
+
+      expect(announcement()).toBe('נמצאו 1,234 פניות');
+    });
+
+    it('uses the singular for one request', async () => {
+      calls[0].respond([fakeRequest(1)], 1);
+      await fixture.whenStable();
+
+      expect(announcement()).toBe('נמצאה פנייה אחת');
+    });
+
+    it('is quiet again while the next load runs, and says the new count when it ends', async () => {
+      calls[0].respond([fakeRequest(1)], 100);
+      await fixture.whenStable();
+      element.querySelector<HTMLButtonElement>('button.mat-mdc-paginator-navigation-next')?.click();
+      await fixture.whenStable();
+      expect(announcement()).toBe('');
+
+      calls[1].respond([fakeRequest(21)], 80);
+      await fixture.whenStable();
+
+      expect(announcement()).toBe('נמצאו 80 פניות');
+    });
+
+    it('does not repeat what the empty and error states already announce', async () => {
+      calls[0].respond([], 0);
+      await fixture.whenStable();
+
+      expect(announcement()).toBe('');
+      expect(element.querySelector('app-state-message')).not.toBeNull();
+    });
+  });
+
   it('has no summary cards: they live on the dashboard (D-43)', () => {
     expect(element.querySelector('app-summary-cards')).toBeNull();
   });

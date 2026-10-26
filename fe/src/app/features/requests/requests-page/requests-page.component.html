@@ -10,6 +10,9 @@
 />
 
 <mat-card class="results" appearance="outlined">
+  <!-- Always in the page, so the screen reader is already listening when the text appears -->
+  <p class="visually-hidden" role="status">{{ resultAnnouncement() }}</p>
+
   <!-- Only while rows are ticked -->
   @if (store.selectedIds().size > 0) {
     <app-bulk-bar

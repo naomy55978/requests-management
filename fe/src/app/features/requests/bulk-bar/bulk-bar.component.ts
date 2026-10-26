@@ -5,7 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
 import { RequestStatus } from '../../../core/api/api.models';
-import { STATUS_LABELS } from '../../../core/i18n/labels';
+import { STATUS_LABELS, describeSelectedCount } from '../../../core/i18n/labels';
 
 /**
  * The bar above the table while rows are ticked: how many, the status to move them to, and the buttons.
@@ -29,6 +29,7 @@ export class BulkBarComponent {
   readonly clear = output<void>();
 
   protected readonly statusLabels = STATUS_LABELS;
+  protected readonly countText = computed(() => describeSelectedCount(this.count()));
   private readonly chosen = signal<RequestStatus | null>(null);
 
   /** The chosen status, as long as it is still on offer (the selection can change under it). */

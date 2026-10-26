@@ -55,6 +55,18 @@ export class RequestsPageComponent {
   /** How long the last list load took (null until the first answer). */
   protected readonly listTiming = computed(() => this.performance.latest('list'));
 
+  /**
+   * Said to screen readers when a load has finished with rows, so a search or filter gives feedback without sight.
+   * Empty while loading and in the error and empty states: those have their own announcement (role alert / status).
+   */
+  protected readonly resultAnnouncement = computed(() => {
+    if (this.store.loading() || this.store.viewState() !== 'data') {
+      return '';
+    }
+    const total = this.store.totalCount();
+    return total === 1 ? 'נמצאה פנייה אחת' : `נמצאו ${total.toLocaleString('he-IL')} פניות`;
+  });
+
   /** Page sizes offered to the user; 100 is the most the API accepts. */
   protected readonly pageSizeOptions = [10, 20, 50, 100];
 
