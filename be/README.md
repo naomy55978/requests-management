@@ -46,7 +46,7 @@ export ConnectionStrings__RequestsDb="Server=localhost,1433;Database=RequestsMan
 ```
 
 (ב־PowerShell: ‏`$env:ConnectionStrings__RequestsDb = "..."`). לבדיקות האוטומטיות – אותה מחרוזת בלי `Database=…` במשתנה `TESTS_SQL_CONNECTION` (ראו "חיבור ל־SQL Server" למטה).
-- כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` (מופעלים ב־`appsettings.Development.json`).
+- כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` / ‏`Database:WarmUpOnStartup` (מופעלים ב־`appsettings.Development.json`). ‏`WarmUpOnStartup` – לפני שה־API מתחיל להאזין הוא מבקש את הסיכום פעם אחת, כדי "לחמם" מסד קר ולמלא את ה־Cache (החלטה D‑48); ביומן: `Warming up…` ואחר כך `Warm-up done in N ms`. כשל בחימום נרשם כ־Warning ולא עוצר את ה־API.
 - יצירה מחדש של הנתונים:
 
 ```
