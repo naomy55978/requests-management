@@ -238,7 +238,7 @@ flowchart TB
 
 **מחזור העבודה בכל משימה:** תוכנית ← אישור מפורש ← ביצוע ← אימות ← Commit עם הפניה ל־Issue, ‏Push ו־CI ירוק.
 
-**שימוש ב־AI:** ‏Claude Code – ‏Opus לתכנון, ארכיטקטורה וסקירה, ו־Sonnet לכתיבת קוד ובדיקות. כל קוד שנכתב אומת בשיטות שלמטה. הפירוט – ב־[README](README.md#שימוש-בכלי-ai).
+**שימוש ב־AI:** ‏Claude Code – ‏Opus לתכנון, ארכיטקטורה וסקירה, ו־Sonnet לכתיבת קוד ובדיקות. כל קוד שנכתב אומת בשיטות שלמטה. הפירוט – ב־[AI_USAGE.md](docs/AI_USAGE.md).
 
 **שיטות האימות:**
 - **Oracle מול SQL** – סקריפט אימות אופציונלי (`scripts/dev/verify-read-api.js` ב־Backend) משווה סינון, חיפוש, מיון ודפדוף לשאילתות SQL ישירות על כל 100,000 הפניות. מקור האמת הן הבדיקות האוטומטיות.
@@ -254,7 +254,7 @@ flowchart TB
 requests-management-docs/          תכנון ותיעוד
   README.md                        נקודת הכניסה לבודקים
   PROJECT_SUMMARY.md               מסמך זה
-  docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, בדיקת הגשה
+  docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, שימוש ב־AI, בדיקת הגשה
     performance/                   תוצאות המדידות ו־Execution Plans: before, after-indexes, final, alternatives, seed-v2-hebrew
 
 requests-management-be/            Backend
@@ -284,7 +284,8 @@ requests-management-fe/            Frontend
 
 | נושא | מסמך |
 |---|---|
-| הרצה, בדיקות, מבנה, מפת דרישות ושימוש ב־AI | [README.md](README.md) |
+| הרצה, בדיקות ומספריהן, ופריטי התיעוד של סעיף 11 | [README.md](README.md) |
+| שימוש בכלי AI | [docs/AI_USAGE.md](docs/AI_USAGE.md) |
 | כל ההחלטות, עם סיבה וחלופות, ומגבלות ידועות | [docs/DECISIONS.md](docs/DECISIONS.md) |
 | חוזה ה־API, ‏Bulk וקודי שגיאה | [docs/API.md](docs/API.md) |
 | אינדקסים, Execution Plans ו־Bottleneck | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
@@ -292,5 +293,5 @@ requests-management-fe/            Frontend
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/PERFORMANCE.md – נספח ב'](docs/PERFORMANCE.md#נספח-ב--הקבצים) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
-| הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
+| הרצת ה־Backend וסקריפט האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
 | הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
