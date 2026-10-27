@@ -105,7 +105,7 @@ export ConnectionStrings__RequestsDb="Server=localhost,1433;Database=RequestsMan
 | איפה | פקודה | מה |
 |---|---|---|
 | Backend | `dotnet test` | **156 בדיקות**: ‏73 יחידה ו־83 Integration – דרך HTTP מול SQL Server אמיתי, במסד זמני שנוצר ונמחק בכל ריצה (D‑21). חיבור: המשתנה `TESTS_SQL_CONNECTION`; בלעדיו – `Server=.` ואז LocalDB |
-| Frontend | `npm test -- --watch=false` | **371 בדיקות** (Vitest), ‏`npm run lint`, ‏`npm run build` |
+| Frontend | `npm test -- --watch=false` | **376 בדיקות** (Vitest), ‏`npm run lint`, ‏`npm run build` |
 | CI | GitHub Actions | בכל Push, בשני ה־Repos; ב־Backend מול SQL Server 2022 בקונטיינר |
 
 בדיקות משמעותיות לדרישות המבדק (§8):
@@ -192,10 +192,10 @@ RequestsManagement.DTO   מודלים לבקשות ולתשובות, כללי ה
 | §2 עדכון סטטוס ו־Concurrency | `RequestRepository.UpdateStatusAsync`, ‏`StatusTransitions` | D‑05, ‏D‑06, ‏D‑07 | `UpdateStatusTests`, ‏`ConcurrencyTests`, ‏`StatusTransitionsTests`, ‏`ConcurrencyProof.cs` |
 | §3 היסטוריה | טבלת `RequestStatusHistory`, ‏`GET /api/requests/{id}/history` | D‑06 | `UpdateStatusTests` |
 | §4 Bulk | `POST /api/requests/bulk-status` | [API.md](docs/API.md), ‏D‑08, ‏D‑19 | `BulkStatusTests`, ‏`verify-bulk-status.js` |
-| §5 Angular | `requests-list.store.ts` (זרם אחד, `debounceTime`, ‏`switchMap`), מצבי טעינה/ריק/שגיאה, ‏409, לוח בקרה, היסטוריה | D‑26–D‑45 | 371 בדיקות FE |
+| §5 Angular | `requests-list.store.ts` (זרם אחד, `debounceTime`, ‏`switchMap`), מצבי טעינה/ריק/שגיאה, ‏409, לוח בקרה, היסטוריה | D‑26–D‑45 | 376 בדיקות FE |
 | §6 ביצועים | אינדקסים (Migration `TuneIndexes`), ‏Deferred Join, חיפוש בינארי | [PERFORMANCE.md](docs/PERFORMANCE.md), ‏D‑24 | `MeasureQueries.cs` |
 | §7 Cache | `SummaryCache` | [CACHE.md](docs/CACHE.md), ‏D‑11, ‏D‑20 | `SummaryCacheTests`, ‏`RequestServiceCacheTests`, ‏`SummaryTests`, ‏`verify-summary-cache.js` |
-| §8 בדיקות | `tests/RequestsManagement.Tests` | D‑21 | 156 BE + 371 FE, ‏CI |
+| §8 בדיקות | `tests/RequestsManagement.Tests` | D‑21 | 156 BE + 376 FE, ‏CI |
 | §9 תכנון עבודה | Issues, Milestones, ‏[Project Board](https://github.com/users/naomy55978/projects/2) | [WORK_PLAN.md](docs/WORK_PLAN.md) | – |
 | §10 איכות קוד | ‏4 שכבות, ‏DI, ‏ProblemDetails (`GlobalExceptionHandler`), ולידציה אחת (D‑18), Logging בלי מידע רגיש | [DECISIONS.md](docs/DECISIONS.md) | – |
 | §11 תיעוד | README זה, ‏READMEs של ה־Repos, ‏`docs/` | – | – |
