@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using RequestsManagement.BL;
 using RequestsManagement.DAL;
 using RequestsManagement.DTO;
-using RequestsManagement.DTO.Diagnostics;
 using RequestsManagement.DTO.Enums;
 
 namespace RequestsManagement.Tests.Unit;
@@ -49,7 +48,7 @@ public class RequestServiceCacheTests
     {
         var repository = new FakeRepository();
         var cache = new SummaryCache(new MemoryCache(new MemoryCacheOptions()), NullLogger<SummaryCache>.Instance);
-        var service = new RequestService(repository, cache, new RequestTimings(), TimeProvider.System, NullLogger<RequestService>.Instance);
+        var service = new RequestService(repository, cache, TimeProvider.System, NullLogger<RequestService>.Instance);
         return (service, repository);
     }
 

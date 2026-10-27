@@ -2,13 +2,12 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RequestsManagement.DAL;
 using RequestsManagement.DTO;
-using RequestsManagement.DTO.Diagnostics;
 using RequestsManagement.DTO.Enums;
 
 namespace RequestsManagement.BL;
 
 internal sealed class RequestService(
-    IRequestRepository repository, SummaryCache summaryCache, RequestTimings timings, TimeProvider timeProvider,
+    IRequestRepository repository, SummaryCache summaryCache, TimeProvider timeProvider,
     ILogger<RequestService> logger)
     : IRequestService
 {
@@ -43,18 +42,13 @@ internal sealed class RequestService(
         return request;
     }
 
-    /// <summary>Serves the summary through the cache and reports hit or miss for the Server-Timing header.</summary>
-    public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
-    {
-        // Reported in the Server-Timing header (D-25): a hit unless the cache has to load (LoadSummaryAsync)
-        timings.SummaryCache = CacheOutcome.Hit;
-        return summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
-    }
+    /// <summary>Serves the summary through the cache.</summary>
+    public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken) =>
+        summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
 
     /// <summary>Loads the summary from the database on a cache miss and logs how long it took.</summary>
     private async Task<SummaryDto> LoadSummaryAsync(CancellationToken cancellationToken)
     {
-        timings.SummaryCache = CacheOutcome.Miss;
         var stopwatch = Stopwatch.StartNew();
         var summary = await repository.GetSummaryAsync(cancellationToken);
 

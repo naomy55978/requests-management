@@ -91,17 +91,6 @@ dotnet run --project src/RequestsManagement.API --launch-profile http
 
 כל השגיאות חוזרות בפורמט `ProblemDetails` אחד (כולל `traceId`); קלט לא תקין – `400` עם רשימת כל הבעיות.
 
-### זמני שרת (`Server-Timing`)
-
-כשהיא מופעלת, כל תשובה כוללת את הכותרת התקנית `Server-Timing` (החלטה D‑25), למשל:
-
-```
-Server-Timing: total;dur=70.3, db;dur=65.5;desc="2 queries"
-Server-Timing: total;dur=0.6, db;dur=0.0;desc="0 queries", cache;desc="hit"     (summary מה־Cache)
-```
-
-`total` – זמן השרת כולו; `db` – זמן השאילתות ומספרן; `cache` – רק ב־summary (‏`hit`/`miss`). הכותרת מוצגת ב־DevTools של הדפדפן (Network ← Timing). היא חושפת זמנים פנימיים ואינה חלק מהדרישות, ולכן **כבויה כברירת מחדל – גם ב־Development**. הפעלה: משתנה הסביבה `ServerTiming__Enabled=true` לפני `dotnet run` (ב־PowerShell: ‏`$env:ServerTiming__Enabled = "true"`), או `"Enabled": true` תחת `ServerTiming` ב־`appsettings.Development.json`. פאנל הביצועים של ה־Frontend (גם הוא כבוי כברירת מחדל) מציג את זמני השרת רק כשהכותרת מופעלת.
-
 ## בדיקות אוטומטיות
 
 ```

@@ -122,14 +122,6 @@ await StartupWarmUp.RunAsync(app.Services, app.Logger, app.Lifetime.ApplicationS
 
 // Configure the HTTP request pipeline.
 
-// Server-Timing header (D-25): first, so the total covers the whole pipeline, error responses included.
-// Off by default, also in Development: it exposes internal timings and is not part of the requirements.
-// Turn it on with ServerTiming__Enabled=true (or in appsettings.Development.json).
-if (app.Configuration.GetValue<bool>("ServerTiming:Enabled"))
-{
-    app.UseMiddleware<ServerTimingMiddleware>();
-}
-
 app.UseExceptionHandler();
 // Also answers bodiless errors (unknown route, wrong method) as ProblemDetails
 app.UseStatusCodePages();
