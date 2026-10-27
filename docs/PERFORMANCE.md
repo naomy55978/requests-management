@@ -92,7 +92,7 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 
 אותן שאילתות ואותם פרמטרים בכל השלבים. ‏`--shape original` מריץ את ה־SQL שלפני M8.
 
-**ממצא מתודולוגי – פיצול אחרי ה־Seed:** מדידת הבסיס הראשונה (`performance/before-fragmented`) הראתה ש־Q1.count קורא 1,118 דפים, ואחרי REBUILD של אותו אינדקס רק 697. הסיבה: ה־Seed טוען ב־`SqlBulkCopy` לטבלה שהאינדקסים הלא־Clustered שלה כבר קיימים, וההכנסה מפצלת דפים. האינדקסים נשארו **מלאים רק ב־35%–61%**:
+**ממצא מתודולוגי – פיצול אחרי ה־Seed:** מדידת הבסיס הראשונה ([`performance/archive/before-fragmented`](performance/archive/before-fragmented)) הראתה ש־Q1.count קורא 1,118 דפים, ואחרי REBUILD של אותו אינדקס רק 697. הסיבה: ה־Seed טוען ב־`SqlBulkCopy` לטבלה שהאינדקסים הלא־Clustered שלה כבר קיימים, וההכנסה מפצלת דפים. האינדקסים נשארו **מלאים רק ב־35%–61%**:
 
 | אינדקס | KB אחרי ה־Seed | KB אחרי REBUILD | מילוי |
 |---|---|---|---|
@@ -101,7 +101,7 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 | ‏`IX_Requests_AssignedTo_Status` | 6,072 | 3,536 | 58% |
 | ‏`IX_Requests_Status_Priority_CreatedAt` | 31,736 | 19,416 | 61% |
 
-השוואה הוגנת מחייבת אינדקסים דחוסים בכל השלבים, ולכן **כל ההשוואות במסמך (`before` ← `final`) נמדדו על אינדקסים דחוסים**. ‏`before-fragmented` נשמר כתיעוד. בעקבות הממצא ה־Seeder מריץ עכשיו `ALTER INDEX ALL … REBUILD` על שתי הטבלאות שלנו בלבד אחרי הטעינה (כ־1.2 שנ'), ובודק שמריץ את ה־Seed מקבל אינדקסים מלאים ב־98–99%.
+השוואה הוגנת מחייבת אינדקסים דחוסים בכל השלבים, ולכן **כל ההשוואות במסמך (`before` ← `final`) נמדדו על אינדקסים דחוסים**. ‏`before-fragmented` נשמר כתיעוד (בתיקייה `archive/`). בעקבות הממצא ה־Seeder מריץ עכשיו `ALTER INDEX ALL … REBUILD` על שתי הטבלאות שלנו בלבד אחרי הטעינה (כ־1.2 שנ'), ובודק שמריץ את ה־Seed מקבל אינדקסים מלאים ב־98–99%.
 
 **סביבה ואמינות הזמנים:**
 - **שרת:** ‏SQL Server 2025 Developer (17.0.1145), ‏compatibility 170, ‏MAXDOP 10, ‏cost threshold 5 (ברירות מחדל של המופע, לא שונו).
@@ -179,7 +179,7 @@ Stream Aggregate – 1 rows
 - **אינדקס קיים:** כובה לריצה אחת (`--disable`), ונבדק אילו שאילתות נפגעות ומה נחסך בכתיבה (W1).
 - **אינדקס מועמד:** נוצר זמנית ונמדד, ואז נמחק.
 
-כל הניסויים ב־[`performance/experiments`](performance/experiments).
+כל הניסויים ב־[`performance/archive/experiments`](performance/archive/experiments).
 
 **כלל ההחלטה (נקבע לפני המדידה):**
 - **הוספה:** רק אם האינדקס מבטל Sort/Memory Grant, או מוריד logical reads בסדר גודל לתרחיש מהסט, ותוספת עלות הכתיבה (W1) קטנה.
@@ -398,7 +398,7 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 
 **מה השתנה:** רק רשימות המילים (`SeedWordLists.cs`). כל רשימה שמרה על אותו **מספר** פריטים, ולכן סדר קריאות ה־`Random` זהה, והסטטוסים, העדיפויות, התאריכים, המטפלים, ההיסטוריה (179,178 שורות) ובחירת הארגון לכל פנייה זהים בשתי הגרסאות. שם ארגון הוא "קידומת + ענף + סיומת", והשפה נקבעת לפי הקידומת (קידומת עברית ← ענף וסיומת בעברית), כך שכ־48% מהפניות הן של ארגון בעברית ושם לא מערבב שפות.
 
-**מדידה:** אותו כלי, אותה מכונה, אותם תנאים, על נתונים אחרי `seed --reset` (תיקיות `seed-v1-english/` ו־`seed-v2-hebrew/`). v1 נמדד מחדש לפני השינוי ותאם ל־`final/` (reads זהים או עד 1% הפרש). בחיפוש הוחלפה המילה `bonus` ב־`בונוס` (אותה תת־קבוצה של פניות: 3,291 במלואה).
+**מדידה:** אותו כלי, אותה מכונה, אותם תנאים, על נתונים אחרי `seed --reset` (תיקיות `archive/seed-v1-english/` ו־`seed-v2-hebrew/`). v1 נמדד מחדש לפני השינוי ותאם ל־`final/` (reads זהים או עד 1% הפרש). בחיפוש הוחלפה המילה `bonus` ב־`בונוס` (אותה תת־קבוצה של פניות: 3,291 במלואה).
 
 | פעולה | Logical reads v1 → v2 | Elapsed ms v1 → v2 | Plan |
 |---|---|---|---|
@@ -462,16 +462,18 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 
 ## נספח ב' – הקבצים
 
+מדריך לתיקייה: [`performance/README.md`](performance/README.md). המדידות שמהן נלקחים המספרים הסופיים בשורש התיקייה, וחומר הביניים ב־`archive/`.
+
 | תיקייה (`docs/performance/`) | תוכן |
 |---|---|
-| ‏`before-fragmented/` | מדידת הבסיס הראשונה – אינדקסים מפוצלים אחרי ה־Seed (לתיעוד בלבד, סעיף 3) |
+| ‏`final/` | המצב הסופי (Seeder v1) |
+| ‏`seed-v2-hebrew/` | המצב הסופי על Seeder v2 (עברית, הנתונים שבהגשה), כולל `compare-with-seed-v1-english.md` ו־`gate-g3.md` |
 | ‏`before/` | בסיס: אינדקסי M1 דחוסים, ה־SQL של M2 |
 | ‏`after-indexes/` | אינדקסי M8, ה־SQL של M2 (ההשפעה של האינדקסים לבד) |
-| ‏`final/` | המצב הסופי (Seeder v1) |
-| ‏`seed-v1-english/` | מדידה חוזרת של המצב הסופי לפני החלפת הנתונים (Seeder v1), בסיס להשוואה בפרק 10 |
-| ‏`seed-v2-hebrew/` | המצב הסופי על Seeder v2 (עברית), כולל `compare-with-seed-v1-english.md` ו־`gate-g3.md` |
 | ‏`alternatives/` | חלופות השאילתה שנבחנו (A1–A6) |
-| ‏`experiments/` | ניסויי האינדקסים, כל אחד מול `before` (`final-OrgCreatedAt` – מול גרסת ביניים של `final` לפני שינוי אינדקס הארגון) |
+| ‏`archive/before-fragmented/` | מדידת הבסיס הראשונה – אינדקסים מפוצלים אחרי ה־Seed (לתיעוד בלבד, סעיף 3) |
+| ‏`archive/experiments/` | ניסויי האינדקסים, כל אחד מול `before` (`final-OrgCreatedAt` – מול גרסת ביניים של `final` לפני שינוי אינדקס הארגון) |
+| ‏`archive/seed-v1-english/` | מדידה חוזרת של המצב הסופי לפני החלפת הנתונים (Seeder v1), בסיס להשוואה בפרק 10 |
 
 בכל תיקייה:
 - `results.md`: טבלה, גודל אינדקסים ועצי Plans.
@@ -486,3 +488,5 @@ dotnet run scripts/MeasureQueries.cs -- --out <dir> --label final
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --label before --shape original   (על אינדקסי M1: Migration קודם)
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --compare before final
 ```
+
+(‏`--compare` מקבל שמות תיקיות יחסית ל־`--out`; לתיקיות שבארכיון – למשל `archive/seed-v1-english`.)

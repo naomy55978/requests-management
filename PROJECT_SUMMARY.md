@@ -247,6 +247,8 @@ requests-management-docs/          תכנון ותיעוד
   PROJECT_TRACKING_RequestsManagement.md   יומן הפרויקט
   docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, בדיקת הגשה
     performance/                   תוצאות המדידות ו־Execution Plans, לכל שלב מדידה
+      README.md                    מדריך: איפה המספרים הסופיים ומה כל תיקייה
+      archive/                     מדידות ביניים: ניסויי אינדקסים, בסיס מפוצל, מדידה חוזרת לפני החלפת הנתונים
 
 requests-management-be/            Backend
   RequestsManagement.sln, global.json, dotnet-tools.json
