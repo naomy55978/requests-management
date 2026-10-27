@@ -283,5 +283,6 @@ requests-management-fe/            Frontend
 | ה־Cache, ה־Invalidation וריבוי מופעים | [docs/CACHE.md](docs/CACHE.md) |
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
+| כל תיקייה וכל קובץ בשלושת ה־Repos, במשפט אחד | [docs/STRUCTURE.md](docs/STRUCTURE.md) |
 | הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
 | הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
