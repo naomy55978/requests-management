@@ -244,7 +244,6 @@ flowchart TB
 requests-management-docs/          תכנון ותיעוד
   README.md                        נקודת הכניסה לבודקים
   PROJECT_SUMMARY.md               מסמך זה
-  PROJECT_TRACKING_RequestsManagement.md   יומן הפרויקט
   docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, בדיקת הגשה
     performance/                   תוצאות המדידות ו־Execution Plans, לכל שלב מדידה
       README.md                    מדריך: איפה המספרים הסופיים ומה כל תיקייה
@@ -284,6 +283,5 @@ requests-management-fe/            Frontend
 | ה־Cache, ה־Invalidation וריבוי מופעים | [docs/CACHE.md](docs/CACHE.md) |
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
-| יומן הפרויקט: מה בוצע בכל שלב ואיך אומת | [PROJECT_TRACKING_RequestsManagement.md](PROJECT_TRACKING_RequestsManagement.md) |
 | הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
 | הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
