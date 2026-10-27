@@ -1,14 +1,20 @@
-name: build
+name: be
 
+# The Backend (be/) only: runs when be/ or this file changes
 on:
   push:
     branches: [main]
+    paths: ['be/**', '.github/workflows/be.yml']
   pull_request:
     branches: [main]
+    paths: ['be/**', '.github/workflows/be.yml']
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: be
 
     # SQL Server for the integration tests (D-09). The container exists only for this run and is thrown away
     # afterwards, so its password is not a secret; it only has to satisfy SQL Server's complexity rules.
@@ -34,7 +40,7 @@ jobs:
       # SDK version is pinned in global.json (shared with local development)
       - uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          global-json-file: be/global.json
 
       - name: Restore
         run: dotnet restore RequestsManagement.sln
@@ -57,5 +63,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults/*.trx
+          path: be/TestResults/*.trx
           retention-days: 14

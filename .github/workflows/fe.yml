@@ -1,13 +1,19 @@
-name: CI
+name: fe
 
+# The Frontend (fe/) only: runs when fe/ or this file changes
 on:
   push:
     branches: [main]
+    paths: ['fe/**', '.github/workflows/fe.yml']
   pull_request:
+    paths: ['fe/**', '.github/workflows/fe.yml']
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fe
     steps:
       - uses: actions/checkout@v4
 
@@ -15,6 +21,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: fe/package-lock.json
 
       # package-lock.json is committed, so the install is exactly the one that was tested locally
       - run: npm ci

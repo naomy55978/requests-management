@@ -1,3 +1,6 @@
+# Editors and OS files for the whole repository.
+# Build output is ignored by each project's own file: be/.gitignore (.NET) and fe/.gitignore (Angular).
+
 # Editors / OS
 .vs/
 .vscode/
