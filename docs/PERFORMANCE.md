@@ -76,6 +76,8 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 | עלות כתיבה (W1) | שינוי סטטוס אחד בדיוק כמו ב־Repository (‏`UPDATE … OUTPUT` והכנסת היסטוריה), בטרנזקציה שמבוטלת (Rollback): reads, ‏Plan (אילו אינדקסים מתוחזקים), ו־**bytes שנכתבו ל־log** (`sys.dm_tran_database_transactions`) |
 | נפח | גודל כל אינדקס (`sys.dm_db_partition_stats`) |
 
+**אימות ה־SQL המועתק (27.10.2026, ‏Backend ב־commit `ebfc523`):** הרצה חד־פעמית של ה־`RequestRepository` האמיתי מול המסד המקומי, עם לכידת כל פקודה ש־EF Core שולח, והשוואה למחרוזות של `scripts/MeasureQueries.cs` (הצורה `final`) – 32 פקודות: Q1–Q7 (COUNT ודף), ה־summary (Q8, שלוש שאילתות) וההיסטוריה (Q9). **25 זהות** (18 תו בתו, 7 שונות ברווחים בלבד). **ב־7 שאילתות הדף עם סינון** (Q1.page, ‏Q1s.page, ‏Q2.page, ‏Q6.page, ‏Q7a–c.page) ההבדל היחיד הוא **שם** הפרמטר של `FETCH NEXT` (EF: ‏`@p2`/`@p3`/`@p7`, בכלי: ‏`@p1`); הטקסט, התנאים, סוגי הפרמטרים וגודליהם זהים. שם של פרמטר לא משנה את ה־Plan ואת ה־logical reads, ולכן ההבדל לא משפיע על התוצאות במסמך. קוד האימות לא נשמר ב־Repo.
+
 **כללי זהירות** (המופע משותף עם מסדים אחרים):
 - אין פקודות ברמת המופע: לא `DBCC FREEPROCCACHE`/`DROPCLEANBUFFERS`, ולא שינוי הגדרות. ניקוי Plans נעשה רק למסד הזה, עם `ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE`.
 - ניסויי כיבוי אינדקס רצים רק במסד בשם `RequestsManagement` ולא על ה־Clustered Index. ה־REBUILD מתבצע ב־`finally`, ובסוף כל ריצה יש בדיקה שכל האינדקסים פעילים.
