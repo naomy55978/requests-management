@@ -19,8 +19,12 @@ public class BulkStatusRequest : IValidatableObject
     [Required, EnumDataType(typeof(RequestStatus))]
     public RequestStatus? NewStatus { get; init; }
 
+    // The default messages name the .NET property ("The field Items must be a string or array type ..."),
+    // so the count rule has its own message in the API's style (D-18)
+    private const string ItemsCountMessage = "'items' must have 1 to 100 requests.";
+
     /// <summary>The requests to change, 1 to 100, each id at most once.</summary>
-    [Required, MinLength(1), MaxLength(MaxItems)]
+    [Required(ErrorMessage = ItemsCountMessage), MinLength(1, ErrorMessage = ItemsCountMessage), MaxLength(MaxItems, ErrorMessage = ItemsCountMessage)]
     public List<BulkStatusItem?>? Items { get; init; }
 
     /// <summary>Checks every item (not null, positive id, valid version) and rejects repeated ids, reporting camelCase keys like the rest of the API.</summary>

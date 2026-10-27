@@ -172,6 +172,8 @@ public class ReadRequestsTests(ApiFixture fixture)
     [InlineData("page=0", "page")]
     [InlineData("sortBy=nonsense", "sortBy")]
     [InlineData("status=99", "status")]
+    [InlineData("search=a", "search")]                      // shorter than the minimum (also with spaces around it)
+    [InlineData("search=%20a%20", "search")]
     [InlineData("createdFrom=2026-05-02&createdTo=2026-05-01", "createdFrom")]
     public async Task InvalidQuery_IsAnswered400WithTheUsualErrorFormat(string query, string expectedKey)
     {

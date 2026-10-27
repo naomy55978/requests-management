@@ -51,6 +51,39 @@ public class ValidationErrorTests(ApiFixture fixture)
         AssertNoInternals(problem);
     }
 
+    public static TheoryData<string> ItemCountsOutsideTheLimit() => new()
+    {
+        BulkBody(itemCount: 101),
+        """{"newStatus":"InProgress","items":[]}""",
+        """{"newStatus":"InProgress","items":null}"""
+    };
+
+    private static string BulkBody(int itemCount)
+    {
+        var items = Enumerable.Range(1, itemCount).Select(id => $$"""{"id":{{id}},"version":"{{Version}}"}""");
+        return $$"""{"newStatus":"InProgress","items":[{{string.Join(",", items)}}]}""";
+    }
+
+    // The count rule of a Bulk call (1 to 100) is answered like every other 400: key "items" and the API's own message,
+    // not the DataAnnotations default that names the .NET property ("The field Items must be ...")
+    [Theory]
+    [MemberData(nameof(ItemCountsOutsideTheLimit))]
+    public async Task BulkItemCountOutsideOneToHundred_Gives400WithAPlainKeyAndTheApiMessage(string json)
+    {
+        using var client = fixture.Client();
+        using var body = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await client.PostAsync(Bulk, body);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.ReadProblemAsync();
+        Assert.True(problem.TryGetProperty("traceId", out _));
+        var error = Assert.Single(problem.GetProperty("errors").EnumerateObject());
+        Assert.Equal("items", error.Name);
+        Assert.Equal("'items' must have 1 to 100 requests.", Assert.Single(error.Value.EnumerateArray()).GetString());
+        AssertNoInternals(problem);
+    }
+
     // Also a body with several problems: every key is a field name and nothing names a .NET type
     [Fact]
     public async Task SeveralProblems_AllKeysArePlainFieldNames()

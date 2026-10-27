@@ -69,6 +69,14 @@ public class RequestFilterValidationTests
     }
 
     [Theory]
+    [InlineData("a", false)]       // one character
+    [InlineData(" a ", false)]     // one character after trimming
+    [InlineData("ab", true)]       // the minimum
+    [InlineData("   ", true)]      // only spaces = no search
+    public void Search_HasAMinimumLength(string search, bool valid) =>
+        Assert.Equal(valid, Validation.FailedMembers(new RequestFilter { Search = search }).Count == 0);
+
+    [Theory]
     [InlineData(nameof(RequestFilter.Organization), 150, true)]
     [InlineData(nameof(RequestFilter.Organization), 151, false)]
     [InlineData(nameof(RequestFilter.AssignedTo), 100, true)]

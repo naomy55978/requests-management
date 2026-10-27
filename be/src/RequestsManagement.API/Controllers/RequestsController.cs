@@ -22,8 +22,8 @@ public class RequestsController(IRequestService requestService) : ControllerBase
     ///   (about half of the New requests).
     /// * **createdFrom** / **createdTo** – whole UTC days (`2026-05-01`), both inclusive.
     /// * **search** – text contained in the title or in the organization name.
-    /// * **sortBy** (`CreatedAt`, `UpdatedAt`, `Priority`, `Status`, `Title`) and **sortDir** (`Asc`, `Desc`);
-    ///   equal values are ordered by id, so paging is stable.
+    /// * **sortBy** (`createdAt`, `updatedAt`, `priority`, `status`, `title`) and **sortDir** (`asc`, `desc`);
+    ///   case is ignored. Equal values are ordered by id, so paging is stable.
     /// * **pageSize** is limited to 100.
     ///
     /// Invalid input is answered with 400 and a ValidationProblemDetails that lists every problem.

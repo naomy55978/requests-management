@@ -16,6 +16,9 @@ public class RequestFilter : IValidatableObject
     // Keeps (Page - 1) * PageSize far below int.MaxValue (it is used as the SQL OFFSET)
     public const int MaxPage = 1_000_000;
 
+    /// <summary>Shortest search text (after trimming): one character would match most rows and still scan the table.</summary>
+    public const int SearchMinLength = 2;
+
     /// <summary>Value of <see cref="AssignedTo"/> that selects requests without a handler.</summary>
     public const string Unassigned = "unassigned";
 
@@ -50,15 +53,15 @@ public class RequestFilter : IValidatableObject
     /// <summary>Last creation day to include (UTC, the whole day is included).</summary>
     public DateOnly? CreatedTo { get; init; }
 
-    /// <summary>Text contained in the title or in the organization name.</summary>
+    /// <summary>Text contained in the title or in the organization name (at least 2 characters).</summary>
     [StringLength(100)]
     public string? Search { get; init; }
 
-    /// <summary>Sort field. Default: CreatedAt.</summary>
+    /// <summary>Sort field. Default: createdAt.</summary>
     [EnumDataType(typeof(RequestSortField))]
     public RequestSortField SortBy { get; init; } = RequestSortField.CreatedAt;
 
-    /// <summary>Sort direction. Default: Desc.</summary>
+    /// <summary>Sort direction. Default: desc.</summary>
     [EnumDataType(typeof(SortDirection))]
     public SortDirection SortDir { get; init; } = SortDirection.Desc;
 
@@ -70,6 +73,12 @@ public class RequestFilter : IValidatableObject
         {
             yield return new ValidationResult(
                 "CreatedFrom must not be later than CreatedTo.", [nameof(CreatedFrom), nameof(CreatedTo)]);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Search) && Search.Trim().Length < SearchMinLength)
+        {
+            yield return new ValidationResult(
+                $"Search must have at least {SearchMinLength} characters.", [nameof(Search)]);
         }
 
         if (Status?.Any(s => !Enum.IsDefined(s)) == true)
