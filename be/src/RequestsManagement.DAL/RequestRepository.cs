@@ -195,6 +195,9 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             return new StatusUpdateResult(StatusUpdateOutcome.Updated, updated.ToDto());
         }
 
+        // Nothing was written: end the transaction before the diagnostic read, so it holds no locks while it runs
+        await transaction.RollbackAsync(cancellationToken);
+
         // 0 rows: find out why. Not found → 404; another version → 409 (the client's data is stale, so this wins
         // over 422); same version → the transition itself is not allowed → 422.
         // (If another update commits between the UPDATE above and this read, the answer is 409 – also correct:

@@ -51,33 +51,60 @@ public class SummaryCacheTests
     }
 
     [Fact]
-    public async Task InvalidationDuringALoad_PreventsTheOldResultFromBeingStored()
+    public async Task InvalidationDuringALoad_LoadsOnceMore_AndCachesOnlyTheNewResult()
     {
         // The generation counter (D-20). A reader starts loading, a status change is committed and invalidates the
-        // cache, and only then does the reader finish. Its result predates the change, so it may be returned to that
-        // reader but must not stay in the cache, or the old summary would be served for the next 60 seconds.
+        // cache, and only then does the first load finish. That result predates the change: it must not be cached,
+        // and the reader loads once more, so it gets the change too and the new result is cached.
         var cache = CreateCache();
-        var loadCanFinish = new TaskCompletionSource();
-        var slowLoads = 0;
+        var firstLoadCanFinish = new TaskCompletionSource();
+        var loads = 0;
 
-        var slowRead = cache.GetOrCreateAsync(async _ =>
+        var read = cache.GetOrCreateAsync(async _ =>
         {
-            slowLoads++;
-            await loadCanFinish.Task;
-            return SummaryOf(total: 111); // the summary from before the change
+            loads++;
+            if (loads == 1)
+            {
+                await firstLoadCanFinish.Task;
+                return SummaryOf(total: 111); // the summary from before the change
+            }
+            return SummaryOf(total: 222);     // the summary after the change
         }, CancellationToken.None);
 
-        cache.Invalidate();           // the change is committed while the reader is still loading
-        loadCanFinish.SetResult();
-        var slowResult = await slowRead;
+        cache.Invalidate();                   // the change is committed while the first load is still running
+        firstLoadCanFinish.SetResult();
+        var result = await read;
 
-        var afterwards = new CountingLoad(total: 222);
+        var afterwards = new CountingLoad(total: 333);
         var next = await cache.GetOrCreateAsync(afterwards.LoadAsync, CancellationToken.None);
 
-        Assert.Equal(111, slowResult.Total);   // the reader that started before still gets its answer
-        Assert.Equal(1, slowLoads);
-        Assert.Equal(1, afterwards.Calls);     // the old result was not stored: this read had to load
+        Assert.Equal(222, result.Total);      // the reader got the summary after the change
+        Assert.Equal(2, loads);               // one retry
+        Assert.Equal(0, afterwards.Calls);    // the second result was cached: this read was a hit
         Assert.Equal(222, next.Total);
+    }
+
+    [Fact]
+    public async Task InvalidationDuringBothLoads_StopsAfterOneRetry_AndCachesNothing()
+    {
+        // Constant changes cannot keep a reader looping: after the one retry the second result is returned uncached
+        var cache = CreateCache();
+        var loads = 0;
+
+        var result = await cache.GetOrCreateAsync(_ =>
+        {
+            loads++;
+            cache.Invalidate();               // a change is committed during every load
+            return Task.FromResult(SummaryOf(total: loads));
+        }, CancellationToken.None);
+
+        var afterwards = new CountingLoad(total: 333);
+        var next = await cache.GetOrCreateAsync(afterwards.LoadAsync, CancellationToken.None);
+
+        Assert.Equal(2, loads);
+        Assert.Equal(2, result.Total);        // the result of the retry
+        Assert.Equal(1, afterwards.Calls);    // nothing was cached
+        Assert.Equal(333, next.Total);
     }
 
     [Theory]

@@ -20,18 +20,17 @@ internal sealed class SummaryCache(IMemoryCache cache, ILogger<SummaryCache> log
     private const string Key = "requests:summary";
     private static readonly TimeSpan Lifetime = TimeSpan.FromSeconds(60);
 
+    // One load plus at most one retry when a status change was committed during the first load
+    private const int MaxLoads = 2;
+
     private readonly object _gate = new();
 
     // Raised by every invalidation. A summary is stored only if the generation did not change while it was
     // being loaded; otherwise it may have been read before a status change that was committed meanwhile.
     private int _generation;
 
-    /// <summary>The cached summary, or <paramref name="load"/>'s result (which is then cached).</summary>
-    /// <remarks>
-    /// Several simultaneous misses each run <paramref name="load"/> (no stampede protection, a conscious decision:
-    /// at most one burst of ~100 ms per minute, not worth a lock around the database query).
-    /// A failed or cancelled load is not cached.
-    /// </remarks>
+    /// <summary>The cached summary, or <paramref name="load"/>'s result, which is cached unless a status change was committed meanwhile.</summary>
+    /// <remarks>Simultaneous misses each load (no stampede protection, D-20); a failed or cancelled load is not cached.</remarks>
     public async Task<SummaryDto> GetOrCreateAsync(
         Func<CancellationToken, Task<SummaryDto>> load, CancellationToken cancellationToken)
     {
@@ -42,6 +41,25 @@ internal sealed class SummaryCache(IMemoryCache cache, ILogger<SummaryCache> log
         }
 
         logger.LogInformation("Summary cache miss, loading from the database");
+
+        // A status change committed during the load makes its result older than that change: load once more, so the
+        // caller gets the change too. Bounded to one retry; under constant changes the second result is returned uncached.
+        for (var attempt = 1; ; attempt++)
+        {
+            var (summary, stored) = await LoadAndStoreAsync(load, cancellationToken);
+            if (stored || attempt == MaxLoads)
+            {
+                return summary;
+            }
+
+            logger.LogDebug("Summary changed while it was loaded, loading again");
+        }
+    }
+
+    /// <summary>Loads the summary and caches it only if no invalidation happened meanwhile; tells whether it was cached.</summary>
+    private async Task<(SummaryDto Summary, bool Stored)> LoadAndStoreAsync(
+        Func<CancellationToken, Task<SummaryDto>> load, CancellationToken cancellationToken)
+    {
         int generationAtStart;
         lock (_gate)
         {
@@ -54,17 +72,14 @@ internal sealed class SummaryCache(IMemoryCache cache, ILogger<SummaryCache> log
         // invalidation could slip in between and the old summary would be stored right after it
         lock (_gate)
         {
-            if (generationAtStart == _generation)
+            if (generationAtStart != _generation)
             {
-                cache.Set(Key, summary, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = Lifetime });
+                return (summary, false);
             }
-            else
-            {
-                logger.LogDebug("Summary not cached: a status change was committed while it was loaded");
-            }
-        }
 
-        return summary;
+            cache.Set(Key, summary, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = Lifetime });
+            return (summary, true);
+        }
     }
 
     /// <summary>Drops the cached summary; call after a status change was committed.</summary>
