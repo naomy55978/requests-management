@@ -80,7 +80,11 @@
 | `id` קטן מ־1 | `items[2].id` |
 | `version` חסר או אינו base64 של 8 בתים | `items[2].version` |
 | איבר `null` ברשימה | `items[2]` |
-| שדה לא מוכר (למשל `changedBy`) | `$.changedBy` |
+| שדה לא מוכר (למשל `changedBy`) – "`'changedBy' is not a known field.`" | `changedBy` (פריט: `items[2].foo`) |
+| ערך מסוג שגוי (למשל `"id": "x"`) – "`The value of 'items[2].id' is not valid.`" | `items[2].id` |
+| גוף חסר, שאינו JSON או שאינו אובייקט | `body` |
+
+המפתחות הם תמיד שמות שדות ב־camelCase (לא נתיב JSON כמו `$.changedBy`), וההודעות אינן חושפות שמות של טיפוסי ‎.NET. אותו פורמט גם ב־`PATCH /api/requests/{id}/status` וב־`POST /api/auth/login`.
 
 בלי טוקן – 401; גוף בלי `Content-Type: application/json` – 415.
 
