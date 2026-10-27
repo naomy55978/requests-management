@@ -188,6 +188,4 @@ dotnet run scripts/MeasureQueries.cs -- --out <dir> --compare before final
 - `--shape original` מודד את ה־SQL שלפני M8; ‏`--alternatives` מודד את חלופות השאילתה שנבחנו; ‏`--disable <index>` מכבה אינדקס אחד לריצה ותמיד בונה אותו מחדש בסוף (רק במסד בשם `RequestsManagement`, ולא את ה־Clustered Index).
 - `SQL_SERVER` כמו בסקריפטים האחרים. הסקריפט לא משנה נתונים ולא מריץ פקודות ברמת המופע: ניקוי Plans רק למסד הזה (`ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE`).
 
-הוראות הרצה מלאות (כולל הבדיקות) יתווספו ב־M9.
-
 > היסטוריית העבודה של M0 (הקמת ה־Solution) נשמרה ב־Repo של התיעוד, ממנו הקוד הועבר לכאן.
