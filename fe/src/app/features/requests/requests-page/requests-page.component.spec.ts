@@ -4,8 +4,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 
 import { RequestsApiService } from '../../../core/api/requests-api.service';
-import { PerformanceLogService } from '../../../core/perf/performance-log.service';
-import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 import { provideAppIcons } from '../../../core/icons/app-icons';
 import { createFakeApi, fakeRequest } from '../requests-list.store.test-helpers';
 import { RequestsPageComponent } from './requests-page.component';
@@ -17,8 +15,7 @@ describe('RequestsPageComponent', () => {
   let statusCalls: ReturnType<typeof createFakeApi>['statusCalls'];
   let bulkCalls: ReturnType<typeof createFakeApi>['bulkCalls'];
 
-  // The optional performance UI (time badge) is off unless a test turns it on
-  async function render(showPerformance = false) {
+  async function render() {
     const fake = createFakeApi();
     calls = fake.calls;
     statusCalls = fake.statusCalls;
@@ -30,7 +27,6 @@ describe('RequestsPageComponent', () => {
         provideNativeDateAdapter(),
         { provide: MAT_DATE_LOCALE, useValue: 'he-IL' },
         provideAppIcons(),
-        { provide: SHOW_PERFORMANCE, useValue: showPerformance },
       ],
     }).compileComponents();
 
@@ -437,39 +433,4 @@ describe('RequestsPageComponent', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
   });
 
-  it('has no time badge by default: the performance UI is off', () => {
-    expect(element.querySelector('app-timing-badge')).toBeNull();
-  });
-
-  describe('time badges (performance UI on)', () => {
-    beforeEach(async () => {
-      TestBed.resetTestingModule();
-      await render(true);
-    });
-
-    it('show nothing until a load has been measured', () => {
-      expect(element.querySelector('app-timing-badge .badge')).toBeNull();
-    });
-
-    it('show the last list load, quietly, next to the title', async () => {
-      const log = TestBed.inject(PerformanceLogService);
-      log.record({
-        at: new Date(),
-        kind: 'list',
-        method: 'GET',
-        status: 200,
-        clientMs: 20,
-        timing: { totalMs: 42, dbMs: 30, queryCount: 2, cache: null },
-      });
-      await fixture.whenStable();
-
-      // Label, time and cache are separate elements (the gap between them is CSS), so they are read one by one
-      const badges = Array.from(element.querySelectorAll('.page-header app-timing-badge')).map((badge) =>
-        ['.label', '.value', '.cache'].map((part) => badge.querySelector(part)?.textContent ?? null),
-      );
-      expect(badges).toEqual([
-        ['רשימה', '42 ms', null],
-      ]);
-    });
-  });
 });

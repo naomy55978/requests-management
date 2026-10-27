@@ -10,7 +10,6 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { HebrewPaginatorIntl } from './core/i18n/hebrew-paginator-intl';
 import { provideAppIcons } from './core/icons/app-icons';
-import { timingInterceptor } from './core/perf/timing.interceptor';
 import { AppTitleStrategy } from './core/routing/app-title-strategy';
 
 // Hebrew formats for the date and number pipes
@@ -22,8 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     // Tab title: "<screen> · ניהול פניות"
     { provide: TitleStrategy, useClass: AppTitleStrategy },
-    // The timing interceptor is last: it measures the call on the network, after the token was added
-    provideHttpClient(withInterceptors([authInterceptor, timingInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor])),
     { provide: LOCALE_ID, useValue: 'he' },
     // Date pickers: Hebrew month and day names, week starts on Sunday
     { provide: MAT_DATE_LOCALE, useValue: 'he-IL' },

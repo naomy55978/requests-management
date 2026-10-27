@@ -10,11 +10,8 @@ import { filter } from 'rxjs';
 
 import { RequestStatus, RequestDto } from '../../../core/api/api.models';
 import { STATUS_LABELS } from '../../../core/i18n/labels';
-import { PerformanceLogService } from '../../../core/perf/performance-log.service';
-import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 
 import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
-import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
 import { BulkBarComponent } from '../bulk-bar/bulk-bar.component';
 import { countOutcomes, toBulkResultRows } from '../bulk-result';
 import { BulkResultDialogComponent, BulkResultDialogData } from '../bulk-result-dialog/bulk-result-dialog.component';
@@ -37,7 +34,6 @@ import { StatusChangeOutcome } from '../status-update-failure';
     RequestsFiltersComponent,
     RequestsTableComponent,
     StateMessageComponent,
-    TimingBadgeComponent,
   ],
   // A new store for every visit: rows and filters of a previous session never show up for the next user
   providers: [RequestsListStore],
@@ -51,13 +47,6 @@ export class RequestsPageComponent {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly performance = inject(PerformanceLogService);
-
-  /** The time badge is part of the optional performance UI. */
-  protected readonly showPerformance = inject(SHOW_PERFORMANCE);
-
-  /** How long the last list load took (null until the first answer). */
-  protected readonly listTiming = computed(() => this.performance.latest('list'));
 
   /**
    * Said to screen readers when a load has finished with rows, so a search or filter gives feedback without sight.

@@ -6,19 +6,6 @@
       <a mat-button routerLink="/requests" routerLinkActive="active" ariaCurrentWhenActive="page">פניות</a>
     </nav>
     <span class="app-spacer"></span>
-    @if (showPerformance) {
-      <button
-        mat-button
-        type="button"
-        class="app-performance"
-        #performanceButton
-        aria-controls="performance-panel"
-        [attr.aria-expanded]="performanceOpen()"
-        (click)="togglePerformance()"
-      >
-        ביצועים
-      </button>
-    }
     <span class="app-user">{{ name }}</span>
     <button mat-button type="button" (click)="auth.logout()">התנתקות</button>
   } @else {
@@ -27,10 +14,5 @@
 </mat-toolbar>
 
 <main class="app-content">
-  <!-- Above the screen, not below it: below a 20-row table it opened out of sight, and the button seemed to do nothing -->
-  @if (showPerformance && performanceOpen() && auth.displayName()) {
-    <app-performance-panel class="app-performance-panel" />
-  }
-
   <router-outlet />
 </main>

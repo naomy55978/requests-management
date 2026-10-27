@@ -1,10 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-import { PerformanceLogService } from '../../../core/perf/performance-log.service';
-import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
-import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
 import { SummaryCardsComponent } from '../summary-cards/summary-cards.component';
 import { SummaryStore } from '../summary.store';
 
@@ -14,7 +11,7 @@ import { SummaryStore } from '../summary.store';
  */
 @Component({
   selector: 'app-dashboard-page',
-  imports: [MatButtonModule, MatIconModule, SummaryCardsComponent, TimingBadgeComponent],
+  imports: [MatButtonModule, MatIconModule, SummaryCardsComponent],
   // A new store for every visit, like the list store (D-27): numbers of a previous session never show up for the next user
   providers: [SummaryStore],
   templateUrl: './dashboard-page.component.html',
@@ -22,11 +19,4 @@ import { SummaryStore } from '../summary.store';
 })
 export class DashboardPageComponent {
   protected readonly summaryStore = inject(SummaryStore);
-  private readonly performance = inject(PerformanceLogService);
-
-  /** The time badge is part of the optional performance UI. */
-  protected readonly showPerformance = inject(SHOW_PERFORMANCE);
-
-  /** How long the last summary load took, and whether the server answered from its cache (null until the first answer). */
-  protected readonly summaryTiming = computed(() => this.performance.latest('summary'));
 }

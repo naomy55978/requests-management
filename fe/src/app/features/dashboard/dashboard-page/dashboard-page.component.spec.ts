@@ -3,8 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { provideAppIcons } from '../../../core/icons/app-icons';
-import { PerformanceLogService } from '../../../core/perf/performance-log.service';
-import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 import { createFakeSummaryApi, fakeSummary } from '../summary.test-helpers';
 import { DashboardPageComponent } from './dashboard-page.component';
 
@@ -13,8 +11,7 @@ describe('DashboardPageComponent', () => {
   let element: HTMLElement;
   let summaryCalls: ReturnType<typeof createFakeSummaryApi>['summaryCalls'];
 
-  // The optional performance UI (time badge) is off unless a test turns it on
-  async function render(showPerformance = false) {
+  async function render() {
     const fake = createFakeSummaryApi();
     summaryCalls = fake.summaryCalls;
     await TestBed.configureTestingModule({
@@ -22,7 +19,6 @@ describe('DashboardPageComponent', () => {
       providers: [
         { provide: RequestsApiService, useValue: fake.api },
         provideAppIcons(),
-        { provide: SHOW_PERFORMANCE, useValue: showPerformance },
       ],
     }).compileComponents();
 
@@ -83,37 +79,4 @@ describe('DashboardPageComponent', () => {
     expect(summaryCalls).toHaveLength(2);
   });
 
-  it('has no time badge by default: the performance UI is off', () => {
-    expect(element.querySelector('app-timing-badge')).toBeNull();
-  });
-
-  describe('time badge (performance UI on)', () => {
-    beforeEach(async () => {
-      TestBed.resetTestingModule();
-      await render(true);
-    });
-
-    it('shows nothing until the summary load has been measured', () => {
-      expect(element.querySelector('app-timing-badge .badge')).toBeNull();
-    });
-
-    it('shows how long the summary took and that the server answered from its cache', async () => {
-      TestBed.inject(PerformanceLogService).record({
-        at: new Date(),
-        kind: 'summary',
-        method: 'GET',
-        status: 200,
-        clientMs: 3,
-        timing: { totalMs: 1.2, dbMs: 0, queryCount: 0, cache: 'hit' },
-      });
-      await fixture.whenStable();
-
-      const badge = element.querySelector('app-timing-badge');
-      expect(['.label', '.value', '.cache'].map((part) => badge?.querySelector(part)?.textContent)).toEqual([
-        'סיכום',
-        '1.2 ms',
-        'HIT',
-      ]);
-    });
-  });
 });
