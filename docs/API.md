@@ -3,7 +3,7 @@
 תיעוד מלא ואינטראקטיבי של כל ה־Endpoints (פרמטרים, מודלים וקודי תשובה) נמצא ב־Swagger UI של ה־API: `/swagger` (במצב Development). קובץ זה מרכז התנהגויות שדורשות הסבר והנמקה.
 כל ה־Endpoints מלבד `POST /api/auth/login` דורשים `Authorization: Bearer <token>` (D‑10).
 
-## עדכון סטטוס ו־Concurrency
+## Concurrency בעדכון סטטוס
 
 `PATCH /api/requests/{id}/status` עם `{"newStatus": "...", "version": "..."}`. ה־`version` הוא ה־`RowVersion` של הפנייה (base64) כפי שהלקוח קרא אותה.
 
