@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>7adb5836-7ec4-4efc-ac34-bcccc4c5cdbc</UserSecretsId>
+    <!-- XML comments on controllers and DTOs become the descriptions in the OpenAPI document / Swagger UI.
+         CS1591 (missing comment on a public member) is not required for every member. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- WebApplicationFactory in the test project needs the (internal) Program class -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="RequestsManagement.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RequestsManagement.BL\RequestsManagement.BL.csproj" />
+    <ProjectReference Include="..\RequestsManagement.DAL\RequestsManagement.DAL.csproj" />
+    <ProjectReference Include="..\RequestsManagement.DTO\RequestsManagement.DTO.csproj" />
+  </ItemGroup>
+
+</Project>
