@@ -124,12 +124,12 @@ public class UpdateStatusTests(ApiFixture fixture)
     }
 
     [Theory]
-    [InlineData("{}")]
-    [InlineData("""{"newStatus":"InProgress"}""")]                              // version missing
-    [InlineData("""{"newStatus":"Nope","version":"AAAAAAAAB9E="}""")]          // unknown status
-    [InlineData("""{"newStatus":"InProgress","version":"***"}""")]              // version is not a version
-    [InlineData("""{"newStatus":"InProgress","version":""")]                    // not JSON
-    public async Task InvalidBody_Gives400_AndChangesNothing(string json)
+    [InlineData("{}", "newStatus")]
+    [InlineData("""{"newStatus":"InProgress"}""", "version")]                              // version missing
+    [InlineData("""{"newStatus":"Nope","version":"AAAAAAAAB9E="}""", "newStatus")]        // unknown status
+    [InlineData("""{"newStatus":"InProgress","version":"***"}""", "version")]              // version is not a version
+    [InlineData("""{"newStatus":"InProgress","version":""", "body")]                       // not JSON
+    public async Task InvalidBody_Gives400_AndChangesNothing(string json, string expectedKey)
     {
         var request = await fixture.InsertRequestAsync(RequestStatus.New);
         using var client = fixture.Client();
@@ -139,6 +139,8 @@ public class UpdateStatusTests(ApiFixture fixture)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.True((await response.ReadProblemAsync()).GetProperty("errors").TryGetProperty(expectedKey, out _),
+            $"no error for '{expectedKey}'");
         Assert.Equal(RequestStatus.New, (await fixture.GetRequestAsync(request.Id)).Status);
         Assert.Empty(await fixture.GetHistoryAsync(request.Id));
     }

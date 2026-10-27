@@ -10,6 +10,7 @@ using RequestsManagement.API.Auth;
 using RequestsManagement.API.Commands;
 using RequestsManagement.API.Middleware;
 using RequestsManagement.API.Startup;
+using RequestsManagement.API.Validation;
 using RequestsManagement.BL;
 using RequestsManagement.DAL;
 
@@ -31,7 +32,11 @@ builder.Services.AddControllers(options => options.SuppressImplicitRequiredAttri
         // A body field the API does not know is rejected with 400 instead of being ignored silently –
         // e.g. a client that tries to send "changedBy" is told so (the acting user comes only from the token)
         options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
-    });
+        // The serializer's messages name .NET types; ValidationProblemResponse replaces them with readable ones
+        options.AllowInputFormatterExceptionMessages = false;
+    })
+    // Every 400 for invalid input: plain field names as keys ("newStatus", not "$.newStatus") and readable messages
+    .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = ValidationProblemResponse.Create);
 // Enums travel as readable strings ("InProgress"); numbers are still accepted as input.
 // The OpenAPI schema generator reads these options, not the MVC ones.
 builder.Services.ConfigureHttpJsonOptions(options =>
