@@ -3,6 +3,19 @@
 תיעוד מלא ואינטראקטיבי של כל ה־Endpoints (פרמטרים, מודלים וקודי תשובה) נמצא ב־Swagger UI של ה־API: `/swagger` (במצב Development). קובץ זה מרכז התנהגויות שדורשות הסבר והנמקה.
 כל ה־Endpoints מלבד `POST /api/auth/login` דורשים `Authorization: Bearer <token>` (D‑10).
 
+## עדכון סטטוס ו־Concurrency
+
+`PATCH /api/requests/{id}/status` עם `{"newStatus": "...", "version": "..."}`. ה־`version` הוא ה־`RowVersion` של הפנייה (base64) כפי שהלקוח קרא אותה.
+
+- **אילו נתיבים בודקים את הגרסה:** שני ה־Endpoints שמשנים סטטוס – `PATCH /api/requests/{id}/status`, ו־`POST /api/requests/bulk-status` לכל פריט – עוברים באותה מתודה, `RequestRepository.UpdateStatusAsync`. היא מריצה `UPDATE` מותנה אחד: `WHERE [Id] = @id AND [RowVersion] = @expectedVersion AND [Status] IN (<הסטטוסים שמהם מותר לעבור לסטטוס החדש>)`. הבדיקה והכתיבה הן פקודה אחת, ולכן מבין עדכונים מקבילים עם אותה גרסה רק אחד מצליח, והשאר מקבלים `409` (D‑06).
+- **0 שורות עודכנו:** הפנייה לא קיימת ← `404`; הגרסה השתנתה ← `409` עם `currentStatus`, ‏`currentVersion`, ‏`currentUpdatedAt`; אותה גרסה אבל מעבר אסור ← `422` עם `allowedStatuses`. ‏`409` קודם ל־`422` (D‑07).
+- `UpdatedAt` נכתב באותו `UPDATE`, ו־SQL Server מייצר `RowVersion` חדש בכל כתיבה לשורה – השניים משתנים יחד.
+- **Audit:** שורת `RequestStatusHistory` (‏`PreviousStatus` מה־DB דרך `OUTPUT deleted`, ‏`ChangedBy` מהטוקן) נכתבת באותה טרנזקציה, **רק בנתיב הזה** ורק כשהעדכון הצליח. אם כתיבתה נכשלת, העדכון מתבטל (`UpdateAtomicityTests`).
+- **מה לא עובר בנתיב הזה:** עדכון ישיר במסד, מחוץ ל־API (ה־Seed, נתוני הבדיקות או SQL ידני), אינו בודק גרסה ואינו כותב Audit. גם כתיבה כזו משנה את `RowVersion`, ולכן לקוח שקרא את הפנייה לפניה יקבל `409` בעדכון הבא שלו.
+
+### אימות
+`UpdateStatusTests` (עדכון, ‏409 וניסיון חוזר, ‏422, ‏404, ‏400, היסטוריה), ‏`ConcurrencyTests` (עדכונים מקבילים עם אותה גרסה: מנצח אחד ושורת היסטוריה אחת) ו־`UpdateAtomicityTests` (העדכון ושורת ה־Audit אטומיים).
+
 ## עדכון סטטוס מרוכז (Bulk)
 
 `POST /api/requests/bulk-status` – שינוי סטטוס של עד 100 פניות בקריאה אחת.
