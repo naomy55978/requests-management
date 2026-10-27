@@ -97,7 +97,7 @@ export ConnectionStrings__RequestsDb="Server=localhost,1433;Database=RequestsMan
 
 | איפה | פקודה | מה |
 |---|---|---|
-| Backend | `dotnet test` | **139 בדיקות**: ‏67 יחידה ו־72 Integration – דרך HTTP מול SQL Server אמיתי, במסד זמני שנוצר ונמחק בכל ריצה (D‑21). חיבור: המשתנה `TESTS_SQL_CONNECTION`; בלעדיו – `Server=.` ואז LocalDB |
+| Backend | `dotnet test` | **145 בדיקות**: ‏73 יחידה ו־72 Integration – דרך HTTP מול SQL Server אמיתי, במסד זמני שנוצר ונמחק בכל ריצה (D‑21). חיבור: המשתנה `TESTS_SQL_CONNECTION`; בלעדיו – `Server=.` ואז LocalDB |
 | Frontend | `npm test -- --watch=false` | **367 בדיקות** (Vitest), ‏`npm run lint`, ‏`npm run build` |
 | CI | GitHub Actions | בכל Push, בשני ה־Repos; ב־Backend מול SQL Server 2022 בקונטיינר |
 
@@ -188,7 +188,7 @@ RequestsManagement.DTO   מודלים לבקשות ולתשובות, כללי ה
 | §5 Angular | `requests-list.store.ts` (זרם אחד, `debounceTime`, ‏`switchMap`), מצבי טעינה/ריק/שגיאה, ‏409, לוח בקרה, היסטוריה | D‑26–D‑45 | 367 בדיקות FE |
 | §6 ביצועים | אינדקסים (Migration `TuneIndexes`), ‏Deferred Join, חיפוש בינארי | [PERFORMANCE.md](docs/PERFORMANCE.md), ‏D‑24 | `MeasureQueries.cs` |
 | §7 Cache | `SummaryCache` | [CACHE.md](docs/CACHE.md), ‏D‑11, ‏D‑20 | `SummaryCacheTests`, ‏`RequestServiceCacheTests`, ‏`SummaryTests`, ‏`verify-summary-cache.js` |
-| §8 בדיקות | `tests/RequestsManagement.Tests` | D‑21 | 139 BE + 367 FE, ‏CI |
+| §8 בדיקות | `tests/RequestsManagement.Tests` | D‑21 | 145 BE + 367 FE, ‏CI |
 | §9 תכנון עבודה | Issues, Milestones, ‏[Project Board](https://github.com/users/naomy55978/projects/2) | [WORK_PLAN.md](docs/WORK_PLAN.md) | – |
 | §10 איכות קוד | ‏4 שכבות, ‏DI, ‏ProblemDetails (`GlobalExceptionHandler`), ולידציה אחת (D‑18), Logging בלי מידע רגיש | [DECISIONS.md](docs/DECISIONS.md) | – |
 | §11 תיעוד | README זה, ‏READMEs של ה־Repos, ‏`docs/` | – | – |
@@ -196,7 +196,7 @@ RequestsManagement.DTO   מודלים לבקשות ולתשובות, כללי ה
 מטריצה מלאה של דרישה ← משימות: [docs/WORK_PLAN.md](docs/WORK_PLAN.md).
 
 ## תכנון העבודה
-- [docs/WORK_PLAN.md](docs/WORK_PLAN.md) – תוכנית העבודה: עשרה Milestones (M0–M9), סדר ביצוע ותלויות, הערכת מאמץ לכל משימה (סה״כ כ־50 שעות), ומטריצת דרישה ← משימות. כוללת משימות שאינן קוד: תכנון, ‏DB, מדידה, תיעוד והגשה.
+- [docs/WORK_PLAN.md](docs/WORK_PLAN.md) – תוכנית העבודה: עשרה Milestones (M0–M9), סדר ביצוע ותלויות, הערכת מאמץ לכל משימה (סה״כ 53 שעות), ומטריצת דרישה ← משימות. כוללת משימות שאינן קוד: תכנון, ‏DB, מדידה, תיעוד והגשה.
 - [Issues](https://github.com/naomy55978/requests-management-docs/issues?q=is%3Aissue) – משימה לכל יחידת עבודה, עם תיאור, תוצר מצופה, קריטריוני קבלה, מאמץ, תלויות וסעיף המבדק. כל Commit בקוד מפנה ל־Issue שלו.
 - [Project Board](https://github.com/users/naomy55978/projects/2) ו־[Milestones](https://github.com/naomy55978/requests-management-docs/milestones).
 - [PROJECT_TRACKING_RequestsManagement.md](PROJECT_TRACKING_RequestsManagement.md) – יומן הפרויקט: אפיון, כל ההחלטות, מה בוצע בכל שלב ואיך אומת, סיכונים וצעדים הבאים.

@@ -189,7 +189,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 
 ## מיפוי בדיקות לדרישות (M6 (בדיקות))
 
-53 שיטות בדיקה ב־`requests-management-be/tests/RequestsManagement.Tests`, **123 מקרים** כולל שורות ה־`Theory` (28 יחידה, 25 Integration מתוכן 2 Concurrency). הסעיפים (§) הם סעיפי מסמך המבדק כפי שמופיעים במטריצה למעלה. ההרצה והחיבור ל־SQL Server מתוארים ב־README של BE.
+53 שיטות בדיקה ב־`requests-management-be/tests/RequestsManagement.Tests`, **123 מקרים** כולל שורות ה־`Theory` (28 יחידה, 25 Integration מתוכן 2 Concurrency). זו תמונת המצב בסוף M6 (בדיקות); ב־27.10.2026 הסוויטה כוללת **145 מקרים** (73 יחידה, 72 Integration), אחרי בדיקות שנוספו מאז. הסעיפים (§) הם סעיפי מסמך המבדק כפי שמופיעים במטריצה למעלה. ההרצה והחיבור ל־SQL Server מתוארים ב־README של BE.
 בדיקות היחידה רצות בזיכרון; בדיקות ה־Integration רצות מול ה־API האמיתי ומסד זמני ב־SQL Server שנוצר מה־Migrations (D‑09), ומשוות גם למה שנשמר ב־DB.
 
 ### יחידה
