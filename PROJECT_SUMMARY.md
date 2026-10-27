@@ -100,7 +100,6 @@ flowchart TB
 - `RequestsController`, ‏`AuthController` – ה־Endpoints; פונים רק לממשק של ה־BL.
 - `GlobalExceptionHandler` – כל שגיאה חוזרת כ־ProblemDetails עם `traceId`; ניתוק לקוח מסתיים ב־499 בלי שגיאה ביומן.
 - `ValidationProblemResponse` – תשובות 400 נקיות: שמות שדות פשוטים (`newStatus`, ‏`items[0].id`) והודעות קריאות, בלי שמות טיפוסים פנימיים של .NET ([D‑18](docs/DECISIONS.md#d-18)).
-- `ServerTimingMiddleware` – כותרת `Server-Timing` עם זמן השרת, זמן ה־DB ו־Cache HIT/MISS; כבויה כברירת מחדל ([D‑25](docs/DECISIONS.md#d-25)).
 - `RequestService` – לוגיקת העסק; מתודה אחת לשינוי סטטוס, משותפת לעדכון הבודד ול־Bulk.
 - `StatusTransitions` – מטריצת המעברים, במקום אחד.
 - `SummaryCache` – ה־Cache של הסיכום: ‏Singleton, ‏60 שניות ומונה "דור" ([D‑20](docs/DECISIONS.md#d-20)).
@@ -147,7 +146,7 @@ flowchart TB
   RP --> RS["RequestsListStore"]
   SS --> API["RequestsApiService"]
   RS --> API
-  AS --> I["Interceptors<br/>טוקן וזמנים"]
+  AS --> I["authInterceptor<br/>טוקן"]
   API --> I
   I --> S[("API")]
 ```
@@ -156,13 +155,12 @@ flowchart TB
 - `AuthService` – ההתחברות והסשן (ב־`sessionStorage`), ובדיקת תוקף במקום אחד ([D‑26](docs/DECISIONS.md#d-26)).
 - `authGuard` – מגן על לוח הבקרה ועל מסך הפניות; משתמש לא מחובר מועבר להתחברות.
 - `authInterceptor` – מוסיף את הטוקן לקריאות ה־API, ו־401 מוביל להתחברות מחדש.
-- `timingInterceptor` – קורא את כותרת `Server-Timing` לפאנל הביצועים; כבוי כברירת מחדל (`SHOW_PERFORMANCE`).
 - `RequestsApiService` – כל הקריאות ל־API של הפניות.
 - `SummaryStore`, ‏`RequestsListStore` – מצב המסך; כל אחד מסופק ע״י המסך שלו ונזרק ביציאה ממנו.
 
 **הרכיבים העיקריים:**
 - `LoginComponent` – טופס ההתחברות.
-- `DashboardPageComponent`, ‏`SummaryCardsComponent` – לוח הבקרה: כרטיסי סיכום, תג זמן וכפתור "רענן".
+- `DashboardPageComponent`, ‏`SummaryCardsComponent` – לוח הבקרה: כרטיסי סיכום וכפתור "רענן".
 - `RequestsPageComponent` – מסך הפניות.
 - `RequestsFiltersComponent` – סינון וחיפוש.
 - `RequestsTableComponent` – הטבלה, מיון ודפדוף, ותפריט שינוי סטטוס לכל שורה.
@@ -170,7 +168,6 @@ flowchart TB
 - `ConfirmCompleteDialogComponent` – אישור לפני מעבר ל"הושלמה".
 - `RequestHistoryDialogComponent` – היסטוריית הסטטוס של פנייה.
 - `StateMessageComponent` – הודעות טעינה, ריק ושגיאה.
-- `PerformancePanelComponent`, ‏`TimingBadgeComponent` – פאנל ותגי הביצועים (אופציונליים, כבויים כברירת מחדל – `SHOW_PERFORMANCE`, מוגדר ע״י `showPerformance` ב־environment).
 
 **זרימת הנתונים במסך הפניות:**
 
@@ -178,7 +175,7 @@ flowchart TB
 flowchart LR
   F["רכיבי המסך<br/>סינון, טבלה, דפדוף"] -->|"שינוי"| ST["RequestsListStore<br/>merge, scan, switchMap"]
   ST --> AP["RequestsApiService"]
-  AP --> IN["Interceptors"]
+  AP --> IN["authInterceptor"]
   IN --> SV[("API")]
   SV -.->|"תשובה"| ST
   ST -.->|"Signals"| F
@@ -244,11 +241,11 @@ flowchart TB
 **שימוש ב־AI:** ‏Claude Code – ‏Opus לתכנון, ארכיטקטורה וסקירה, ו־Sonnet לכתיבת קוד ובדיקות. כל קוד שנכתב אומת בשיטות שלמטה. הפירוט – ב־[README](README.md#שימוש-בכלי-ai).
 
 **שיטות האימות:**
-- **Oracle מול SQL** – סקריפטי אימות אופציונליים (`scripts/dev` ב־Backend) משווים כל סינון, חיפוש, מיון ודפדוף לשאילתת SQL ישירה על 100,000 הפניות. מקור האמת הם סוויטות הבדיקות האוטומטיות.
+- **Oracle מול SQL** – סקריפט אימות אופציונלי (`scripts/dev/verify-read-api.js` ב־Backend) משווה סינון, חיפוש, מיון ודפדוף לשאילתות SQL ישירות על כל 100,000 הפניות. מקור האמת הן הבדיקות האוטומטיות.
 - **Oracle ב־LINQ** – בבדיקות ה־Integration התוצאה הצפויה מחושבת מהנתונים ולא מועתקת מהקוד ([D‑21](docs/DECISIONS.md#d-21)).
 - **בדיקות מוטציה** – שוברים את הקוד בכוונה ומוודאים שהבדיקות נכשלות.
-- **הוכחת Concurrency** – ‏1,000 בקשות PATCH מקבילות: בדיוק 50 הצלחות ו־950 תשובות 409, ושורת היסטוריה אחת לכל פנייה (`scripts/dev/ConcurrencyProof.cs`).
-- **דפדפן אמיתי** – ב־Chrome מול ה־API האמיתי, לפני ואחרי כל תיקון בממשק: מיקום הפאנל, יישור טקסט מעורב עברית/אנגלית ומיקוד מקלדת, וזמן הבקשה הראשונה לסיכום (78–105 ms אחרי החימום).
+- **הוכחת Concurrency** – `ConcurrencyTests`: ‏10 פניות × 20 בקשות PATCH בו־זמנית עם אותה גרסה ← לכל פנייה בדיוק `200` אחד ו־19 תשובות `409`, ושורת היסטוריה אחת; ו־Bulk במקביל ל־PATCH ← מנצח אחד לכל פנייה, בלי 5xx. העדכון ושורת ה־Audit אטומיים (`UpdateAtomicityTests`).
+- **דפדפן אמיתי** – ב־Chrome מול ה־API האמיתי, לפני ואחרי כל תיקון בממשק: יישור טקסט מעורב עברית/אנגלית, ניווט ומיקוד מקלדת, וזמן הבקשה הראשונה לסיכום (78–105 ms אחרי החימום).
 - **בדיקה מקצה לקצה** – מ־clone נקי על LocalDB קר, כמו בודק ([SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md)): בבדיקה מ־26.10.2026: ‏145 בדיקות Backend, ‏367 בדיקות Frontend ומעבר של 21/21 בדפדפן. סך הבדיקות האוטומטיות היום: ‏159 + 376 = 535.
 
 ## מבנה התיקיות

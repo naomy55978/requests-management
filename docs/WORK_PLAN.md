@@ -40,7 +40,7 @@ Closes naomy55978/requests-management-docs#12
 | M5 | Cache | Cache מתועד | 2 ש' | M3 |
 | M6 | בדיקות | בדיקות ירוקות ב־CI | 5 ש' | M2–M5 |
 | M7 | Angular | UI מלא | 13.5 ש' (במקור 12) | M2–M5 |
-| M8 | ביצועים | PERFORMANCE.md + כותרת Server-Timing | 5 ש' | M1–M2 |
+| M8 | ביצועים | PERFORMANCE.md | 5 ש' | M1–M2 |
 | M9 | תיעוד והגשה | הגשה מלאה | 7.25 ש' (במקור 4) | הכל |
 | | **סה"כ (הערכה)** | | **54.5 ש'** | |
 
@@ -162,7 +162,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | [#38](https://github.com/naomy55978/requests-management-docs/issues/38) | עדכון סטטוס עם טיפול ב-409 (הודעה ורענון השורה) | 1.5 | [#19](https://github.com/naomy55978/requests-management-docs/issues/19), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §5 (עדכון סטטוס וטיפול ב-409 Conflict) |
 | [#39](https://github.com/naomy55978/requests-management-docs/issues/39) | בחירה מרובה ו-Bulk עם הצגת תוצאה לכל פריט | 1.5 | [#21](https://github.com/naomy55978/requests-management-docs/issues/21), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §5, §4 (תשובה ברורה ללקוח) |
 | [#40](https://github.com/naomy55978/requests-management-docs/issues/40) | חלון היסטוריית שינויים | 0.75 | [#19](https://github.com/naomy55978/requests-management-docs/issues/19), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §5 (צפייה בהיסטוריית שינויים), §3 |
-| [#52](https://github.com/naomy55978/requests-management-docs/issues/52) | תג זמן ופאנל ביצועים ב־UI (Server-Timing) | 1.5 | [#51](https://github.com/naomy55978/requests-management-docs/issues/51), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §6 (מדידה בזמן ריצה), §5 |
+| [#52](https://github.com/naomy55978/requests-management-docs/issues/52) | תג זמן ופאנל ביצועים ב־UI (Server-Timing) – הוסר בניקוי האחרון (#54) | 1.5 | [#51](https://github.com/naomy55978/requests-management-docs/issues/51), [#34](https://github.com/naomy55978/requests-management-docs/issues/34) | §6 (מדידה בזמן ריצה), §5 |
 | [#41](https://github.com/naomy55978/requests-management-docs/issues/41) | סקירת קוד ה-UI: הפרדת Components ו-Services | 0.25 | [#35](https://github.com/naomy55978/requests-management-docs/issues/35), [#36](https://github.com/naomy55978/requests-management-docs/issues/36), [#37](https://github.com/naomy55978/requests-management-docs/issues/37), [#38](https://github.com/naomy55978/requests-management-docs/issues/38), [#39](https://github.com/naomy55978/requests-management-docs/issues/39), [#40](https://github.com/naomy55978/requests-management-docs/issues/40) | §5 (הפרדת אחריות), §10 |
 
 ### M8 – ביצועים (5 ש'; במקור 3 ש')
@@ -172,7 +172,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | מדידת בסיס: STATISTICS IO/TIME ו-Execution Plan לשתי פעולות | 1.25 | [#9](https://github.com/naomy55978/requests-management-docs/issues/9), [#11](https://github.com/naomy55978/requests-management-docs/issues/11) | §6 ביצועים (Execution Plan או מדד מקביל) |
 | [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | כוונון אינדקסים ומדידה חוזרת (לפני/אחרי) | 1.25 | [#42](https://github.com/naomy55978/requests-management-docs/issues/42) | §6 (פירוט האינדקסים והסיבה) |
 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | ניתוח Bottleneck וכתיבת docs/PERFORMANCE.md | 1 | [#43](https://github.com/naomy55978/requests-management-docs/issues/43) | §6 (Bottleneck והצעת שיפור), §1 (תיעוד מניעת טעינה מלאה), §11 |
-| [#51](https://github.com/naomy55978/requests-management-docs/issues/51) | כותרת `Server-Timing` בתשובות ה־API (חלק ה־Backend של D‑23) | 1.5 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | §6 (מדידה בזמן ריצה), §11 |
+| [#51](https://github.com/naomy55978/requests-management-docs/issues/51) | כותרת `Server-Timing` בתשובות ה־API (חלק ה־Backend של D‑23) – הוסרה בניקוי האחרון (#54) | 1.5 | [#44](https://github.com/naomy55978/requests-management-docs/issues/44) | §6 (מדידה בזמן ריצה), §11 |
 
 ### M9 – תיעוד והגשה (7.25 ש', במקור 4)
 
