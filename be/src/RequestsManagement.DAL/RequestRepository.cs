@@ -254,7 +254,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             query = query.Where(r => priorities.Contains(r.Priority));
         }
 
-        // Prefix match (LIKE 'x%') can use the OrganizationName index; "contains" is what Search is for
+        // Prefix match (LIKE 'x%') can use the OrganizationName and AssignedTo indexes; "contains" is what Search is for
         if (!string.IsNullOrWhiteSpace(filter.Organization))
         {
             var prefix = EscapeLike(filter.Organization.Trim()) + "%";
@@ -264,9 +264,16 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         if (!string.IsNullOrWhiteSpace(filter.AssignedTo))
         {
             var assignedTo = filter.AssignedTo.Trim();
-            query = string.Equals(assignedTo, RequestFilter.Unassigned, StringComparison.OrdinalIgnoreCase)
-                ? query.Where(r => r.AssignedTo == null)
-                : query.Where(r => r.AssignedTo == assignedTo);
+            if (string.Equals(assignedTo, RequestFilter.Unassigned, StringComparison.OrdinalIgnoreCase))
+            {
+                // A keyword, not a prefix: exactly the requests without a handler
+                query = query.Where(r => r.AssignedTo == null);
+            }
+            else
+            {
+                var prefix = EscapeLike(assignedTo) + "%";
+                query = query.Where(r => EF.Functions.Like(r.AssignedTo, prefix, LikeEscape));
+            }
         }
 
         // Both bounds are whole UTC days; the upper bound is exclusive of the next day

@@ -17,8 +17,9 @@ public class RequestsController(IRequestService requestService) : ControllerBase
     ///
     /// * **status**, **priority** – repeat the parameter to match any of several values (`status=New&amp;status=Waiting`).
     /// * **organization** – organization name starts with the given text.
-    /// * **assignedTo** – handler user name. Use the special value **`unassigned`** to get only requests that have
-    ///   no handler yet (about half of the New requests).
+    /// * **assignedTo** – handler user name starts with the given text (`dana` finds `dana.cohen`). Use the special
+    ///   value **`unassigned`** (a keyword, not a prefix) to get only requests that have no handler yet
+    ///   (about half of the New requests).
     /// * **createdFrom** / **createdTo** – whole UTC days (`2026-05-01`), both inclusive.
     /// * **search** – text contained in the title or in the organization name.
     /// * **sortBy** (`CreatedAt`, `UpdatedAt`, `Priority`, `Status`, `Title`) and **sortDir** (`Asc`, `Desc`);

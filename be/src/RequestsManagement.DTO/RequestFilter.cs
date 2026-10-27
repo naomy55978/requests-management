@@ -38,8 +38,8 @@ public class RequestFilter : IValidatableObject
     public string? Organization { get; init; }
 
     /// <summary>
-    /// Only requests assigned to this handler (user name).
-    /// The special value <c>unassigned</c> returns only requests that have no handler yet.
+    /// Only requests whose handler's user name starts with this text (the full name matches too).
+    /// The special value <c>unassigned</c> (a keyword, not a prefix) returns only requests that have no handler yet.
     /// </summary>
     [StringLength(100)]
     public string? AssignedTo { get; init; }

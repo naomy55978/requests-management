@@ -26,9 +26,28 @@ public class ReadRequestsTests(ApiFixture fixture)
         ["assigned-to-a-user"] = new(
             $"assignedTo=dana.cohen&{TestData.Window}",
             r => r.AssignedTo == "dana.cohen"),
+        // A prefix finds the same rows as the full name (the full name itself is "assigned-to-a-user" above); case is ignored
+        ["assigned-to-prefix"] = new(
+            $"assignedTo=Dana&{TestData.Window}",
+            r => r.AssignedTo is not null && r.AssignedTo.StartsWith("dana", StringComparison.OrdinalIgnoreCase)),
+        // "friedman" is only a part of "yossi.friedman": a prefix match is not "contains"
+        ["assigned-to-prefix-is-not-contains"] = new($"assignedTo=friedman&{TestData.Window}", _ => false, CanBeEmpty: true),
+        ["assigned-to-no-match"] = new($"assignedTo=nobody&{TestData.Window}", _ => false, CanBeEmpty: true),
+        // % and _ are plain characters: unescaped, "dana_cohen" would match "dana.cohen" and "dana%" every dana
+        ["assigned-to-underscore-is-literal"] = new($"assignedTo=dana_cohen&{TestData.Window}", _ => false, CanBeEmpty: true),
+        ["assigned-to-percent-is-literal"] = new($"assignedTo={Uri.EscapeDataString("dana%")}&{TestData.Window}", _ => false, CanBeEmpty: true),
+        ["assigned-to-prefix-and-status"] = new(
+            $"assignedTo=yossi&status=New&status=Waiting&{TestData.Window}",
+            r => r.AssignedTo is not null && r.AssignedTo.StartsWith("yossi", StringComparison.OrdinalIgnoreCase) &&
+                 r.Status is RequestStatus.New or RequestStatus.Waiting),
         ["unassigned"] = new(
             $"assignedTo=unassigned&{TestData.Window}",
             r => r.AssignedTo is null),
+        // The keyword is not a prefix: "UNASSIGNED" (any case) is still the no-handler filter, and "unassign" is a plain prefix of no one
+        ["unassigned-any-case"] = new(
+            $"assignedTo=UNASSIGNED&{TestData.Window}",
+            r => r.AssignedTo is null),
+        ["unassigned-prefix-is-just-a-prefix"] = new($"assignedTo=unassign&{TestData.Window}", _ => false, CanBeEmpty: true),
         ["date-range-is-inclusive"] = new(
             "createdFrom=2026-01-10&createdTo=2026-01-20",
             r => r.CreatedAt.Date >= new DateTime(2026, 1, 10) && r.CreatedAt.Date <= new DateTime(2026, 1, 20)),
