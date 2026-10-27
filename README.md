@@ -2,7 +2,7 @@
 
 מערכת לניהול פניות ובקשות המתקבלות מארגונים ומעסיקים, לעבודה של כמה משתמשים במקביל מול 100,000 פניות. המשתמשים מאתרים פניות בחיפוש, בסינון, במיון ובדפדוף – כולם בצד השרת – ומעדכנים סטטוס, אחד־אחד או עד 100 בבת אחת. עדכון מתחרה נחסם ב־Optimistic Concurrency, כל שינוי נשמר בהיסטוריה, ולוח בקרה מציג נתונים מסכמים מתוך Cache.
 
-> **סקירה מלאה במסמך אחד, עם תרשימים: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**
+> **סקירה מלאה במסמך אחד, עם תרשימים: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** · גרסה להדפסה: **[PROJECT_SUMMARY.pdf](PROJECT_SUMMARY.pdf)** (נוצר מ־`PROJECT_SUMMARY.md`, אותו תוכן; ה־`.md` הוא המקור)
 
 ## מבנה ה־Repository
 
@@ -85,7 +85,7 @@ dotnet test --filter "FullyQualifiedName~ConcurrencyTests"
 
 | נושא | מסמך |
 |---|---|
-| סקירת הפרויקט, עם תרשימים | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) |
+| סקירת הפרויקט, עם תרשימים | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) · [PROJECT_SUMMARY.pdf](PROJECT_SUMMARY.pdf) (להדפסה, נוצר מה־`.md`) |
 | החלטות, חלופות ומגבלות ידועות | [docs/DECISIONS.md](docs/DECISIONS.md) |
 | התנהגות ה־API: Concurrency, ‏Bulk, ‏Summary | [docs/API.md](docs/API.md) |
 | ביצועים: מדידות, אינדקסים, Plans ו־Bottleneck | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
