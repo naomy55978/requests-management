@@ -251,7 +251,8 @@ requests-management-docs/          תכנון ותיעוד
 requests-management-be/            Backend
   RequestsManagement.sln, global.json, dotnet-tools.json
   .github/workflows/               CI: build ובדיקות מול SQL Server בקונטיינר
-  scripts/                         סקריפטי אימות, הוכחת Concurrency ומדידת שאילתות
+  scripts/                         מדידת שאילתות (MeasureQueries.cs)
+    dev/                           כלי פיתוח אופציונליים: סקריפטי אימות והוכחת Concurrency
   src/
     RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Startup, ‏Program.cs
     RequestsManagement.BL/         RequestService, ‏StatusTransitions, ‏SummaryCache, ‏AuthService

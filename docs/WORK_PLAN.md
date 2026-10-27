@@ -281,6 +281,6 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `ConcurrencyTests.BulkCallsRacingSinglePatchCalls_ExactlyOneChangePerRequest_NoServerErrors` | 1 | §2, §4 | שני Bulk (אחד בסדר הפוך) ו־3 בקשות PATCH לכל פנייה, במקביל: מנצח אחד לכל פנייה, שורת היסטוריה אחת, ‏0 תשובות 5xx (אין Deadlock) |
 
 ### מה לא מכוסה בבדיקות האוטומטיות (ונבדק בסקריפטים או במדידה)
-- פקיעה **אמיתית** של 60 שניות, ובדיקה מול 100,000 פניות: `scripts/verify-summary-cache.js`, ‏`scripts/verify-read-api.js`.
+- פקיעה **אמיתית** של 60 שניות, ובדיקה מול 100,000 פניות: `scripts/dev/verify-summary-cache.js`, ‏`scripts/dev/verify-read-api.js`.
 - זמני תגובה, אינדקסים ו־Execution Plans: M8 (ביצועים).
 - Frontend: M7 (Angular).

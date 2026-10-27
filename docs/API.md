@@ -95,7 +95,7 @@
 - Logging: שורת Information אחת לקריאה (משתמש, סטטוס יעד, ספירה לכל תוצאה וזמן). פריט שנכשל נרשם ב־Debug עם מזהה ותוצאה בלבד – בלי טוקן, גרסאות או גוף הבקשה.
 
 ### אימות
-`node scripts/verify-bulk-status.js` ב־`requests-management-be` (ראו README שם): ולידציה, כל התוצאות בבקשה אחת והשפעתן על ה־DB וההיסטוריה, `ChangedBy` מהטוקן, 100 פריטים, וקריאות Bulk **במקביל** לבקשות PATCH בודדות על אותן פניות – לכל פנייה מנצח אחד בדיוק, ללא 5xx.
+`node scripts/dev/verify-bulk-status.js` ב־`requests-management-be` (ראו README שם): ולידציה, כל התוצאות בבקשה אחת והשפעתן על ה־DB וההיסטוריה, `ChangedBy` מהטוקן, 100 פריטים, וקריאות Bulk **במקביל** לבקשות PATCH בודדות על אותן פניות – לכל פנייה מנצח אחד בדיוק, ללא 5xx.
 
 ## סיכום (`GET /api/requests/summary`)
 
@@ -104,4 +104,4 @@
 **סדר ה־`topOrganizations`:** עד 10 ארגונים, לפי מספר הפניות הפתוחות (כל סטטוס מלבד `Completed`) **בסדר יורד**, ובשוויון – **לפי שם הארגון בסדר עולה** (לפי ה־Collation של מסד הנתונים). הסדר דטרמיניסטי, כך שאותם נתונים תמיד מחזירים אותה רשימה באותו סדר.
 
 ### אימות
-`node scripts/verify-summary-cache.js` ב־`requests-management-be` (ראו README שם) משווה את התשובה, כולל `topOrganizations` **לפי הסדר**, לחישוב ישיר ב־SQL.
+`node scripts/dev/verify-summary-cache.js` ב־`requests-management-be` (ראו README שם) משווה את התשובה, כולל `topOrganizations` **לפי הסדר**, לחישוב ישיר ב־SQL.

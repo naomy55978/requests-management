@@ -80,7 +80,7 @@
 **לא מומש**: לשרת בודד, `IMemoryCache` פשוט יותר ומספיק (D‑11).
 
 ## אימות
-`node scripts/verify-summary-cache.js` ב־`requests-management-be` (ראו README שם; הסקריפט ממתין דקה כדי לבדוק פקיעה אמיתית):
+`node scripts/dev/verify-summary-cache.js` ב־`requests-management-be` (ראו README שם; הסקריפט ממתין דקה כדי לבדוק פקיעה אמיתית):
 1. Hit מהיר מ־Miss (חציון Hit < חצי חציון Miss) והתוכן זהה.
 2. Hit לא פונה ל־DB: שינוי ישיר ב־SQL לא נראה, ואחרי 60 שניות הוא נראה בלי שום קריאה שמנקה.
 3. אחרי PATCH – ה־summary משקף את השינוי מיד, והוא זהה ל־`GROUP BY` ישיר.
