@@ -168,7 +168,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 >
 > **משימה חדשה (26.10.2026):** ‏#53 – מסמך סיכום הפרויקט עם תרשימים (2 ש'), שנוסף אחרי שהתיעוד עצמו הושלם.
 >
-> **משימה חדשה (27.10.2026):** ‏#54 – ניקוי אחרון בעקבות שתי ביקורות עיוורות (4 ש'): הסרת עודף (ממשק הביצועים האופציונלי, סקריפטים כפולים, ארכיון מדידות), בדיקת אטומיות, ודיוק התיעוד.
+> **משימה חדשה (27.10.2026):** ‏#54 – ניקוי אחרון ובדיקת עקביות (4 ש'): הסרת עודף (ממשק הביצועים האופציונלי, החימום בעלייה, סקריפטים, ארכיון מדידות), חוזה ה־API (פורמט 400, אורך חיפוש מינימלי, ערכי מיון), בחירת שרת הבדיקות, ודיוק התיעוד.
 
 | Issue | משימה | מאמץ | תלוי ב־ | סעיף במבדק |
 |---|---|---|---|---|
@@ -178,7 +178,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | בדיקה מקצה לקצה מ-clone נקי | 2.25 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45) | אופן ההגשה (אפשר בחינה והרצה) |
 | [#49](https://github.com/naomy55978/requests-management-docs/issues/49) | גישת הבודקים לשלושת ה-Repos ורשימת הגשה | 0.5 | [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | אופן ההגשה (נגישות הפתרון, לא ZIP) |
 | [#53](https://github.com/naomy55978/requests-management-docs/issues/53) | מסמך סיכום הפרויקט (`PROJECT_SUMMARY.md`) עם תרשימים | 2 | [#45](https://github.com/naomy55978/requests-management-docs/issues/45), [#46](https://github.com/naomy55978/requests-management-docs/issues/46), [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | §11 תיעוד הפתרון |
-| [#54](https://github.com/naomy55978/requests-management-docs/issues/54) | ניקוי אחרון בעקבות ביקורות עיוורות (Final cleanup following independent reviews) | 4 | [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | §6, §8, §10 (הימנעות מ־Over‑Engineering), §11 |
+| [#54](https://github.com/naomy55978/requests-management-docs/issues/54) | ניקוי אחרון ובדיקת עקביות (Final cleanup and consistency pass) | 4 | [#48](https://github.com/naomy55978/requests-management-docs/issues/48) | §6, §8, §10 (הימנעות מ־Over‑Engineering), §11 |
 
 ## מטריצת מעקב: דרישה ← משימות
 
@@ -223,6 +223,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `RequestFilterValidationTests.DateRange_StartAfterEnd_IsRejected_SameDayAndOpenRangesAreNot` | 1 | §1 | טווח תאריכים הפוך נדחה; אותו יום וטווח פתוח מותרים |
 | `RequestFilterValidationTests.UndefinedEnumNumbers_AreRejected` | 1 | §1 | ערך Enum לא מוגדר (`status=99`) נדחה בסינון ובמיון |
 | `RequestFilterValidationTests.TextFilters_HaveALengthLimit` | 6 | §1 | אורך מרבי ל־`organization`, ‏`assignedTo`, ‏`search` |
+| `RequestFilterValidationTests.Search_HasAMinimumLength` | 4 | §1 | חיפוש של פחות מ־2 תווים (אחרי `trim`) נדחה – אותו מינימום כמו בלקוח; רווחים בלבד = בלי חיפוש |
 | `UpdateStatusRequestValidationTests.ValidRequest_IsAccepted` | 1 | §2 | גוף PATCH תקין |
 | `UpdateStatusRequestValidationTests.MissingOrUndefinedStatus_IsRejected` | 1 | §2 | סטטוס חסר או לא מוגדר נדחה |
 | `UpdateStatusRequestValidationTests.MissingOrMalformedVersion_IsRejected` | 4 | §2 | גרסה חסרה, לא base64, או באורך שגוי נדחית |
@@ -235,7 +236,8 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `BulkStatusRequestValidationTests.NegativeId_IsRejected` | 1 | §4 | מזהה שלילי נדחה |
 | `SummaryCacheTests.SecondRead_IsServedFromTheCache` | 1 | §7 | קריאה שנייה לא פונה למקור הנתונים |
 | `SummaryCacheTests.AfterInvalidate_TheNextReadLoadsAgain` | 1 | §7 | Invalidation גורם לטעינה מחדש |
-| `SummaryCacheTests.InvalidationDuringALoad_PreventsTheOldResultFromBeingStored` | 1 | §7 | מונה ה"דור" (D‑20): תוצאה שנטענה לפני שינוי שנעשה בינתיים לא נשמרת |
+| `SummaryCacheTests.InvalidationDuringALoad_LoadsOnceMore_AndCachesOnlyTheNewResult` | 1 | §7 | מונה ה"דור" (D‑20): תוצאה שנטענה לפני שינוי שנעשה בינתיים לא נשמרת; הקורא טוען פעם אחת נוספת ומקבל את השינוי, והתוצאה החדשה נשמרת |
+| `SummaryCacheTests.InvalidationDuringBothLoads_StopsAfterOneRetry_AndCachesNothing` | 1 | §7 | הטעינה החוזרת חסומה לפעם אחת: שינוי גם בזמנה ← התוצאה מוחזרת בלי להישמר, בלי לולאה |
 | `SummaryCacheTests.AFailedOrCancelledLoad_IsNotCached` | 2 | §7 | כשל או ביטול בטעינה לא נשמרים |
 | `SummaryCacheTests.Entry_ExpiresAfterSixtySecondsFromItsCreation_AndReadsDoNotExtendIt` | 1 | §7 | Expiration מוחלט של 60 שנ' (לא Sliding), בשעון מבוקר – בלי המתנה אמיתית |
 | `RequestServiceCacheTests.SuccessfulUpdate_ClearsTheCache` | 1 | §7 | שינוי סטטוס מוצלח מנקה |
@@ -245,7 +247,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `RequestServiceCacheTests.Bulk_StoppedByADisconnectAfterASavedItem_StillClearsTheCache` | 1 | §7, §4 | ניתוק לקוח באמצע Bulk אחרי פריט שנשמר – ה־Cache מנוקה בכל זאת (`finally`, D‑20) |
 | `RequestServiceCacheTests.Bulk_StoppedByADisconnectBeforeAnythingWasSaved_LeavesTheCacheAlone` | 1 | §7, §4 | ניתוק לפני שנשמר משהו – אין ניקוי מיותר |
 | `SeedDataTests (5 בדיקות)` | 5 | מבנה פנייה (100K, יצירה חוזרת) | ה־Seed דטרמיניסטי (אותו מספר ← אותן שורות), וכל צירוף מילים נכנס לאורך העמודות |
-| `StartupWarmUpTests (6 בדיקות)` | 6 | §10 (טיפול בשגיאות, Logging) | החימום בעלייה (D‑48): רץ פעם אחת כשהוא מופעל ולא רץ כשהוא כבוי, ב־Scope משלו; כשל, Timeout או כיבוי נרשמים כ־Warning ולא עוצרים את ההפעלה |
+| `TestDatabaseSelectionTests (2 בדיקות)` | 4 | §8 (Integration שרץ במחשב הבודק) | בלי `TESTS_SQL_CONNECTION` – ‏LocalDB בלבד; עם המשתנה – בדיוק השרת שבו. מופע מקומי אחר לא נבחר במקרה |
 
 ### Integration
 
@@ -259,7 +261,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `ReadRequestsTests.Sorting_IsDoneByTheServer` | 10 | §1 | מיון ב־5 שדות × 2 כיוונים, עם `Id` כ־tie‑breaker |
 | `ReadRequestsTests.Search_IgnoresCase_FindsHebrew_AndKeepsSpecialCharactersLiteral` | 6 | §1 | חיפוש טקסטואלי בכותרת ובשם הארגון: לא רגיש לאותיות גדולות/קטנות, מוצא עברית, ו־`% _ [` נשארים תווים רגילים |
 | `ReadRequestsTests.Paging_ReturnsEveryRequestOnceAndKnowsTheTotal` | 1 | §1 | דפדוף יציב, ‏`totalCount`, דף אחרון חלקי ודף אחרי הסוף ← `200` ריק |
-| `ReadRequestsTests.InvalidQuery_IsAnswered400WithTheUsualErrorFormat` | 6 | §1 | פרמטר לא חוקי ← 400 ב־`ValidationProblemDetails` עם מפתחות camelCase ו־`traceId` (D‑18) |
+| `ReadRequestsTests.InvalidQuery_IsAnswered400WithTheUsualErrorFormat` | 8 | §1 | פרמטר לא חוקי (כולל חיפוש קצר מ־2 תווים) ← 400 ב־`ValidationProblemDetails` עם מפתחות camelCase ו־`traceId` (D‑18) |
 | `ReadRequestsTests.ExtremeDates_AreAnswered200_NotAServerError` | 3 | §1 | טווח תאריכים בקצוות (`0001-01-01`, ‏`9999-12-31`) נענה ב־200 עם התוצאה הנכונה, לא ב־500 |
 | `ReadRequestsTests.GetById_ReturnsTheRequestWithItsVersion_And404WhenMissing` | 1 | §1 | פנייה בודדת עם ה־`version` האמיתי מה־DB, ו־404 |
 | `UpdateStatusTests.Update_ChangesTheRequest_AndWritesOneAuditRowByTheUserOfTheToken` | 2 | §2, §3 | 200; ה־DB מעודכן; שורת היסטוריה אחת עם סטטוס קודם מה־DB ו־`ChangedBy` של בעל הטוקן (משני משתמשים); `UpdatedAt = ChangedAt` |
@@ -270,7 +272,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `UpdateStatusTests.InvalidBody_Gives400_AndChangesNothing` | 5 | §2 | גוף לא תקין (חסר, לא מוכר, פגום, לא JSON) ← 400 ושום שינוי |
 | `UpdateStatusTests.History_ListsTheChangesOldestFirst_IsEmptyForAnUntouchedRequest_And404ForAMissingOne` | 1 | §3 | היסטוריה מהישן לחדש, ‏`[]` לפנייה שלא שונתה, ו־404 |
 | `UpdateAtomicityTests.WhenTheAuditRowCannotBeWritten_TheStatusUpdateIsRolledBack` | 1 | §2, §3 | כשהכנסת שורת ה־Audit נכשלת, העדכון מתבטל: `Status`, ‏`RowVersion` ו־`UpdatedAt` ללא שינוי ואין שורת היסטוריה. רצה במסד בדיקות משלה |
-| `ValidationErrorTests (2 בדיקות)` | 11 | §1, §2, §10 (Validation עקבי) | גוף שלא ניתן לקרוא (JSON פגום, ערך לא מוכר, סוג שגוי) ← 400 עם שם שדה פשוט והודעה קריאה, בלי שמות טיפוסים פנימיים; כמה בעיות יחד – כל המפתחות שמות שדות |
+| `ValidationErrorTests (3 בדיקות)` | 14 | §1, §2, §4, §10 (Validation עקבי) | גוף שלא ניתן לקרוא (JSON פגום, ערך לא מוכר, סוג שגוי) ← 400 עם שם שדה פשוט והודעה קריאה, בלי שמות טיפוסים פנימיים; כמה בעיות יחד – כל המפתחות שמות שדות; מספר פריטי Bulk מחוץ ל־1–100 ← מפתח `items` וההודעה של ה־API ולא ברירת המחדל של DataAnnotations |
 | `BulkStatusTests.MixedCall_ReportsEveryOutcome_AndOnlyTheSuccessfulItemsChangeTheDatabase` | 1 | §4, §3 | Partial Success: Updated, NotFound, Conflict, InvalidTransition בקריאה אחת; סדר ושדות; ה־DB לכל פריט; Conflict לפני InvalidTransition; היסטוריה רק למצליחים, עם `ChangedBy` מהטוקן |
 | `BulkStatusTests.InvalidCall_Gives400_AndNotEvenTheValidItemsAreChanged` | 3 | §4 | רשימה ריקה, מעל 100 פריטים, מזהה כפול ← 400 ושום פריט לא משתנה |
 | `BulkStatusTests.AFullCallOfHundredRequests_UpdatesAllOfThemWithTheirAuditRows` | 1 | §4 | הגבול העליון מקצה לקצה: 100 פניות, כולן עם שורת היסטוריה |
@@ -287,6 +289,6 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `ConcurrencyTests.BulkCallsRacingSinglePatchCalls_ExactlyOneChangePerRequest_NoServerErrors` | 1 | §2, §4 | שני Bulk (אחד בסדר הפוך) ו־3 בקשות PATCH לכל פנייה, במקביל: מנצח אחד לכל פנייה, שורת היסטוריה אחת, ‏0 תשובות 5xx (אין Deadlock) |
 
 ### מה לא מכוסה בבדיקות האוטומטיות
-- התנהגות מול כל 100,000 הפניות (בבדיקות: 40 פניות קבועות): ‏`scripts/dev/verify-read-api.js` (אופציונלי) ומדידות M8 ב־[PERFORMANCE.md](PERFORMANCE.md).
+- התנהגות מול כל 100,000 הפניות (בבדיקות: 40 פניות קבועות): מדידות M8 ב־[PERFORMANCE.md](PERFORMANCE.md).
 - פקיעה **אמיתית** של 60 שניות: נבדקת בשעון מבוקר (`SummaryCacheTests`), בלי המתנה אמיתית.
 - Frontend: בדיקות Vitest ב־`requests-management-fe` (M7).

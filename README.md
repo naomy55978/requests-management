@@ -41,9 +41,10 @@ npm start
 
 ## בדיקות
 
-- **Backend:** ‏`dotnet test` – ‏**163 בדיקות**: ‏72 יחידה ו־91 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה.
+- **Backend:** ‏`dotnet test` – ‏**171 בדיקות**: ‏75 יחידה ו־96 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה. ברירת המחדל היא LocalDB, בלי הגדרה; שרת אחר – רק במשתנה `TESTS_SQL_CONNECTION` ([README של ה־Backend](https://github.com/naomy55978/requests-management-be#חיבור-לsql-server)).
 - **Frontend:** ‏`npm test -- --watch=false` – ‏**300 בדיקות** (Vitest); וגם `npm run lint` ו־`npm run build`.
 - **CI:** ‏GitHub Actions בכל Push בשני ה־Repos של הקוד; ה־Backend מול SQL Server 2022 בקונטיינר.
+- **נבדק מ־clone נקי (27.10.2026):** ‏Backend ‏171/171 מול LocalDB בלי הגדרה (BE `31707e6`), ‏Frontend ‏300/300 עם lint ו־build (FE `1d4dcba`); ה־API עלה על מסד LocalDB חדש עם Seed של 100,000 פניות, והבקשה הראשונה לסיכום ענתה תוך 209 ms.
 
 אלה המספרים העדכניים; מסמכים אחרים מפנים לכאן. **הוכחת ה־Concurrency** בפקודה אחת, מתיקיית ה־Backend:
 
@@ -63,7 +64,7 @@ dotnet test --filter "FullyQualifiedName~ConcurrencyTests"
 - **בסיס הנתונים והאינדקסים** – ‏SQL Server בגלל `rowversion` המובנה, ושבעה אינדקסים שכל אחד נבחר במדידת logical reads ו־Execution Plan על 100,000 פניות: [PERFORMANCE.md](docs/PERFORMANCE.md).
 - **Concurrency ו־Bulk** – ‏`UPDATE` מותנה על `RowVersion` שה־DB אוכף, ו־Bulk של עד 100 פניות עם Partial Success ותוצאה לכל פריט: [API.md](docs/API.md).
 - **Cache ו־Invalidation** – הסיכום ב־`IMemoryCache` ל־60 שניות, מתבטל אחרי כל שינוי סטטוס שנשמר, ומה נדרש בכמה מופעי שרת: [CACHE.md](docs/CACHE.md).
-- **שתי החלטות טכנולוגיות וחלופות** – Concurrency באכיפת ה־DB, ו־Bulk עם Partial Success: [DECISIONS.md – שתי החלטות מרכזיות](docs/DECISIONS.md#שתי-החלטות-מרכזיות); כל 48 ההחלטות באותו מסמך.
+- **שתי החלטות טכנולוגיות וחלופות** – Concurrency באכיפת ה־DB, ו־Bulk עם Partial Success: [DECISIONS.md – שתי החלטות מרכזיות](docs/DECISIONS.md#שתי-החלטות-מרכזיות); כל 43 ההחלטות הפעילות באותו מסמך.
 - **מגבלה ידועה ושיפור** – חיפוש `LIKE '%x%'` סורק את כל הטבלה, והשיפור הוא אינדקס n‑grams או Full‑Text: [DECISIONS.md – המגבלה והשיפור](docs/DECISIONS.md#המגבלה-והשיפור-שנבחרו-11-במבדק).
 - **שימוש בכלי AI** – [למטה](#שימוש-בכלי-ai), והפירוט ב־[AI_USAGE.md](docs/AI_USAGE.md).
 
@@ -86,4 +87,3 @@ dotnet test --filter "FullyQualifiedName~ConcurrencyTests"
 | Cache, ‏Invalidation וכמה מופעי שרת | [docs/CACHE.md](docs/CACHE.md) |
 | תוכנית העבודה ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | שימוש בכלי AI | [docs/AI_USAGE.md](docs/AI_USAGE.md) |
-| בדיקה מקצה לקצה מ־clone נקי (26–27.10.2026) | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |

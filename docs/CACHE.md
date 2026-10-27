@@ -42,7 +42,8 @@
 ### מרוץ בין קריאה ל־Invalidation – מונה "דור"
 בלי הגנה, אפשר להגיע למצב הבא: קורא נכשל ב־Cache ומתחיל לחשב (~100 ms) ← שינוי סטטוס מתבצע ומנקה את ה־Cache ← הקורא מסיים ושומר את התוצאה הישנה, ו־**הנתון הישן נשאר 60 שניות** אחרי שינוי שכבר בוצע.
 הפתרון: `SummaryCache` מחזיק מונה שעולה בכל `Invalidate()`. קורא זוכר את הערך בתחילת החישוב, ושומר ב־Cache **רק אם המונה לא השתנה**. בדיקת המונה והשמירה נעשות תחת נעילה אחת שגם `Invalidate()` משתמש בה, כדי שלא ייכנס Invalidation ביניהן.
-בדיקת היחידה `SummaryCacheTests.InvalidationDuringALoad_PreventsTheOldResultFromBeingStored` בודקת זאת באופן דטרמיניסטי: Invalidation בזמן שהטעינה עדיין רצה, והתוצאה הישנה לא נשמרת.
+**אם המונה השתנה, הקורא טוען פעם אחת נוספת** ושומר את התוצאה החדשה, כך שגם הוא מקבל את השינוי. אם גם בטעינה השנייה היה שינוי, התוצאה מוחזרת בלי להישמר – ניסיון חוזר אחד בלבד, בלי לולאה.
+בדיקות היחידה `SummaryCacheTests.InvalidationDuringALoad_LoadsOnceMore_AndCachesOnlyTheNewResult` ו־`InvalidationDuringBothLoads_StopsAfterOneRetry_AndCachesNothing` בודקות זאת באופן דטרמיניסטי.
 
 ### החלטה מודעת: בלי הגנה מפני Stampede
 אם כמה בקשות נכשלות ב־Cache באותו רגע (אחרי פקיעה או Invalidation), כל אחת מחשבת את ה־summary בעצמה, ולא רק אחת מהן. **בחרנו לא להוסיף נעילה או "Single‑Flight"**, כי:
@@ -82,6 +83,6 @@
 ## אימות
 בדיקות ב־`requests-management-be` (מיפוי מלא: [WORK_PLAN.md](WORK_PLAN.md#מיפוי-בדיקות-לדרישות)):
 1. **Hit ו־Expiration:** ‏`SummaryCacheTests` – קריאה שנייה מה־Cache; פקיעה מוחלטת אחרי 60 שניות בשעון מבוקר (קריאות לא מאריכות אותה); טעינה שנכשלה או בוטלה לא נשמרת.
-2. **מונה הדור:** ‏`SummaryCacheTests.InvalidationDuringALoad_PreventsTheOldResultFromBeingStored`.
+2. **מונה הדור והטעינה החוזרת:** ‏`SummaryCacheTests.InvalidationDuringALoad_LoadsOnceMore_AndCachesOnlyTheNewResult`, ‏`InvalidationDuringBothLoads_StopsAfterOneRetry_AndCachesNothing`.
 3. **מתי מנקים:** ‏`RequestServiceCacheTests` – עדכון מוצלח מנקה; ‏404/409/422 לא; Bulk עם פריט מעודכן אחד לפחות מנקה, ו־Bulk שכולו נכשל לא; ניתוק באמצע Bulk אחרי פריט שנשמר עדיין מנקה (`finally`).
 4. **מקצה לקצה מול SQL Server:** ‏`SummaryTests` – ה־summary שווה ל־`GROUP BY` ישיר; אחרי PATCH ואחרי Bulk הוא משקף את השינוי מיד; שינויים שנכשלו לא מנקים את ה־Cache.

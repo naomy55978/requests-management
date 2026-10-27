@@ -7,14 +7,20 @@
 
 - **`organization` ו־`assignedTo` – "מתחיל ב…" (Prefix):** ‏`assignedTo=dana` מוצא את `dana.cohen`, ו־`organization=Acme` מוצא גם `Acme Ltd`. השם המלא מתאים כמובן גם הוא, האותיות לא רגישות לגודל, ו־`% _ [` בקלט הם תווים רגילים. לא "מכיל": `assignedTo=friedman` לא מוצא את `yossi.friedman`. ההחלטה ב־[D‑12](DECISIONS.md#d-12).
 - **`assignedTo=unassigned`** (בכל אותיות) היא מילת מפתח ולא Prefix: בדיוק הפניות בלי מטפל (`AssignedTo IS NULL`).
-- **`search` – "מכיל":** בכותרת ובשם הארגון, על כל הטבלה (ראו [PERFORMANCE.md](PERFORMANCE.md) סעיף 7.1).
+- **`search` – "מכיל":** בכותרת ובשם הארגון, על כל הטבלה (ראו [PERFORMANCE.md](PERFORMANCE.md) סעיף 7.1). **לפחות 2 תווים** אחרי `trim` – אותו מינימום כמו בלקוח; קצר מזה ← `400` על `search` (‏`ReadRequestsTests`, ‏`ValidationTests`). רווחים בלבד = בלי חיפוש.
+
+## מיון (`GET /api/requests`)
+
+- **`sortBy`:** ‏`createdAt` (ברירת מחדל), ‏`updatedAt`, ‏`priority`, ‏`status`, ‏`title`. **`sortDir`:** ‏`asc`, ‏`desc` (ברירת מחדל).
+- אלה הערכים שהלקוח שולח, וכך הם מופיעים ב־Swagger; ה־API לא רגיש לגודל אותיות (`CreatedAt` עובד גם הוא). ערך אחר ← `400` על `sortBy`/`sortDir`.
+- בשוויון ממיינים לפי `id` באותו כיוון, ולכן הדפדוף יציב.
 
 ## Concurrency בעדכון סטטוס
 
 `PATCH /api/requests/{id}/status` עם `{"newStatus": "...", "version": "..."}`. ה־`version` הוא ה־`RowVersion` של הפנייה (base64) כפי שהלקוח קרא אותה.
 
 - **אילו נתיבים בודקים את הגרסה:** שני ה־Endpoints שמשנים סטטוס – `PATCH /api/requests/{id}/status`, ו־`POST /api/requests/bulk-status` לכל פריט – עוברים באותה מתודה, `RequestRepository.UpdateStatusAsync`. היא מריצה `UPDATE` מותנה אחד: `WHERE [Id] = @id AND [RowVersion] = @expectedVersion AND [Status] IN (<הסטטוסים שמהם מותר לעבור לסטטוס החדש>)`. הבדיקה והכתיבה הן פקודה אחת, ולכן מבין עדכונים מקבילים עם אותה גרסה רק אחד מצליח, והשאר מקבלים `409` (D‑06).
-- **0 שורות עודכנו:** הפנייה לא קיימת ← `404`; הגרסה השתנתה ← `409` עם `currentStatus`, ‏`currentVersion`, ‏`currentUpdatedAt`; אותה גרסה אבל מעבר אסור ← `422` עם `allowedStatuses`. ‏`409` קודם ל־`422` (D‑07).
+- **0 שורות עודכנו:** הטרנזקציה מתבטלת (לא נכתב דבר), ורק אז נקראת הפנייה כדי לדעת למה: הפנייה לא קיימת ← `404`; הגרסה השתנתה ← `409` עם `currentStatus`, ‏`currentVersion`, ‏`currentUpdatedAt`; אותה גרסה אבל מעבר אסור ← `422` עם `allowedStatuses`. ‏`409` קודם ל־`422` (D‑07).
 - `UpdatedAt` נכתב באותו `UPDATE`, ו־SQL Server מייצר `RowVersion` חדש בכל כתיבה לשורה – השניים משתנים יחד.
 - **Audit:** שורת `RequestStatusHistory` (‏`PreviousStatus` מה־DB דרך `OUTPUT deleted`, ‏`ChangedBy` מהטוקן) נכתבת באותה טרנזקציה, **רק בנתיב הזה** ורק כשהעדכון הצליח. אם כתיבתה נכשלת, העדכון מתבטל (`UpdateAtomicityTests`).
 - **מה לא עובר בנתיב הזה:** עדכון ישיר במסד, מחוץ ל־API (ה־Seed, נתוני הבדיקות או SQL ידני), אינו בודק גרסה ואינו כותב Audit. גם כתיבה כזו משנה את `RowVersion`, ולכן לקוח שקרא את הפנייה לפניה יקבל `409` בעדכון הבא שלו.
@@ -93,7 +99,7 @@
 
 | מקרה | מפתח השגיאה |
 |---|---|
-| רשימה ריקה, חסרה או `null` / יותר מ־100 פריטים | `items` |
+| רשימה ריקה, חסרה או `null` / יותר מ־100 פריטים – "`'items' must have 1 to 100 requests.`" | `items` |
 | מזהה כפול (ההודעה מפרטת עד 10 מזהים) | `items` |
 | `newStatus` חסר או לא חוקי | `newStatus` |
 | `id` קטן מ־1 | `items[2].id` |
@@ -123,4 +129,4 @@
 **סדר ה־`topOrganizations`:** עד 10 ארגונים, לפי מספר הפניות הפתוחות (כל סטטוס מלבד `Completed`) **בסדר יורד**, ובשוויון – **לפי שם הארגון בסדר עולה** (לפי ה־Collation של מסד הנתונים). הסדר דטרמיניסטי, כך שאותם נתונים תמיד מחזירים אותה רשימה באותו סדר.
 
 ### אימות
-`SummaryTests.Summary_IsTheAggregationOfTheDatabase` משווה את התשובה, כולל `topOrganizations` **לפי הסדר**, ל־`GROUP BY` ישיר ב־SQL; ‏`scripts/dev/verify-read-api.js` (אופציונלי) עושה זאת על כל 100,000 הפניות.
+`SummaryTests.Summary_IsTheAggregationOfTheDatabase` משווה את התשובה, כולל `topOrganizations` **לפי הסדר**, ל־`GROUP BY` ישיר ב־SQL.

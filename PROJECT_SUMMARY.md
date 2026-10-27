@@ -105,7 +105,6 @@ flowchart TB
 - `SummaryCache` – ה־Cache של הסיכום: ‏Singleton, ‏60 שניות ומונה "דור" ([D‑20](docs/DECISIONS.md#d-20)).
 - `RequestRepository` – שאילתות עם Projection ל־DTO, דפדוף יעיל ב־Deferred Join (דילוג על עמודים באינדקס צר, ושליפת שורות העמוד בלבד), ועדכון סטטוס מותנה עם `OUTPUT`.
 - `DatabaseSeeder` – 100,000 פניות דטרמיניסטיות ב־SqlBulkCopy ([D‑13](docs/DECISIONS.md#d-13), [D‑33](docs/DECISIONS.md#d-33)).
-- `StartupWarmUp` – חימום הסיכום בעליית השרת, לפני שהוא מתחיל להאזין ([D‑48](docs/DECISIONS.md#d-48)).
 
 **עדכון סטטוס, כולל עדכון מתחרה (409):**
 
@@ -185,7 +184,7 @@ flowchart LR
 
 ## החלטות מרכזיות
 
-כל 48 ההחלטות, עם הסיבה והחלופות שנשקלו – ב־[DECISIONS.md](docs/DECISIONS.md). העיקריות:
+כל 43 ההחלטות הפעילות, עם הסיבה והחלופות שנשקלו – ב־[DECISIONS.md](docs/DECISIONS.md). העיקריות:
 
 - [D‑01](docs/DECISIONS.md#d-01) – **SQL Server:** ‏`rowversion` מובנה ל־Optimistic Concurrency, טרנזקציות ו־Execution Plans ברורים.
 - [D‑03](docs/DECISIONS.md#d-03) – **ארבעה פרויקטים בשרת (API, ‏BL, ‏DAL, ‏DTO):** הפרדה מוכרת וברורה, בלי שכבות שרק מעבירות קריאות.
@@ -198,7 +197,7 @@ flowchart LR
 - [D‑24](docs/DECISIONS.md#d-24) – **דפדוף בשרת ואינדקסים שנבחרו במדידה:** כל אינדקס נבדק ב־logical reads, ב־Execution Plan ובעלות הכתיבה.
 - [D‑27](docs/DECISIONS.md#d-27) – **זרם RxJS יחיד עם `switchMap`:** בקשות מיושנות מתבטלות, וכל הסינון נשאר בשרת.
 - [D‑43](docs/DECISIONS.md#d-43) – **לוח הבקרה כמסך הפתיחה:** סקירה קודם, והרשימה במרחק לחיצה.
-- [D‑48](docs/DECISIONS.md#d-48) – **חימום בעלייה:** הבקשה הראשונה לסיכום מהירה, כי השרת מאזין רק אחרי החימום.
+- [D‑18](docs/DECISIONS.md#d-18) – **מנגנון Validation אחד:** ‏DataAnnotations על ה־DTOs, וכל קלט לא תקין – ‏400 באותו פורמט ProblemDetails, עם שמות שדות והודעות קריאות.
 
 ## מגבלות ידועות ובחירות מודעות
 
@@ -241,12 +240,12 @@ flowchart TB
 **שימוש ב־AI:** ‏Claude Code – ‏Opus לתכנון, ארכיטקטורה וסקירה, ו־Sonnet לכתיבת קוד ובדיקות. כל קוד שנכתב אומת בשיטות שלמטה. הפירוט – ב־[AI_USAGE.md](docs/AI_USAGE.md).
 
 **שיטות האימות:**
-- **Oracle מול SQL** – סקריפט אימות אופציונלי (`scripts/dev/verify-read-api.js` ב־Backend) משווה סינון, חיפוש, מיון ודפדוף לשאילתות SQL ישירות על כל 100,000 הפניות. מקור האמת הן הבדיקות האוטומטיות.
+- **Oracle מול SQL** – בזמן הפיתוח סקריפט אימות השווה סינון, חיפוש, מיון ודפדוף לשאילתות SQL ישירות על כל 100,000 הפניות; הוא הוסר בניקוי האחרון (#54), ומקור האמת הן הבדיקות האוטומטיות.
 - **Oracle ב־LINQ** – בבדיקות ה־Integration התוצאה הצפויה מחושבת מהנתונים ולא מועתקת מהקוד ([D‑21](docs/DECISIONS.md#d-21)).
 - **בדיקות מוטציה** – שוברים את הקוד בכוונה ומוודאים שהבדיקות נכשלות.
 - **הוכחת Concurrency** – `ConcurrencyTests`: ‏10 פניות × 20 בקשות PATCH בו־זמנית עם אותה גרסה ← לכל פנייה בדיוק `200` אחד ו־19 תשובות `409`, ושורת היסטוריה אחת; ו־Bulk במקביל ל־PATCH ← מנצח אחד לכל פנייה, בלי 5xx. העדכון ושורת ה־Audit אטומיים (`UpdateAtomicityTests`).
 - **דפדפן אמיתי** – ב־Chrome מול ה־API האמיתי, לפני ואחרי כל תיקון בממשק: יישור טקסט מעורב עברית/אנגלית, ניווט ומיקוד מקלדת, וזמן הבקשה הראשונה לסיכום (78–105 ms אחרי החימום).
-- **בדיקה מקצה לקצה** – מ־clone נקי על LocalDB קר, כמו בודק ([SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md)): בבדיקה מ־26.10.2026 עברו כל הבדיקות האוטומטיות ומעבר של 21/21 בדפדפן. מספרי הבדיקות העדכניים – ב־[README](README.md#בדיקות).
+- **בדיקה מקצה לקצה** – מ־clone נקי על LocalDB, כמו בודק; התאריך והתוצאות – ב־[README](README.md#בדיקות).
 
 ## מבנה התיקיות
 
@@ -258,10 +257,9 @@ requests-management-docs/          תכנון ותיעוד
     performance/                   תוצאות המדידות ו־Execution Plans: before, after-indexes, final, alternatives, seed-v2-hebrew
 
 requests-management-be/            Backend
-  RequestsManagement.sln, global.json, dotnet-tools.json
+  RequestsManagement.sln, global.json
   .github/workflows/               CI: build ובדיקות מול SQL Server בקונטיינר
   scripts/                         מדידת שאילתות (MeasureQueries.cs)
-    dev/                           אופציונלי: verify-read-api.js – ה־API מול SQL ישיר על 100,000 הפניות
   src/
     RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Startup, ‏Program.cs
     RequestsManagement.BL/         RequestService, ‏StatusTransitions, ‏SummaryCache, ‏AuthService
@@ -292,6 +290,6 @@ requests-management-fe/            Frontend
 | ה־Cache, ה־Invalidation וריבוי מופעים | [docs/CACHE.md](docs/CACHE.md) |
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/PERFORMANCE.md – נספח ב'](docs/PERFORMANCE.md#נספח-ב--הקבצים) |
-| הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
+| הבדיקה מקצה לקצה מ־clone נקי | [README.md – בדיקות](README.md#בדיקות) |
 | הרצת ה־Backend וסקריפט האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
 | הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
