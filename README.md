@@ -49,7 +49,7 @@ npm start
 - **Backend:** ‏`dotnet test` – ‏**171 בדיקות**: ‏75 יחידה ו־96 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה. ברירת המחדל היא LocalDB, בלי הגדרה; שרת אחר – רק במשתנה `TESTS_SQL_CONNECTION` ([README של ה־Backend](be/README.md#חיבור-לsql-server)).
 - **Frontend:** ‏`npm test -- --watch=false` – ‏**300 בדיקות** (Vitest); וגם `npm run lint` ו־`npm run build`.
 - **CI:** ‏GitHub Actions – ‏[`be.yml`](.github/workflows/be.yml) כש־`be/` משתנה (מול SQL Server 2022 בקונטיינר), ו־[`fe.yml`](.github/workflows/fe.yml) כש־`fe/` משתנה.
-- **נבדק מ־clone נקי (27.10.2026):** ‏Backend ‏171/171 מול LocalDB בלי הגדרה (BE `31707e6`), ‏Frontend ‏300/300 עם lint ו־build (FE `1d4dcba`); ה־API עלה על מסד LocalDB חדש עם Seed של 100,000 פניות, והבקשה הראשונה לסיכום ענתה תוך 209 ms.
+- **נבדק מ־clone נקי (27.10.2026, ‏commit `3d795a6`):** ‏Backend ‏171/171 מול LocalDB בלי הגדרה, ‏Frontend ‏300/300 עם lint ו־build; ה־API עלה על מסד LocalDB חדש עם Seed של 100,000 פניות, והבקשה הראשונה לסיכום ענתה תוך 199 ms. שני ה־Workflows ירוקים.
 
 אלה המספרים העדכניים; מסמכים אחרים מפנים לכאן. **הוכחת ה־Concurrency** בפקודה אחת, מתיקיית ה־Backend:
 
