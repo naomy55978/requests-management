@@ -101,4 +101,80 @@ describe('AuthService', () => {
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);
   });
+
+  describe('cross-tab logout', () => {
+    // Minimal stand-in for BroadcastChannel: records what was posted and lets a test deliver a message
+    class FakeChannel {
+      static instances: FakeChannel[] = [];
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      readonly posted: unknown[] = [];
+      constructor(readonly name: string) {
+        FakeChannel.instances.push(this);
+      }
+      postMessage(message: unknown): void {
+        this.posted.push(message);
+      }
+      receive(data: unknown): void {
+        this.onmessage?.({ data } as MessageEvent);
+      }
+    }
+
+    beforeEach(() => {
+      FakeChannel.instances = [];
+      vi.stubGlobal('BroadcastChannel', FakeChannel);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(fakeSession()));
+    });
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('broadcasts the logout with the user name', () => {
+      const auth = createService();
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      auth.logout();
+
+      expect(FakeChannel.instances[0].posted).toEqual([{ type: 'logout', userName: fakeSession().userName }]);
+    });
+
+    it('clears the session and goes to login when another tab logs out the same user', () => {
+      const auth = createService();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      FakeChannel.instances[0].receive({ type: 'logout', userName: fakeSession().userName });
+
+      expect(auth.isAuthenticated()).toBe(false);
+      expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+      expect(navigate).toHaveBeenCalledWith(['/login']);
+      expect(FakeChannel.instances[0].posted).toEqual([]); // no echo back
+    });
+
+    it('ignores a logout of a different user (tabs may hold different users)', () => {
+      const auth = createService();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      FakeChannel.instances[0].receive({ type: 'logout', userName: 'someone.else' });
+
+      expect(auth.isAuthenticated()).toBe(true);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('ignores messages that are not a logout', () => {
+      const auth = createService();
+
+      FakeChannel.instances[0].receive({ type: 'other', userName: fakeSession().userName });
+      FakeChannel.instances[0].receive(null);
+
+      expect(auth.isAuthenticated()).toBe(true);
+    });
+
+    it('still logs out locally when BroadcastChannel is undefined', () => {
+      vi.stubGlobal('BroadcastChannel', undefined);
+      const auth = createService();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      auth.logout();
+
+      expect(auth.isAuthenticated()).toBe(false);
+      expect(navigate).toHaveBeenCalledWith(['/login']);
+    });
+  });
 });

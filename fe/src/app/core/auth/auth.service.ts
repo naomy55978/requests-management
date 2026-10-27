@@ -7,6 +7,8 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../api/api.models';
 
 const STORAGE_KEY = 'rm.session';
+const LOGOUT_CHANNEL = 'rm.auth';
+const LOGOUT_MESSAGE = 'logout';
 
 /**
  * Holds the login session (the JWT and who it belongs to). The session lives in sessionStorage (D-26):
@@ -18,6 +20,15 @@ export class AuthService {
   private readonly router = inject(Router);
 
   private readonly session = signal<LoginResponse | null>(readStoredSession());
+
+  /** Tells the app's other tabs about a logout (null where BroadcastChannel is not available). */
+  private readonly channel = openLogoutChannel();
+
+  constructor() {
+    if (this.channel) {
+      this.channel.onmessage = (event: MessageEvent<unknown>) => this.onLogoutMessage(event.data);
+    }
+  }
 
   /** Display name of the logged-in user, for the toolbar. Null once the session is gone (logout, expiry). */
   readonly displayName = computed(() => this.session()?.displayName ?? null);
@@ -39,10 +50,30 @@ export class AuthService {
       .pipe(tap((response) => this.store(response)));
   }
 
-  /** Ends the session and goes to the login screen. */
+  /** Ends the session, goes to the login screen and logs the same user out of the other open tabs. */
   logout(): void {
+    const userName = this.session()?.userName;
+    this.endSession();
+    if (userName) {
+      this.channel?.postMessage({ type: LOGOUT_MESSAGE, userName });
+    }
+  }
+
+  private endSession(): void {
     this.clear();
     void this.router.navigate(['/login']);
+  }
+
+  /**
+   * Another tab logged out. Only the same user is logged out here: tabs may hold different users (D-26),
+   * and one user's logout must not end another user's session. Does not broadcast again, so no echo loop.
+   */
+  private onLogoutMessage(data: unknown): void {
+    const message = data as { type?: unknown; userName?: unknown } | null;
+    const current = this.session();
+    if (message?.type === LOGOUT_MESSAGE && current && message.userName === current.userName) {
+      this.endSession();
+    }
   }
 
   /**
@@ -81,6 +112,15 @@ export class AuthService {
   private clear(): void {
     this.session.set(null);
     writeStoredSession(null);
+  }
+}
+
+/** Opens the cross-tab channel, or returns null when the browser has no BroadcastChannel (then logout stays per tab). */
+function openLogoutChannel(): BroadcastChannel | null {
+  try {
+    return typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(LOGOUT_CHANNEL);
+  } catch {
+    return null;
   }
 }
 
