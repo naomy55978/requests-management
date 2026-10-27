@@ -4,4 +4,6 @@ export const environment = {
   // Relative on purpose: in development the dev-server proxy forwards /api to the API (proxy.conf.json);
   // in a deployment the web server is expected to do the same. Same origin = no CORS.
   apiBaseUrl: '/api',
+  // Optional performance UI (panel, time badges), off by default
+  showPerformance: false,
 };

@@ -11,6 +11,7 @@ import { filter } from 'rxjs';
 import { RequestStatus, RequestDto } from '../../../core/api/api.models';
 import { STATUS_LABELS } from '../../../core/i18n/labels';
 import { PerformanceLogService } from '../../../core/perf/performance-log.service';
+import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 
 import { StateMessageComponent } from '../../../shared/state-message/state-message.component';
 import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
@@ -51,6 +52,9 @@ export class RequestsPageComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
   private readonly performance = inject(PerformanceLogService);
+
+  /** The time badge is part of the optional performance UI. */
+  protected readonly showPerformance = inject(SHOW_PERFORMANCE);
 
   /** How long the last list load took (null until the first answer). */
   protected readonly listTiming = computed(() => this.performance.latest('list'));

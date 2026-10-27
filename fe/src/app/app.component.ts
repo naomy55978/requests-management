@@ -4,6 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from './core/auth/auth.service';
+import { SHOW_PERFORMANCE } from './core/perf/show-performance';
 import { PerformancePanelComponent } from './shared/performance-panel/performance-panel.component';
 
 @Component({
@@ -14,6 +15,9 @@ import { PerformancePanelComponent } from './shared/performance-panel/performanc
 })
 export class AppComponent {
   protected readonly auth = inject(AuthService);
+
+  /** The performance button and panel exist only when the optional performance UI is on. */
+  protected readonly showPerformance = inject(SHOW_PERFORMANCE);
 
   /** The performance panel is closed until the user opens it (D-23): it must not take over the app. */
   protected readonly performanceOpen = signal(false);

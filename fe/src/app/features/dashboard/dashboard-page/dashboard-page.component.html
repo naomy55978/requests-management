@@ -2,7 +2,9 @@
   <h1 class="page-title">לוח בקרה</h1>
   <span class="page-tools">
     <!-- A quiet note: how long the last load took, with cache HIT/MISS (D-23) -->
-    <app-timing-badge label="סיכום" [entry]="summaryTiming()" />
+    @if (showPerformance) {
+      <app-timing-badge label="סיכום" [entry]="summaryTiming()" />
+    }
     <button mat-icon-button type="button" class="refresh" aria-label="רענן" (click)="summaryStore.refresh()">
       <mat-icon svgIcon="refresh" />
     </button>

@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { fakeSession } from './core/auth/auth.test-helpers';
+import { SHOW_PERFORMANCE } from './core/perf/show-performance';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
@@ -22,11 +23,27 @@ describe('AppComponent', () => {
     expect(element.querySelector('.app-user')).toBeNull();
   });
 
-  describe('performance panel', () => {
+  it('has no performance button or panel by default: the performance UI is off', async () => {
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [provideRouter([]), provideHttpClient()],
+    }).compileComponents();
+    sessionStorage.setItem('rm.session', JSON.stringify(fakeSession()));
+
+    const fixture = TestBed.createComponent(AppComponent);
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.app-user')).not.toBeNull();
+    expect(element.querySelector('button.app-performance')).toBeNull();
+    expect(element.querySelector('app-performance-panel')).toBeNull();
+  });
+
+  describe('performance panel (performance UI on)', () => {
     async function render(loggedIn: boolean) {
       await TestBed.configureTestingModule({
         imports: [AppComponent],
-        providers: [provideRouter([]), provideHttpClient()],
+        providers: [provideRouter([]), provideHttpClient(), { provide: SHOW_PERFORMANCE, useValue: true }],
       }).compileComponents();
       if (loggedIn) {
         sessionStorage.setItem('rm.session', JSON.stringify(fakeSession()));

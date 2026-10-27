@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { provideAppIcons } from '../../../core/icons/app-icons';
 import { PerformanceLogService } from '../../../core/perf/performance-log.service';
+import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 import { createFakeSummaryApi, fakeSummary } from '../summary.test-helpers';
 import { DashboardPageComponent } from './dashboard-page.component';
 
@@ -12,18 +13,25 @@ describe('DashboardPageComponent', () => {
   let element: HTMLElement;
   let summaryCalls: ReturnType<typeof createFakeSummaryApi>['summaryCalls'];
 
-  beforeEach(async () => {
+  // The optional performance UI (time badge) is off unless a test turns it on
+  async function render(showPerformance = false) {
     const fake = createFakeSummaryApi();
     summaryCalls = fake.summaryCalls;
     await TestBed.configureTestingModule({
       imports: [DashboardPageComponent],
-      providers: [{ provide: RequestsApiService, useValue: fake.api }, provideAppIcons()],
+      providers: [
+        { provide: RequestsApiService, useValue: fake.api },
+        provideAppIcons(),
+        { provide: SHOW_PERFORMANCE, useValue: showPerformance },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardPageComponent);
     element = fixture.nativeElement as HTMLElement;
     await fixture.whenStable();
-  });
+  }
+
+  beforeEach(() => render());
 
   const refreshButton = () => element.querySelector<HTMLButtonElement>('button.refresh');
 
@@ -75,7 +83,16 @@ describe('DashboardPageComponent', () => {
     expect(summaryCalls).toHaveLength(2);
   });
 
-  describe('time badge', () => {
+  it('has no time badge by default: the performance UI is off', () => {
+    expect(element.querySelector('app-timing-badge')).toBeNull();
+  });
+
+  describe('time badge (performance UI on)', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+      await render(true);
+    });
+
     it('shows nothing until the summary load has been measured', () => {
       expect(element.querySelector('app-timing-badge .badge')).toBeNull();
     });

@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { PerformanceLogService } from '../../../core/perf/performance-log.service';
+import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 import { TimingBadgeComponent } from '../../../shared/timing-badge/timing-badge.component';
 import { SummaryCardsComponent } from '../summary-cards/summary-cards.component';
 import { SummaryStore } from '../summary.store';
@@ -22,6 +23,9 @@ import { SummaryStore } from '../summary.store';
 export class DashboardPageComponent {
   protected readonly summaryStore = inject(SummaryStore);
   private readonly performance = inject(PerformanceLogService);
+
+  /** The time badge is part of the optional performance UI. */
+  protected readonly showPerformance = inject(SHOW_PERFORMANCE);
 
   /** How long the last summary load took, and whether the server answered from its cache (null until the first answer). */
   protected readonly summaryTiming = computed(() => this.performance.latest('summary'));

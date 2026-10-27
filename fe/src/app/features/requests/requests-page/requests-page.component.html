@@ -1,7 +1,9 @@
 <div class="page-header">
   <h1 class="page-title">פניות</h1>
   <!-- A quiet note: how long the last load took (D-23) -->
-  <app-timing-badge label="רשימה" [entry]="listTiming()" />
+  @if (showPerformance) {
+    <app-timing-badge label="רשימה" [entry]="listTiming()" />
+  }
 </div>
 
 <app-requests-filters

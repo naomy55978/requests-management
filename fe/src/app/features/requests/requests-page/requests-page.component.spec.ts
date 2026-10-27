@@ -5,6 +5,7 @@ import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/cor
 
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { PerformanceLogService } from '../../../core/perf/performance-log.service';
+import { SHOW_PERFORMANCE } from '../../../core/perf/show-performance';
 import { provideAppIcons } from '../../../core/icons/app-icons';
 import { createFakeApi, fakeRequest } from '../requests-list.store.test-helpers';
 import { RequestsPageComponent } from './requests-page.component';
@@ -16,7 +17,8 @@ describe('RequestsPageComponent', () => {
   let statusCalls: ReturnType<typeof createFakeApi>['statusCalls'];
   let bulkCalls: ReturnType<typeof createFakeApi>['bulkCalls'];
 
-  beforeEach(async () => {
+  // The optional performance UI (time badge) is off unless a test turns it on
+  async function render(showPerformance = false) {
     const fake = createFakeApi();
     calls = fake.calls;
     statusCalls = fake.statusCalls;
@@ -28,13 +30,16 @@ describe('RequestsPageComponent', () => {
         provideNativeDateAdapter(),
         { provide: MAT_DATE_LOCALE, useValue: 'he-IL' },
         provideAppIcons(),
+        { provide: SHOW_PERFORMANCE, useValue: showPerformance },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RequestsPageComponent);
     element = fixture.nativeElement as HTMLElement;
     await fixture.whenStable();
-  });
+  }
+
+  beforeEach(() => render());
 
   const rows = () => element.querySelectorAll('tr.mat-mdc-row');
   const text = () => element.textContent ?? '';
@@ -432,7 +437,16 @@ describe('RequestsPageComponent', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
   });
 
-  describe('time badges', () => {
+  it('has no time badge by default: the performance UI is off', () => {
+    expect(element.querySelector('app-timing-badge')).toBeNull();
+  });
+
+  describe('time badges (performance UI on)', () => {
+    beforeEach(async () => {
+      TestBed.resetTestingModule();
+      await render(true);
+    });
+
     it('show nothing until a load has been measured', () => {
       expect(element.querySelector('app-timing-badge .badge')).toBeNull();
     });

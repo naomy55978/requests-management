@@ -5,6 +5,7 @@ import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PerformanceLogService, classifyRequest } from './performance-log.service';
 import { parseServerTiming } from './server-timing';
+import { SHOW_PERFORMANCE } from './show-performance';
 
 const SERVER_TIMING = 'Server-Timing';
 
@@ -14,10 +15,10 @@ const SERVER_TIMING = 'Server-Timing';
  * API the same origin as the app (D-25); without the header only the browser time is kept.
  *
  * A call that is cancelled (the user typed again, the page closed) never answers and is not noted.
- * Nothing is changed or delayed: the interceptor only looks.
+ * Nothing is changed or delayed: the interceptor only looks. With the performance UI off (SHOW_PERFORMANCE) it does nothing.
  */
 export const timingInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith(environment.apiBaseUrl)) {
+  if (!inject(SHOW_PERFORMANCE) || !request.url.startsWith(environment.apiBaseUrl)) {
     return next(request);
   }
 

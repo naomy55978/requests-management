@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import { PerformanceLogService } from './performance-log.service';
+import { SHOW_PERFORMANCE } from './show-performance';
 import { timingInterceptor } from './timing.interceptor';
 
 describe('timingInterceptor', () => {
@@ -12,7 +13,11 @@ describe('timingInterceptor', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([timingInterceptor])), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([timingInterceptor])),
+        provideHttpClientTesting(),
+        { provide: SHOW_PERFORMANCE, useValue: true },
+      ],
     });
     http = TestBed.inject(HttpClient);
     backend = TestBed.inject(HttpTestingController);
@@ -79,5 +84,23 @@ describe('timingInterceptor', () => {
     backend.expectOne('/api/requests/summary').flush({});
 
     expect(log.entries().map((e) => e.kind)).toEqual(['summary', 'list']);
+  });
+});
+
+describe('timingInterceptor with the performance UI off (the default)', () => {
+  it('passes the call through and notes nothing', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(withInterceptors([timingInterceptor])), provideHttpClientTesting()],
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+    const answers: unknown[] = [];
+
+    http.get('/api/requests/summary').subscribe((body) => answers.push(body));
+    backend.expectOne('/api/requests/summary').flush({ ok: true }, { headers: { 'Server-Timing': 'total;dur=1' } });
+
+    expect(answers).toEqual([{ ok: true }]);
+    expect(TestBed.inject(PerformanceLogService).entries()).toEqual([]);
+    backend.verify();
   });
 });
