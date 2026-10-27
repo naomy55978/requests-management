@@ -9,7 +9,6 @@ using Microsoft.OpenApi;
 using RequestsManagement.API.Auth;
 using RequestsManagement.API.Commands;
 using RequestsManagement.API.Middleware;
-using RequestsManagement.API.Startup;
 using RequestsManagement.API.Validation;
 using RequestsManagement.BL;
 using RequestsManagement.DAL;
@@ -116,9 +115,6 @@ if (isSeedCommand)
 
 // Migrate and seed an empty database when enabled in configuration (Development only by default, D-17)
 await app.Services.InitializeDatabaseAsync();
-
-// Warm the (possibly just seeded, so cold) database and the summary cache before the first request can arrive (D-48)
-await StartupWarmUp.RunAsync(app.Services, app.Logger, app.Lifetime.ApplicationStopping);
 
 // Configure the HTTP request pipeline.
 

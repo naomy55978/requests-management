@@ -79,10 +79,7 @@ public sealed class ApiFixture : IAsyncLifetime
             items = items.Select(item => new { id = item.Id, version = item.Version }).ToArray()
         });
 
-    /// <summary>
-    /// Adds a request that belongs to one test (created in 2030, so the read tests never see it).
-    /// Its version is the real one from the database.
-    /// </summary>
+    /// <summary>Adds a request that belongs to one test (created in 2030, so the read tests never see it), with its real version.</summary>
     public async Task<NewRequest> InsertRequestAsync(
         RequestStatus status = RequestStatus.New,
         RequestPriority priority = RequestPriority.Medium,

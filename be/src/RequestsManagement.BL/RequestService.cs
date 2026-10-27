@@ -157,10 +157,7 @@ internal sealed class RequestService(
         return new BulkStatusResponse(results.Count, succeeded, results.Count - succeeded, results);
     }
 
-    /// <summary>
-    /// The one status change used by both the single and the bulk update: the conditional database update
-    /// with the allowed transitions (D-05, D-06). Each call is its own transaction.
-    /// </summary>
+    /// <summary>The one status change used by the single and the bulk update, in its own transaction (D-05, D-06).</summary>
     private async Task<StatusUpdateResult> ChangeStatusAsync(
         int id, byte[] expectedVersion, RequestStatus newStatus, string changedBy, CancellationToken cancellationToken)
     {

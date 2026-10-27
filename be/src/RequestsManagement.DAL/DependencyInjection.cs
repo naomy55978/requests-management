@@ -6,9 +6,7 @@ namespace RequestsManagement.DAL;
 
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Registers the data access layer. Called only from the API composition root (Program.cs).
-    /// </summary>
+    /// <summary>Registers the data access layer. Called only from the API composition root (Program.cs).</summary>
     public static IServiceCollection AddDataAccess(
         this IServiceCollection services, string connectionString, DatabaseOptions databaseOptions)
     {

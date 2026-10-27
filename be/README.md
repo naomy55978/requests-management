@@ -10,7 +10,6 @@
 |---|---|---|
 | **‎.NET SDK** | **10.0.401** ומעלה | נקבע ב־`global.json` (‏`rollForward: latestFeature`). |
 | **SQL Server** | **LocalDB** ‏(`(localdb)\MSSQLLocalDB`) – ברירת המחדל; או SQL Server 2022 ומעלה | נבדק מול LocalDB של SQL Server 2025 (פיתוח) ומול SQL Server 2022 בקונטיינר (CI). מופע אחר – ראו [מסד הנתונים](#מסד-הנתונים). |
-| **Node.js** + **`sqlcmd`** | Node.js 18 ומעלה | **רק** לסקריפט האימות האופציונלי ב־`scripts/dev/` – לא נדרשים לבנייה, להרצה או לבדיקות. |
 
 ## מבנה
 
@@ -39,7 +38,6 @@ dotnet build RequestsManagement.sln
 
 - **ההרצה הראשונה לוקחת זמן** (הקמת המסד + יצירת 100,000 פניות). נמדד מ־clone נקי על LocalDB קר, פעמיים, עם 2.3–2.8 GB זיכרון פנוי: 30–40 שנ' מ־`dotnet run` ועד שה־API מאזין, מתוכן 14–25 שנ' ל־Seed; בהפעלה הראשונה אי־פעם של LocalDB, או במחשב עמוס, נמדדו גם יותר משתי דקות. בזמן זה ה־API עדיין לא מאזין, וב־Console מופיעה ההודעה `Seeding 100,000 requests - this may take a few minutes on first run`. הרצות הבאות מדלגות על היצירה ועולות תוך שניות.
 - ברירת המחדל: ‏SQL Server LocalDB – ‏`(localdb)\MSSQLLocalDB`.
-- **חימום בעלייה (D‑48):** אחרי ה־Seed ולפני שה־API מאזין הוא מבקש את הסיכום פעם אחת (ביומן: `Warming up…` ואחריו `Warm-up done in N ms`), כדי שהמסד וה־Cache יהיו חמים כשהבקשה הראשונה מגיעה. נמדד: 169 ms, והבקשה הראשונה לסיכום – 78–105 ms. בלי החימום, בהרצה אחת, הבקשה הראשונה לסיכום לקחה 22 שנ' (הגבול 30); זה לא חזר אחרי הוספת החימום, והסיבה לא הוכחה. החימום אינו מגן מפני כך ש־Windows מוציא את הזיכרון של SQL Server לדיסק בדקות שאחרי ההפעלה, במחשב עם מעט זיכרון פנוי: אז הבקשות הראשונות עלולות להיות איטיות, ובמקרה קיצוני להיכשל ב־timeout (30 שנ'). במסך תופיע הודעת שגיאה עם "נסה שוב" – ניסיון חוזר עובר, כי המסד כבר בזיכרון. כדאי לסגור אפליקציות כבדות לפני ההרצה הראשונה.
 - מופע אחר: לדרוס את `ConnectionStrings:RequestsDb` באמצעות user-secrets או משתנה הסביבה `ConnectionStrings__RequestsDb`.
 - **בלי LocalDB (למשל Mac/Linux):** SQL Server 2022 בקונטיינר – זה אותו Image שמולו רצות הבדיקות ב־CI. **הפקודה לא הורצה במחשב הפיתוח** (אין בו Docker – החלטות D‑09, D‑47):
 
@@ -54,7 +52,7 @@ export ConnectionStrings__RequestsDb="Server=localhost,1433;Database=RequestsMan
 ```
 
 (ב־PowerShell: ‏`$env:ConnectionStrings__RequestsDb = "..."`). לבדיקות האוטומטיות – אותה מחרוזת בלי `Database=…` במשתנה `TESTS_SQL_CONNECTION` (ראו "חיבור ל־SQL Server" למטה).
-- כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` / ‏`Database:WarmUpOnStartup` (מופעלים ב־`appsettings.Development.json`). ‏`WarmUpOnStartup` – לפני שה־API מתחיל להאזין הוא מבקש את הסיכום פעם אחת, כדי "לחמם" מסד קר ולמלא את ה־Cache (החלטה D‑48); ביומן: `Warming up…` ואחר כך `Warm-up done in N ms`. כשל בחימום נרשם כ־Warning ולא עוצר את ה־API.
+- כיבוי האתחול האוטומטי: ‏`Database:MigrateOnStartup` / ‏`Database:SeedOnStartup` (מופעלים ב־`appsettings.Development.json`).
 - יצירה מחדש של הנתונים:
 
 ```
@@ -88,6 +86,7 @@ dotnet run --project src/RequestsManagement.API --launch-profile http
 - `GET /api/requests/summary` – ספירות לפי סטטוס ועדיפות וארגונים מובילים בפניות פתוחות
 - `PATCH /api/requests/{id}/status` – שינוי סטטוס עם `{"newStatus": "...", "version": "..."}` (Optimistic Concurrency): ‏`409` אם מישהו שינה את הפנייה בינתיים, ‏`422` למעבר סטטוס אסור
 - `GET /api/requests/{id}/history` – היסטוריית שינויי הסטטוס (מי ומתי)
+- `POST /api/requests/bulk-status` – שינוי סטטוס של 1 עד 100 פניות בקריאה אחת, עם `{"newStatus": "...", "items": [{"id": ..., "version": "..."}]}`; כל פנייה בטרנזקציה משלה (Partial Success), והתשובה `200` עם תוצאה לכל פנייה
 
 כל השגיאות חוזרות בפורמט `ProblemDetails` אחד (כולל `traceId`); קלט לא תקין – `400` עם רשימת כל הבעיות.
 
@@ -101,13 +100,13 @@ dotnet test
 
 | תיקייה | מה בודקים | מול מה רצות |
 |---|---|---|
-| `Unit/` | מטריצת מעברי הסטטוס (כל 16 הצירופים), כללי הקלט של הבקשות (גבולות דפדוף, 100 פריטים ב־Bulk, מזהים כפולים), ה־Cache של ה־summary (כולל מונה ה־"דור" ופקיעה של 60 שנ' בשעון מבוקר, בלי המתנה) ומתי השירות מנקה אותו | בזיכרון, בלי מסד נתונים |
+| `Unit/` | מטריצת מעברי הסטטוס (כל 16 הצירופים), כללי הקלט של הבקשות (גבולות דפדוף, אורך מינימלי לחיפוש, 100 פריטים ב־Bulk, מזהים כפולים), ה־Cache של ה־summary (כולל מונה ה־"דור", טעינה חוזרת אחת ופקיעה של 60 שנ' בשעון מבוקר, בלי המתנה), מתי השירות מנקה אותו, ובחירת שרת הבדיקות | בזיכרון, בלי מסד נתונים |
 | `Integration/` | ה־API האמיתי (`WebApplicationFactory`) מול SQL Server אמיתי: אימות (401), סינון, חיפוש, מיון ודפדוף בצד השרת, ‏PATCH (‏200/409/422/404/400), ‏`ChangedBy` מהטוקן, היסטוריה, אטומיות העדכון ושורת ה־Audit (במסד משלה), ‏Bulk עם Partial Success, ‏ה־summary וה־Invalidation שלו | מסד זמני |
 | `Integration/ConcurrencyTests.cs` | אין Lost Update: 20 בקשות PATCH במקביל עם אותה גרסה ← בדיוק `200` אחד ושורת היסטוריה אחת; ‏Bulk במקביל לבקשות PATCH בודדות ← מנצח אחד לכל פנייה, ובלי שגיאות שרת | מסד זמני |
 
 ### חיבור ל־SQL Server
 
-בדיקות ה־Integration צריכות SQL Server. החיבור נקבע במשתנה הסביבה `TESTS_SQL_CONNECTION` – מחרוזת חיבור **לשרת, בלי שם מסד נתונים**:
+בדיקות ה־Integration צריכות SQL Server. **ברירת המחדל היא LocalDB** (`(localdb)\MSSQLLocalDB`), בלי צורך בהגדרה. כל שרת אחר – גם מופע ברירת מחדל מקומי – נבחר **רק** במשתנה הסביבה `TESTS_SQL_CONNECTION`: מחרוזת חיבור **לשרת, בלי שם מסד נתונים**, עם הרשאה ליצור מסד:
 
 ```powershell
 # מופע ברירת מחדל מקומי עם Windows Authentication
@@ -115,7 +114,7 @@ $env:TESTS_SQL_CONNECTION = "Server=.;Trusted_Connection=True;TrustServerCertifi
 dotnet test
 ```
 
-אם המשתנה לא מוגדר, הבדיקות מנסות לפי הסדר `Server=.` ואז LocalDB (`(localdb)\MSSQLLocalDB`); אם אף אחד מהם לא זמין, הבדיקות נכשלות עם הודעה שמסבירה מה נוסה. (הרצה ראשונה על LocalDB "קר" עלולה לארוך זמן.)
+אם אי אפשר להתחבר לשרת שנבחר, הבדיקות נכשלות עם הודעה שאומרת לאיזה שרת ניסו ואיך לבחור אחר. (הרצה ראשונה על LocalDB "קר" עלולה לארוך זמן.)
 
 **מחשב עם מעט זיכרון פנוי:** כש־SQL Server נאלץ לדחוס את הזיכרון שלו (ביומן השגיאות שלו מופיעה ההודעה "a significant part of SQL Server process memory has been paged out"), שאילתה בודדת עלולה להיתקע עשרות שניות, וה־API יחזיר `500` אחרי Timeout של 30 שניות; הבדיקה הנוגעת בה תיכשל ב־`InternalServerError` והריצה תארך דקות. זו בעיית סביבה ולא באג: הרצה חוזרת עוברת. כדאי לסגור אפליקציות כבדות לפני הרצה.
 
@@ -141,10 +140,6 @@ dotnet test --filter "FullyQualifiedName~Concurrency"    # רק בדיקות ה�
 ### CI
 
 ב־GitHub Actions (`.github/workflows/build.yml`) הבדיקות רצות מול SQL Server בקונטיינר (service container), אחרי המתנה לכך שהוא עונה. מחרוזת החיבור מוגדרת ב־`TESTS_SQL_CONNECTION`, והסיסמה היא סיסמת קונטיינר חד־פעמי שנמחק בסוף הריצה. בדיקה שנכשלת מכשילה את ה־build, ותוצאות הבדיקות נשמרות כ־Artifact (`test-results`).
-
-## סקריפט אימות אופציונלי
-
-**הבדיקות האוטומטיות הן מקור האמת**, ורצות בכל Push. בנוסף, `scripts/dev/verify-read-api.js` משווה את ה־API לשאילתות SQL ישירות על מסד הפיתוח המלא (100,000 פניות) – מה שהבדיקות, שרצות על 40 פניות קבועות, אינן מכסות. הוא אופציונלי ולא משנה נתונים; מה הוא בודק ואיך מריצים – ב־[`scripts/dev/README.md`](scripts/dev/README.md).
 
 ## מדידת ביצועים
 

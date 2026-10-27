@@ -22,15 +22,9 @@ public interface IRequestRepository
     /// <summary>Aggregations over all requests (GROUP BY in the database).</summary>
     Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Changes the status only if the request still has <paramref name="expectedVersion"/> and its current status
-    /// is one of <paramref name="allowedPrevious"/>, and writes the audit row in the same transaction (D-06).
-    /// The DAL does not know the transition rules; the caller passes the allowed previous statuses.
-    /// </summary>
-    /// <returns>
-    /// Updated (with the new version), NotFound, Conflict (version changed meanwhile) or
-    /// InvalidTransition (version matches, but the current status may not change to <paramref name="newStatus"/>).
-    /// </returns>
+    /// <summary>Changes the status only if the request still has <paramref name="expectedVersion"/> and a status in
+    /// <paramref name="allowedPrevious"/> (computed by the BL), with the audit row in the same transaction (D-06).</summary>
+    /// <returns>Updated, NotFound, Conflict (another version) or InvalidTransition (same version, status not allowed).</returns>
     Task<StatusUpdateResult> UpdateStatusAsync(
         int id,
         byte[] expectedVersion,

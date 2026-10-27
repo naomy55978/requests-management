@@ -27,11 +27,10 @@ internal sealed class AuthService(IUserRepository users, ILogger<AuthService> lo
     {
         var user = await users.FindCredentialsAsync(userName, cancellationToken);
 
-        // Users seeded before M3 have no hash and can never log in
-        var hash = string.IsNullOrEmpty(user?.PasswordHash) ? DummyHash : user.PasswordHash;
-        var result = Hasher.VerifyHashedPassword(user!, hash, password);
+        // An unknown user is checked against the dummy hash, so both answers take the same time
+        var result = Hasher.VerifyHashedPassword(user!, user?.PasswordHash ?? DummyHash, password);
 
-        if (user is null || hash == DummyHash || result == PasswordVerificationResult.Failed)
+        if (user is null || result == PasswordVerificationResult.Failed)
         {
             // Never log the password, not even partially
             logger.LogWarning("Login failed for user name {UserName}", userName);

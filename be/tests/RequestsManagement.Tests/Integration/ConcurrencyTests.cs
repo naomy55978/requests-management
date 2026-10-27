@@ -64,9 +64,7 @@ public class ConcurrencyTests(ApiFixture fixture)
             .ToList();
     }
 
-    /// <summary>
-    /// What must be true for one request after any race on its original version. Returns the violations (empty = ok).
-    /// </summary>
+    /// <summary>What must be true for one request after any race on its original version. Returns the violations (empty = ok).</summary>
     private async Task<List<string>> VerifyAsync(
         NewRequest request, RequestStatus original, IReadOnlyList<Attempt> attempts)
     {

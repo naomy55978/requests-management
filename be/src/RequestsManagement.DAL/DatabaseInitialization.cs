@@ -11,10 +11,7 @@ namespace RequestsManagement.DAL;
 /// </summary>
 public static class DatabaseInitialization
 {
-    /// <summary>
-    /// Applies migrations and seeds an empty database, according to <see cref="DatabaseOptions"/>.
-    /// Gives a reviewer a ready database on first run without manual steps.
-    /// </summary>
+    /// <summary>Applies migrations and seeds an empty database as <see cref="DatabaseOptions"/> says, so the first run needs no manual step.</summary>
     public static async Task InitializeDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var options = services.GetRequiredService<DatabaseOptions>();
@@ -48,10 +45,7 @@ public static class DatabaseInitialization
         }
     }
 
-    /// <summary>
-    /// Seeds the database on demand. With <paramref name="reset"/> the database is dropped and re-created first;
-    /// without it, seeding is refused when the database already contains data.
-    /// </summary>
+    /// <summary>Seeds on demand: with <paramref name="reset"/> the database is re-created first; without it, a database with data is refused.</summary>
     /// <exception cref="DatabaseSeedException">Seeding was refused.</exception>
     public static async Task SeedDatabaseAsync(
         this IServiceProvider services, int requestCount, bool reset, CancellationToken cancellationToken = default)

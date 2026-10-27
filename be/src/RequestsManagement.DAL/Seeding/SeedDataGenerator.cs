@@ -149,9 +149,7 @@ internal static class SeedDataGenerator
     /// <summary>True when the text starts with a Hebrew letter (the Hebrew block, U+0590–U+05FF).</summary>
     private static bool IsHebrew(string text) => text.Length > 0 && text[0] is >= '֐' and <= '׿';
 
-    /// <summary>
-    /// Older requests are more likely to be completed, recent ones more likely to be new or in progress.
-    /// </summary>
+    /// <summary>Older requests are more likely to be completed, recent ones more likely to be new or in progress.</summary>
     private static RequestStatus PickStatus(Random random, double ageDays)
     {
         // Weights for New, InProgress, Waiting, Completed
@@ -174,9 +172,7 @@ internal static class SeedDataGenerator
         throw new InvalidOperationException("Status weights must sum to 100.");
     }
 
-    /// <summary>
-    /// Status changes from New to <paramref name="finalStatus"/>, using only transitions allowed by D-05.
-    /// </summary>
+    /// <summary>Status changes from New to <paramref name="finalStatus"/>, using only transitions allowed by D-05.</summary>
     private static RequestStatus[] BuildStatusPath(Random random, RequestStatus finalStatus)
     {
         var roll = random.NextDouble();
@@ -199,10 +195,8 @@ internal static class SeedDataGenerator
         };
     }
 
-    /// <summary>
-    /// Increasing change times after <paramref name="createdAt"/>: at least one hour, at most 60 days later,
-    /// never after the anchor date. The last change time becomes UpdatedAt.
-    /// </summary>
+    /// <summary>Increasing change times 1 hour to 60 days after <paramref name="createdAt"/>, never after the anchor date;
+    /// the last one becomes UpdatedAt.</summary>
     private static DateTime[] BuildChangeTimes(Random random, DateTime createdAt, int changeCount)
     {
         if (changeCount == 0)

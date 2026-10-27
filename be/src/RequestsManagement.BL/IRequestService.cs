@@ -20,24 +20,13 @@ public interface IRequestService
     /// <returns>All status changes of the request, oldest first, or null if the request does not exist.</returns>
     Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Changes the status of a request with optimistic concurrency, enforcing the transition rules (D-05, D-06).
-    /// </summary>
-    /// <param name="id">Request id.</param>
-    /// <param name="request">New status and the version the client read (already validated).</param>
+    /// <summary>Changes the status of a request with optimistic concurrency, enforcing the transition rules (D-05, D-06).</summary>
     /// <param name="changedBy">The authenticated user, taken from the token by the caller – never from the body.</param>
-    /// <param name="cancellationToken">Cancelled when the client disconnects.</param>
     Task<StatusUpdateResult> UpdateStatusAsync(
         int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Changes the status of up to 100 requests (D-08, Partial Success): every item is its own update with its own
-    /// transaction, through the same path as <see cref="UpdateStatusAsync"/>, so one failed item does not affect the others.
-    /// </summary>
-    /// <param name="request">New status and the requests with their versions (already validated).</param>
-    /// <param name="changedBy">The authenticated user, taken from the token by the caller – never from the body.</param>
-    /// <param name="cancellationToken">Cancelled when the client disconnects; items already saved stay saved.</param>
-    /// <returns>A result per item, in the order of the call.</returns>
+    /// <summary>Changes the status of up to 100 requests, each through <see cref="UpdateStatusAsync"/>'s path in its own transaction (D-08).</summary>
+    /// <returns>A result per item, in the order of the call; items saved before a disconnect stay saved.</returns>
     Task<BulkStatusResponse> BulkUpdateStatusAsync(
         BulkStatusRequest request, string changedBy, CancellationToken cancellationToken);
 }
