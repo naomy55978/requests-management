@@ -10,7 +10,7 @@ namespace RequestsManagement.API.Middleware;
 /// Browser DevTools show it under Network → Timing, and the UI (M7) reads it to show the server time.
 /// </summary>
 /// <remarks>
-/// Enabled only by the ServerTiming:Enabled setting (on in Development): the header exposes internal timings.
+/// Enabled only by the ServerTiming:Enabled setting (off by default, also in Development): the header exposes internal timings.
 /// It is the first middleware, so "total" includes everything the server does, also for error responses.
 /// The values are taken when the response starts, i.e. before the body is written.
 /// </remarks>
