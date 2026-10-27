@@ -276,7 +276,9 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             query = query.Where(r => r.CreatedAt >= fromDate);
         }
 
-        if (filter.CreatedTo is { } to)
+        // The last day of the calendar has no "next day" (AddDays would throw); every date is on or before it,
+        // so no upper bound is needed
+        if (filter.CreatedTo is { } to && to != DateOnly.MaxValue)
         {
             var beforeDate = to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
             query = query.Where(r => r.CreatedAt < beforeDate);

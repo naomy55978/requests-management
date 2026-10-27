@@ -167,6 +167,22 @@ public class ReadRequestsTests(ApiFixture fixture)
         Assert.True(problem.GetProperty("errors").TryGetProperty(expectedKey, out _), $"no error for '{expectedKey}'");
     }
 
+    // The upper bound is "before the next day"; for the last day of the calendar there is no next day (AddDays
+    // would throw -> 500). The extreme dates must be answered like any other.
+    [Theory]
+    [InlineData("createdFrom=2030-01-01&createdTo=9999-12-31")]
+    [InlineData("createdFrom=0001-01-01&createdTo=2030-12-31")]
+    [InlineData("createdFrom=0001-01-01&createdTo=9999-12-31")]
+    public async Task ExtremeDates_AreAnswered200_NotAServerError(string dates)
+    {
+        var token = Guid.NewGuid().ToString("N")[..12];
+        var inserted = await fixture.InsertRequestAsync(title: $"Extreme dates {token}");
+
+        var page = await GetPageAsync($"search={token}&{dates}&pageSize=100");
+
+        Assert.Equal([inserted.Id], page.Items.Select(r => r.Id).ToList());
+    }
+
     [Fact]
     public async Task GetById_ReturnsTheRequestWithItsVersion_And404WhenMissing()
     {
