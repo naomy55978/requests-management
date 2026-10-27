@@ -15,7 +15,7 @@ module.exports = defineConfig([
     ],
     processor: angular.processInlineTemplates,
     rules: {
-      // Project rule (tracking file, section 2): every component has its own .ts, .html and .scss file,
+      // Project rule (FE README, 'Code structure'): every component has its own .ts, .html and .scss file,
       // so an inline template or inline styles fail the lint
       '@angular-eslint/component-max-inline-declarations': ['error', { template: 0, styles: 0, animations: 0 }],
       '@angular-eslint/directive-selector': [

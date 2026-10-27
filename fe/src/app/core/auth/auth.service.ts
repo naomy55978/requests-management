@@ -32,6 +32,7 @@ export class AuthService {
     return this.validSession() !== null;
   }
 
+  /** Sends the credentials and, on success, keeps the returned session in memory and in sessionStorage. */
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, credentials)
@@ -83,6 +84,7 @@ export class AuthService {
   }
 }
 
+/** True when the session's expiry time has passed or cannot be read, so a damaged session never counts as valid. */
 function isExpired(session: LoginResponse): boolean {
   const expiresAt = Date.parse(session.expiresAt);
   return Number.isNaN(expiresAt) || expiresAt <= Date.now();
@@ -99,6 +101,7 @@ function readStoredSession(): LoginResponse | null {
   }
 }
 
+/** Saves the session to sessionStorage (or removes it for null), ignoring a storage that is unavailable. */
 function writeStoredSession(session: LoginResponse | null): void {
   try {
     if (session) {
@@ -111,6 +114,7 @@ function writeStoredSession(session: LoginResponse | null): void {
   }
 }
 
+/** Checks that a stored value has the shape of a login response, so hand-edited storage cannot pass as a session. */
 function isLoginResponse(value: unknown): value is LoginResponse {
   const candidate = value as Partial<LoginResponse> | null;
   return (

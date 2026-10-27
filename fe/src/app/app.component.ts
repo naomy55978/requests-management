@@ -24,6 +24,7 @@ export class AppComponent {
 
   private readonly performanceButton = viewChild('performanceButton', { read: ElementRef<HTMLElement> });
 
+  /** Opens or closes the performance panel, returning focus to its button on close so keyboard users are not lost. */
   protected togglePerformance(): void {
     this.performanceOpen.update((open) => !open);
     // Opening: the panel moves focus to itself. Closing: the panel is gone, and focus would be lost with it.

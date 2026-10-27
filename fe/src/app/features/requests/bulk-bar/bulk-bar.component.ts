@@ -42,6 +42,7 @@ export class BulkBarComponent {
     this.chosen.set(status);
   }
 
+  /** Asks for the chosen status to be applied, unless no status is chosen or a call is already on its way. */
   protected submit(): void {
     const target = this.target();
     if (target && !this.busy()) {

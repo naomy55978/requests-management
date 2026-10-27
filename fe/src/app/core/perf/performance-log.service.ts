@@ -45,6 +45,7 @@ export class PerformanceLogService {
   /** Newest first. */
   readonly entries = signal<readonly PerformanceEntry[]>([]);
 
+  /** Adds a timing entry at the top of the log, keeping only the newest entries. */
   record(entry: Omit<PerformanceEntry, 'id'>): void {
     const withId: PerformanceEntry = { ...entry, id: this.nextId++ };
     this.entries.update((entries) => [withId, ...entries].slice(0, MAX_ENTRIES));

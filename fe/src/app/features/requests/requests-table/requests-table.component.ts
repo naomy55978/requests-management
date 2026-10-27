@@ -89,6 +89,7 @@ export class RequestsTableComponent {
     'actions',
   ];
 
+  /** Passes a header click on to the page as the API's sort field and direction. */
   protected onSort(sort: Sort): void {
     // Clearing the sort is disabled (matSortDisableClear), so there is always a direction.
     // Column names are the API's sort field names.

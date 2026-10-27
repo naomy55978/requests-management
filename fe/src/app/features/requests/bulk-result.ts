@@ -47,6 +47,7 @@ export function countOutcomes(results: readonly BulkItemResult[]): { outcome: Bu
   })).filter((entry) => entry.count > 0);
 }
 
+/** The Hebrew result line of one item, saying why it failed when it did. */
 function describeResult(result: BulkItemResult): string {
   switch (result.outcome) {
     case 'Updated':
@@ -60,11 +61,13 @@ function describeResult(result: BulkItemResult): string {
   }
 }
 
+/** The "now <status>" part of a failure line, empty when the server did not send the current status. */
 function current(result: BulkItemResult): string {
   const status = REQUEST_STATUSES.find((s) => s === result.currentStatus);
   return status ? ` (כעת «${STATUS_LABELS[status]}»)` : '';
 }
 
+/** The "allowed: ..." part of an invalid-transition line, or a note that the status is final. */
 function allowed(statuses: readonly RequestStatus[] | undefined): string {
   if (!statuses) {
     return '';

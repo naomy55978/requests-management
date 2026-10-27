@@ -142,6 +142,7 @@ export class RequestsListStore {
     return this.loading() ? 'loading' : 'empty';
   });
 
+  /** Turns filter, sort and paging changes into one stream of queries and keeps the rows, total and flags in step with it. */
   constructor() {
     // Typed text: wait for a pause in typing, so fast typing sends one request and not one per keystroke
     const textChanges$ = this.filters$.pipe(
@@ -222,6 +223,7 @@ export class RequestsListStore {
     );
   }
 
+  /** Moves to another page or page size, keeping the filters and the sort. */
   changePage(page: number, pageSize: number): void {
     this.changes$.next((query) =>
       query.page === page && query.pageSize === pageSize ? query : { ...query, page, pageSize },
@@ -257,6 +259,7 @@ export class RequestsListStore {
     });
   }
 
+  /** Adds the row to the selection, or removes it if it was selected. */
   toggleSelection(id: number): void {
     this.selectedIds.update((ids) => {
       const next = new Set(ids);
@@ -315,6 +318,7 @@ export class RequestsListStore {
     this.changes$.next((query) => ({ ...query }));
   }
 
+  /** Marks a row as having a status change on its way, so the same change is not sent twice. */
   private setPending(id: number, pending: boolean): void {
     this.pendingIds.update((ids) => {
       const next = new Set(ids);
@@ -327,6 +331,7 @@ export class RequestsListStore {
     });
   }
 
+  /** Brings the row on screen in line with the server's answer to a status change, reloading the list when the answer cannot. */
   private applyOutcome(id: number, outcome: StatusChangeOutcome): void {
     switch (outcome.kind) {
       case 'updated':

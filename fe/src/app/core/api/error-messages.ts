@@ -44,6 +44,7 @@ export function describeLoginError(error: unknown): string {
   return describeHttpError(error);
 }
 
+/** The Hebrew message for a 400: names the invalid fields the UI knows, or asks the user to check the values. */
 function describeValidationError(error: HttpErrorResponse): string {
   const body: unknown = error.error;
   const fields = isProblemDetails(body) && body.errors ? Object.keys(body.errors) : [];

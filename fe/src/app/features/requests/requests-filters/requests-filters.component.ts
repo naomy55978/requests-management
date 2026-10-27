@@ -105,6 +105,7 @@ export class RequestsFiltersComponent {
     return start !== null || end !== null;
   });
 
+  /** Disables the handler field while "without a handler" is checked, and reports the form's value once per user action. */
   constructor() {
     // While "without a handler" is checked the handler text has no meaning, so the field is disabled
     this.form.controls.unassigned.valueChanges.pipe(takeUntilDestroyed()).subscribe((unassigned) => {
@@ -140,6 +141,7 @@ export class RequestsFiltersComponent {
     this.form.controls.range.reset();
   }
 
+  /** The form's current value as the filters the store expects, with the dates as date-only strings. */
   private toFilters(): RequestFilters {
     // getRawValue: a disabled control (the handler text) is still part of the form
     const value = this.form.getRawValue();

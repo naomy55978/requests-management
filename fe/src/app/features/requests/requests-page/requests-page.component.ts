@@ -143,6 +143,7 @@ export class RequestsPageComponent {
       });
   }
 
+  /** The Hebrew snackbar text for the outcome of a single status change. */
   private describe(outcome: StatusChangeOutcome): string {
     return outcome.kind === 'updated'
       ? `פנייה ${outcome.request.id} עודכנה ל«${STATUS_LABELS[outcome.request.status]}».`

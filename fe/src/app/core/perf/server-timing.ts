@@ -71,6 +71,7 @@ function splitOutsideQuotes(text: string, separator: string): string[] {
   return parts;
 }
 
+/** The value of one `key=value` parameter without its quotes, or null when the parameter is missing. */
 function readText(parameters: string[], key: string): string | null {
   const parameter = parameters.find((p) => p.toLowerCase().startsWith(`${key}=`));
   if (!parameter) {
@@ -79,12 +80,14 @@ function readText(parameters: string[], key: string): string | null {
   return parameter.slice(key.length + 1).replace(/^"(.*)"$/, '$1');
 }
 
+/** One parameter as a non-negative number, or null when it is missing or not a valid duration. */
 function readNumber(parameters: string[], key: string): number | null {
   const text = readText(parameters, key);
   const value = text === null || text === '' ? NaN : Number(text);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
+/** The first whole number in a text (the query count in "2 queries"), or null when there is none. */
 function readFirstInteger(text: string): number | null {
   const match = /\d+/.exec(text);
   return match ? Number(match[0]) : null;

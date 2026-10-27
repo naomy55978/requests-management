@@ -26,6 +26,7 @@ export class SummaryStore {
   /** Hebrew message of the last failed load; null when the last load succeeded. */
   readonly error = signal<string | null>(null);
 
+  /** Loads the summary on start and on every refresh, keeping the summary, loading and error signals in step. */
   constructor() {
     this.refresh$
       .pipe(

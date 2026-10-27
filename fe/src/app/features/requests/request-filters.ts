@@ -53,6 +53,7 @@ export const EMPTY_TEXT_FILTERS: TextFilters = { search: '', organization: '', a
 
 export const EMPTY_OPTION_FILTERS: OptionFilters = { status: [], priority: [], createdFrom: null, createdTo: null };
 
+/** The typed part of the filters, which the store sends only after a pause in typing. */
 export function pickTextFilters(filters: RequestFilters): TextFilters {
   // The checkbox travels with the text fields so "who is the assignee" is decided in one place
   return {
@@ -62,6 +63,7 @@ export function pickTextFilters(filters: RequestFilters): TextFilters {
   };
 }
 
+/** The picked part of the filters (statuses, priorities, dates), which the store sends at once. */
 export function pickOptionFilters(filters: RequestFilters): OptionFilters {
   return {
     status: filters.status,
@@ -81,10 +83,12 @@ export function normalizeTextFilters(text: TextFilters): TextFilters {
   };
 }
 
+/** True when both hold the same text filters, so an unchanged value does not cause another request. */
 export function sameTextFilters(a: TextFilters, b: TextFilters): boolean {
   return a.search === b.search && a.organization === b.organization && a.assignedTo === b.assignedTo;
 }
 
+/** True when both hold the same option filters, so an unchanged value does not cause another request. */
 export function sameOptionFilters(a: OptionFilters, b: OptionFilters): boolean {
   return (
     sameList(a.status, b.status) &&
@@ -141,6 +145,7 @@ export function hasActiveFilters(query: RequestListQuery): boolean {
   );
 }
 
+/** True when both lists hold the same values in the same order. */
 function sameList(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }

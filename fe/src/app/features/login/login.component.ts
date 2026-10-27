@@ -39,6 +39,7 @@ export class LoginComponent {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly passwordVisible = signal(false);
 
+  /** Logs in with the form's values and returns to the screen the user came from, showing a Hebrew message on failure. */
   protected submit(): void {
     if (this.submitting()) {
       return;

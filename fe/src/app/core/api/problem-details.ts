@@ -13,6 +13,7 @@ export interface ProblemDetails {
   [extension: string]: unknown;
 }
 
+/** Accepts any object as ProblemDetails, since every member is optional and each reader checks the members it uses. */
 export function isProblemDetails(body: unknown): body is ProblemDetails {
   return typeof body === 'object' && body !== null;
 }

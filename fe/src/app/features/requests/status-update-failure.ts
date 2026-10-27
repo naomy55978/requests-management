@@ -63,12 +63,14 @@ export function withCurrentState(row: RequestDto, current: CurrentRequestState):
   return { ...row, status: current.status, version: current.version, updatedAt: current.updatedAt ?? row.updatedAt };
 }
 
+/** The Hebrew 422 message, listing the statuses that are allowed or saying that the status is final. */
 function describeAllowed(allowed: RequestStatus[]): string {
   return allowed.length > 0
     ? `המעבר אינו מותר מהסטטוס הנוכחי. מעברים מותרים: ${allowed.map((s) => STATUS_LABELS[s]).join(', ')}.`
     : 'המעבר אינו מותר: הפנייה הושלמה והסטטוס שלה סופי.';
 }
 
+/** Reads the request's current status and version from a 409/422 body, or null when the body does not carry them. */
 function readCurrentState(body: unknown): CurrentRequestState | null {
   if (!isProblemDetails(body)) {
     return null;
@@ -82,11 +84,13 @@ function readCurrentState(body: unknown): CurrentRequestState | null {
   return typeof updatedAt === 'string' ? { status, version, updatedAt } : { status, version };
 }
 
+/** The allowed statuses from a 422 body, ignoring any value the UI does not know. */
 function readAllowedStatuses(body: unknown): RequestStatus[] {
   const list = isProblemDetails(body) ? body['allowedStatuses'] : undefined;
   return Array.isArray(list) ? list.map(toStatus).filter((s): s is RequestStatus => s !== null) : [];
 }
 
+/** The value as a known request status, or null for anything else. */
 function toStatus(value: unknown): RequestStatus | null {
   return REQUEST_STATUSES.find((status) => status === value) ?? null;
 }
