@@ -4,8 +4,8 @@
 // Concurrency proof: no lost update (optimistic concurrency, D-06).
 //
 // Run against a running API (Development, seeded database):
-//   dotnet run scripts/ConcurrencyProof.cs
-//   dotnet run scripts/ConcurrencyProof.cs -- --base-url http://localhost:5084 --requests 50 --parallel 20
+//   dotnet run scripts/dev/ConcurrencyProof.cs
+//   dotnet run scripts/dev/ConcurrencyProof.cs -- --base-url http://localhost:5084 --requests 50 --parallel 20
 //
 // For each of N requests it sends P PATCH /status calls AT THE SAME TIME, all with the same version,
 // from two different users and with different target statuses. Expected for every request:

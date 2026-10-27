@@ -1,12 +1,12 @@
 // Verification of the bulk status update (M4, D-08): validation, Partial Success with a result per item,
 // ChangedBy from the token, audit rows, and a bulk update racing against single PATCH calls on the same requests.
-// Complements scripts/verify-status-update.js (single update) and scripts/ConcurrencyProof.cs.
+// Complements scripts/dev/verify-status-update.js (single update) and scripts/dev/ConcurrencyProof.cs.
 //
 // Requirements: the API is running, the database is seeded, Node.js 18+ and sqlcmd on the PATH.
 // CHANGES DATA: it changes the status of a few hundred requests (as dana.cohen and yossi.friedman).
 // Run "dotnet run --project src/RequestsManagement.API -- seed --reset" afterwards to restore the original data.
 //
-//   node scripts/verify-bulk-status.js
+//   node scripts/dev/verify-bulk-status.js
 //
 // Environment variables (optional):
 //   API_URL     default http://localhost:5084

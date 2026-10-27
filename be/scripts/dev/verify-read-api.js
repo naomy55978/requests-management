@@ -3,7 +3,7 @@
 // Requirements: the API is running, the database is seeded with the default 100,000 requests,
 // Node.js 18+ and sqlcmd on the PATH. Read-only – changes no data.
 //
-//   node scripts/verify-read-api.js
+//   node scripts/dev/verify-read-api.js
 //
 // Environment variables (optional):
 //   API_URL     default http://localhost:5084

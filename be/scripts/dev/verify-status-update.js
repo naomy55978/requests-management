@@ -1,11 +1,11 @@
 // Verification of status updates (M3): transition rules, error responses, history, authentication and
-// database consistency. Complements scripts/ConcurrencyProof.cs (the no-lost-update proof).
+// database consistency. Complements scripts/dev/ConcurrencyProof.cs (the no-lost-update proof).
 //
 // Requirements: the API is running, the database is seeded, Node.js 18+ and sqlcmd on the PATH.
 // CHANGES DATA: it changes the status of a few dozen requests (as dana.cohen and yossi.friedman).
 // Run "dotnet run --project src/RequestsManagement.API -- seed --reset" afterwards to restore the original data.
 //
-//   node scripts/verify-status-update.js
+//   node scripts/dev/verify-status-update.js
 //
 // Environment variables (optional):
 //   API_URL     default http://localhost:5084

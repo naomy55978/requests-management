@@ -10,7 +10,7 @@
 // change by another user. Its own changes are made as dana.cohen.
 // Run "dotnet run --project src/RequestsManagement.API -- seed --reset" afterwards to restore the original data.
 //
-//   node scripts/verify-summary-cache.js
+//   node scripts/dev/verify-summary-cache.js
 //
 // Environment variables (optional):
 //   API_URL      default http://localhost:5084
