@@ -2,15 +2,15 @@
 
 צד הלקוח של מערכת ניהול הפניות: אפליקציית Angular 22 עם Angular Material, בעברית ועם פריסת RTL, שעובדת מול ה־REST API של ה־Backend.
 
-> התכנון, ההחלטות וה־Issues נמצאים ב־[requests-management-docs](https://github.com/naomy55978/requests-management-docs) – נקודת הכניסה לפרויקט. ה־Backend נמצא ב־[requests-management-be](https://github.com/naomy55978/requests-management-be).
+> נקודת הכניסה לפרויקט היא ה־[README הראשי](../README.md); ההחלטות והתכנון ב־[`docs/`](../docs), וה־Backend ב־[`be/`](../be). כל הפקודות כאן רצות מתיקיית `fe/`.
 
 ## דרישות מקדימות
 
 | כלי | גרסה נדרשת | הערות |
 |---|---|---|
-| **Node.js** | **24** (מומלץ) – או כל גרסה בטווח `^22.22.3` / `^24.15.0` | הטווח הוא שדה `engines` ב־`package.json`, כפי ש־Angular 22 דורש; ב־`.nvmrc` וב־CI – ‏24. **Node 20 לא נתמך:** ה־CLI של Angular מסרב לרוץ עליו (נבדק 27.10.2026 על Node 20.11). על Node 24.22.1 ‏build, ‏lint והבדיקות עוברים (מספר הבדיקות העדכני – ב־[README של התיעוד](https://github.com/naomy55978/requests-management-docs#בדיקות)). |
+| **Node.js** | **24** (מומלץ) – או כל גרסה בטווח `^22.22.3` / `^24.15.0` | הטווח הוא שדה `engines` ב־`package.json`, כפי ש־Angular 22 דורש; ב־`.nvmrc` וב־CI – ‏24. **Node 20 לא נתמך:** ה־CLI של Angular מסרב לרוץ עליו (נבדק 27.10.2026 על Node 20.11). על Node 24.22.1 ‏build, ‏lint והבדיקות עוברים (מספר הבדיקות העדכני – ב־[README הראשי](../README.md#בדיקות)). |
 | **npm** | מגיע עם Node | |
-| **Backend** | רץ על `http://localhost:5084` | דרישותיו (‏.NET SDK 10.0.401+, ‏SQL Server) – ב־README של [requests-management-be](https://github.com/naomy55978/requests-management-be). |
+| **Backend** | רץ על `http://localhost:5084` | דרישותיו (‏.NET SDK 10.0.401+, ‏SQL Server) – ב־[README של ה־Backend](../be/README.md). |
 
 ## הרצה
 
@@ -51,7 +51,7 @@ npm run lint                # ESLint (angular-eslint)
 npm run build               # בנייה לפרודקשן (dist/)
 ```
 
-ה־CI ב־GitHub Actions מריץ את שלושתם על כל Push (`.github/workflows/ci.yml`, Node 24).
+ה־CI ב־GitHub Actions מריץ את שלושתם על כל Push ([`.github/workflows/fe.yml`](../.github/workflows/fe.yml), Node 24; רץ כשמשהו ב־`fe/` משתנה).
 
 ## מבנה הקוד
 

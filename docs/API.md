@@ -120,7 +120,7 @@
 - Logging: שורת Information אחת לקריאה (משתמש, סטטוס יעד, ספירה לכל תוצאה וזמן). פריט שנכשל נרשם ב־Debug עם מזהה ותוצאה בלבד – בלי טוקן, גרסאות או גוף הבקשה.
 
 ### אימות
-בדיקות ב־`requests-management-be`: ‏`BulkStatusTests` – ולידציה (‏400 ושום שינוי), כל התוצאות בבקשה אחת והשפעתן על ה־DB וההיסטוריה, `ChangedBy` מהטוקן ו־100 פריטים; ‏`ConcurrencyTests.BulkCallsRacingSinglePatchCalls…` – קריאות Bulk **במקביל** לבקשות PATCH בודדות על אותן פניות: לכל פנייה מנצח אחד בדיוק, ללא 5xx.
+בדיקות ב־[`be/tests`](../be/tests/RequestsManagement.Tests): ‏`BulkStatusTests` – ולידציה (‏400 ושום שינוי), כל התוצאות בבקשה אחת והשפעתן על ה־DB וההיסטוריה, `ChangedBy` מהטוקן ו־100 פריטים; ‏`ConcurrencyTests.BulkCallsRacingSinglePatchCalls…` – קריאות Bulk **במקביל** לבקשות PATCH בודדות על אותן פניות: לכל פנייה מנצח אחד בדיוק, ללא 5xx.
 
 ## סיכום (`GET /api/requests/summary`)
 

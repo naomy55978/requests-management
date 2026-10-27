@@ -1,7 +1,7 @@
 # Cache ל־summary
 
 תיעוד ההחלטה (D‑11, ופרטי המימוש ב־D‑20), הנימוקים, ה־Invalidation, ומה נדרש כשמריצים יותר ממופע שרת אחד.
-המימוש: `SummaryCache` ב־`requests-management-be/src/RequestsManagement.BL/SummaryCache.cs`.
+המימוש: [`SummaryCache`](../be/src/RequestsManagement.BL/SummaryCache.cs).
 
 ## מה נשמר, ולמה דווקא ה־summary
 
@@ -81,7 +81,7 @@
 **לא מומש**: לשרת בודד, `IMemoryCache` פשוט יותר ומספיק (D‑11).
 
 ## אימות
-בדיקות ב־`requests-management-be` (מיפוי מלא: [WORK_PLAN.md](WORK_PLAN.md#מיפוי-בדיקות-לדרישות)):
+בדיקות ב־[`be/tests`](../be/tests/RequestsManagement.Tests) (מיפוי מלא: [WORK_PLAN.md](WORK_PLAN.md#מיפוי-בדיקות-לדרישות)):
 1. **Hit ו־Expiration:** ‏`SummaryCacheTests` – קריאה שנייה מה־Cache; פקיעה מוחלטת אחרי 60 שניות בשעון מבוקר (קריאות לא מאריכות אותה); טעינה שנכשלה או בוטלה לא נשמרת.
 2. **מונה הדור והטעינה החוזרת:** ‏`SummaryCacheTests.InvalidationDuringALoad_LoadsOnceMore_AndCachesOnlyTheNewResult`, ‏`InvalidationDuringBothLoads_StopsAfterOneRetry_AndCachesNothing`.
 3. **מתי מנקים:** ‏`RequestServiceCacheTests` – עדכון מוצלח מנקה; ‏404/409/422 לא; Bulk עם פריט מעודכן אחד לפחות מנקה, ו־Bulk שכולו נכשל לא; ניתוק באמצע Bulk אחרי פריט שנשמר עדיין מנקה (`finally`).

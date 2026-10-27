@@ -16,7 +16,7 @@
 
 ## על הפרויקט
 
-מערכת לניהול פניות ובקשות המתקבלות מארגונים, לעבודה של כמה משתמשים במקביל מול 100,000 פניות: איתור, סינון, חיפוש, מיון ודפדוף – כולם בצד השרת; עדכון סטטוס עם Optimistic Concurrency והיסטוריית שינויים; עדכון מרוכז (Bulk) של עד 100 פניות; ולוח בקרה עם נתונים מסכמים השמורים ב־Cache. הפתרון בנוי ב־‎.NET 10, ‏Angular 22 ו־SQL Server, ומחולק לשלושה Repos: [requests-management-docs](https://github.com/naomy55978/requests-management-docs) (תכנון ותיעוד – כאן), [requests-management-be](https://github.com/naomy55978/requests-management-be) (Backend) ו־[requests-management-fe](https://github.com/naomy55978/requests-management-fe) (Frontend). המשימות מנוהלות ב־[Project Board](https://github.com/users/naomy55978/projects/2).
+מערכת לניהול פניות ובקשות המתקבלות מארגונים, לעבודה של כמה משתמשים במקביל מול 100,000 פניות: איתור, סינון, חיפוש, מיון ודפדוף – כולם בצד השרת; עדכון סטטוס עם Optimistic Concurrency והיסטוריית שינויים; עדכון מרוכז (Bulk) של עד 100 פניות; ולוח בקרה עם נתונים מסכמים השמורים ב־Cache. הפתרון בנוי ב־‎.NET 10, ‏Angular 22 ו־SQL Server, וכולו ב־Repository אחד: [`be/`](be) (Backend), [`fe/`](fe) (Frontend) ו־[`docs/`](docs) (תיעוד), עם ה־Issues וה־Milestones. המשימות מנוהלות ב־[Project Board](https://github.com/users/naomy55978/projects/2).
 
 ## הארכיטקטורה במבט אחד
 
@@ -191,7 +191,7 @@ flowchart LR
 - [D‑06](docs/DECISIONS.md#d-06) – **‏`UPDATE` מותנה, ו־409 לעדכון מתחרה:** האכיפה ב־DB, אטומית, ומונעת Lost Update.
 - [D‑08](docs/DECISIONS.md#d-08) – **Bulk עם Partial Success:** כל פנייה עצמאית, וכשל באחת לא מבטל את השאר.
 - [D‑10](docs/DECISIONS.md#d-10) – **JWT, ו־`ChangedBy` מתוך הטוקן:** השרת קובע מי שינה, והלקוח לא יכול לזייף.
-- [D‑16](docs/DECISIONS.md#d-16) – **שלושה Repos:** מחזור חיים ו־CI נפרדים לכל Stack, ו־Repo תיעוד כנקודת כניסה.
+- [D‑49](docs/DECISIONS.md#d-49) – **Repository אחד:** קישור אחד לבודק, עם ההיסטוריה המלאה של ה־Backend וה־Frontend ו־CI נפרד לכל תיקייה.
 - [D‑20](docs/DECISIONS.md#d-20) – **Cache עם מונה "דור" ו־Invalidation אחרי ה־Commit:** קורא איטי לא משאיר נתון ישן אחרי שינוי.
 - [D‑21](docs/DECISIONS.md#d-21) – **בדיקות מול SQL Server אמיתי:** הערבויות המרכזיות (‏`rowversion`, טרנזקציה, אינדקסים) הן של ה־DB.
 - [D‑24](docs/DECISIONS.md#d-24) – **דפדוף בשרת ואינדקסים שנבחרו במדידה:** כל אינדקס נבדק ב־logical reads, ב־Execution Plan ובעלות הכתיבה.
@@ -233,7 +233,7 @@ flowchart TB
 
 עשרה Milestones בסדר שבו בוצעו; M8 (ביצועים) בוצע לפני M7 (Angular), כדי לסיים את השרת לפני הממשק ([D‑22](docs/DECISIONS.md#d-22)). התלויות, המשימות והערכת המאמץ – ב־[WORK_PLAN.md](docs/WORK_PLAN.md).
 
-**הערכה מול בפועל:** ‏58.5 שעות בהערכה; לפי דיווח עצמי העבודה ארכה הרבה פחות, כי כלי ה־AI קיצרו את כתיבת הקוד ([WORK_PLAN.md](docs/WORK_PLAN.md#הערכה-מול-בפועל)).
+**הערכה מול בפועל:** ‏61.5 שעות בהערכה; לפי דיווח עצמי העבודה ארכה הרבה פחות, כי כלי ה־AI קיצרו את כתיבת הקוד ([WORK_PLAN.md](docs/WORK_PLAN.md#הערכה-מול-בפועל)).
 
 **מחזור העבודה בכל משימה:** תוכנית ← אישור מפורש ← ביצוע ← אימות ← Commit עם הפניה ל־Issue, ‏Push ו־CI ירוק.
 
@@ -250,15 +250,15 @@ flowchart TB
 ## מבנה התיקיות
 
 ```
-requests-management-docs/          תכנון ותיעוד
+requests-management/
   README.md                        נקודת הכניסה לבודקים
   PROJECT_SUMMARY.md               מסמך זה
-  docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, שימוש ב־AI, בדיקת הגשה
+  .github/workflows/               CI: be.yml (build ובדיקות מול SQL Server בקונטיינר), fe.yml (lint, בדיקות ו־build)
+  docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, שימוש ב־AI
     performance/                   תוצאות המדידות ו־Execution Plans: before, after-indexes, final, alternatives, seed-v2-hebrew
 
-requests-management-be/            Backend
+be/                                Backend
   RequestsManagement.sln, global.json
-  .github/workflows/               CI: build ובדיקות מול SQL Server בקונטיינר
   scripts/                         מדידת שאילתות (MeasureQueries.cs)
   src/
     RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Startup, ‏Program.cs
@@ -269,8 +269,7 @@ requests-management-be/            Backend
     Unit/                          בדיקות יחידה
     Integration/                   בדיקות דרך ה־API מול SQL Server, ותשתית הבדיקות
 
-requests-management-fe/            Frontend
-  .github/workflows/               CI: lint, בדיקות ו־build
+fe/                                Frontend
   angular.json, package.json, proxy.conf.json
   src/app/
     core/                          API, התחברות, עברית, אייקונים, ניתוב
@@ -291,5 +290,5 @@ requests-management-fe/            Frontend
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/PERFORMANCE.md – נספח ב'](docs/PERFORMANCE.md#נספח-ב--הקבצים) |
 | הבדיקה מקצה לקצה מ־clone נקי | [README.md – בדיקות](README.md#בדיקות) |
-| הרצת ה־Backend וסקריפט האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
-| הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
+| הרצת ה־Backend ומדידת השאילתות | [be/README.md](be/README.md) |
+| הרצת ה־Frontend | [fe/README.md](fe/README.md) |

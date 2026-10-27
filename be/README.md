@@ -2,7 +2,7 @@
 
 צד השרת של מערכת ניהול הפניות: REST API ב־‎.NET 10 מול SQL Server.
 
-> התכנון, ההחלטות וה־Issues נמצאים ב־[requests-management-docs](https://github.com/naomy55978/requests-management-docs) – נקודת הכניסה לפרויקט. ה־Frontend נמצא ב־[requests-management-fe](https://github.com/naomy55978/requests-management-fe).
+> נקודת הכניסה לפרויקט היא ה־[README הראשי](../README.md); ההחלטות והתכנון ב־[`docs/`](../docs), וה־Frontend ב־[`fe/`](../fe). כל הפקודות כאן רצות מתיקיית `be/`.
 
 ## דרישות מקדימות
 
@@ -139,11 +139,11 @@ dotnet test --filter "FullyQualifiedName~Concurrency"    # רק בדיקות ה�
 
 ### CI
 
-ב־GitHub Actions (`.github/workflows/build.yml`) הבדיקות רצות מול SQL Server בקונטיינר (service container), אחרי המתנה לכך שהוא עונה. מחרוזת החיבור מוגדרת ב־`TESTS_SQL_CONNECTION`, והסיסמה היא סיסמת קונטיינר חד־פעמי שנמחק בסוף הריצה. בדיקה שנכשלת מכשילה את ה־build, ותוצאות הבדיקות נשמרות כ־Artifact (`test-results`).
+ב־GitHub Actions ([`.github/workflows/be.yml`](../.github/workflows/be.yml), רץ כשמשהו ב־`be/` משתנה) הבדיקות רצות מול SQL Server בקונטיינר (service container), אחרי המתנה לכך שהוא עונה. מחרוזת החיבור מוגדרת ב־`TESTS_SQL_CONNECTION`, והסיסמה היא סיסמת קונטיינר חד־פעמי שנמחק בסוף הריצה. בדיקה שנכשלת מכשילה את ה־build, ותוצאות הבדיקות נשמרות כ־Artifact (`test-results`).
 
 ## מדידת ביצועים
 
-`scripts/MeasureQueries.cs` (M8) מריץ ישירות מול SQL Server את ה־SQL ש־EF מייצר לתרחישי ה־API העיקריים (רשימה עם סינון משולב, מיונים, דף עמוק, חיפוש, Summary, היסטוריה ועדכון סטטוס שמבוטל ב־Rollback). לכל שאילתה הוא שומר logical reads ‏(`STATISTICS IO`), את ה־Execution Plan בפועל (קובץ `.sqlplan` ועץ אופרטורים בטקסט: Sort, ‏Key Lookup, ‏Memory Grant, ‏DOP) וזמנים חמים. ה־API לא צריך לרוץ. התוצאות והניתוח: `docs/PERFORMANCE.md` ב־Repo התיעוד.
+`scripts/MeasureQueries.cs` (M8) מריץ ישירות מול SQL Server את ה־SQL ש־EF מייצר לתרחישי ה־API העיקריים (רשימה עם סינון משולב, מיונים, דף עמוק, חיפוש, Summary, היסטוריה ועדכון סטטוס שמבוטל ב־Rollback). לכל שאילתה הוא שומר logical reads ‏(`STATISTICS IO`), את ה־Execution Plan בפועל (קובץ `.sqlplan` ועץ אופרטורים בטקסט: Sort, ‏Key Lookup, ‏Memory Grant, ‏DOP) וזמנים חמים. ה־API לא צריך לרוץ. התוצאות והניתוח: [`docs/PERFORMANCE.md`](../docs/PERFORMANCE.md).
 
 ```
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --label final
@@ -153,4 +153,4 @@ dotnet run scripts/MeasureQueries.cs -- --out <dir> --compare before final
 - `--shape original` מודד את ה־SQL שלפני M8; ‏`--alternatives` מודד את חלופות השאילתה שנבחנו; ‏`--disable <index>` מכבה אינדקס אחד לריצה ותמיד בונה אותו מחדש בסוף (רק במסד בשם `RequestsManagement`, ולא את ה־Clustered Index).
 - `SQL_SERVER` – ברירת מחדל `(localdb)\MSSQLLocalDB`. הסקריפט לא משנה נתונים ולא מריץ פקודות ברמת המופע: ניקוי Plans רק למסד הזה (`ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE`).
 
-> היסטוריית העבודה של M0 (הקמת ה־Solution) נשמרה ב־Repo של התיעוד, ממנו הקוד הועבר לכאן.
+> ההיסטוריה המלאה של ה־Backend נשמרה ב־`be/` (‏`git log --follow be/...`); הוא פותח ב־Repository נפרד ואוחד לכאן ב־#55 (D‑49).

@@ -1,4 +1,4 @@
-// Types that match the backend DTOs (requests-management-be, project RequestsManagement.DTO).
+// Types that match the backend DTOs (be/, project RequestsManagement.DTO).
 // Enums travel as strings, `version` is the base64 row version, dates are ISO-8601 strings in UTC.
 
 export type RequestStatus = 'New' | 'InProgress' | 'Waiting' | 'Completed';

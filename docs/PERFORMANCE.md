@@ -1,6 +1,6 @@
 # ביצועים – מדידה, אינדקסים ו־Bottleneck
 
-> M8 (ביצועים), Issues [#42](https://github.com/naomy55978/requests-management-docs/issues/42)–[#44](https://github.com/naomy55978/requests-management-docs/issues/44). החלטה: D‑24 (אינדקסים ושאילתות) ב־[DECISIONS.md](DECISIONS.md).
+> M8 (ביצועים), Issues [#42](https://github.com/naomy55978/requests-management/issues/42)–[#44](https://github.com/naomy55978/requests-management/issues/44). החלטה: D‑24 (אינדקסים ושאילתות) ב־[DECISIONS.md](DECISIONS.md).
 > כל המספרים נמדדו על 100,000 פניות ו־179,178 שורות היסטוריה (ה־Seed הדטרמיניסטי, D‑13), בכלי שנמצא ב־Repo של ה־Backend וניתן להריץ שוב: `scripts/MeasureQueries.cs`.
 >
 > **גרסאות Seeder:** כל המדידות במסמך (סעיפים 1–8 ונספח א׳) נעשו על **Seeder v1** – כותרות וארגונים באנגלית. ב־D‑33 הנתונים הוחלפו ל־**v2** (כותרות בעברית, ארגונים בעברית ובאנגלית), ופרק 9 מציג את המדידה מחדש והשוואה. מספרי v1 לא שונו – הם נשארים נכונים לגרסה שעליה נמדדו.
@@ -78,7 +78,7 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 | עלות כתיבה (W1) | שינוי סטטוס אחד בדיוק כמו ב־Repository (‏`UPDATE … OUTPUT` והכנסת היסטוריה), בטרנזקציה שמבוטלת (Rollback): reads, ‏Plan (אילו אינדקסים מתוחזקים), ו־**bytes שנכתבו ל־log** (`sys.dm_tran_database_transactions`) |
 | נפח | גודל כל אינדקס (`sys.dm_db_partition_stats`) |
 
-**אימות ה־SQL המועתק (27.10.2026, ‏Backend ב־commit `ebfc523`):** הרצה חד־פעמית של ה־`RequestRepository` האמיתי מול המסד המקומי, עם לכידת כל פקודה ש־EF Core שולח, והשוואה למחרוזות של `scripts/MeasureQueries.cs` (הצורה `final`) – 32 פקודות: Q1–Q7 (COUNT ודף), ה־summary (Q8, שלוש שאילתות) וההיסטוריה (Q9). **25 זהות** (18 תו בתו, 7 שונות ברווחים בלבד). **ב־7 שאילתות הדף עם סינון** (Q1.page, ‏Q1s.page, ‏Q2.page, ‏Q6.page, ‏Q7a–c.page) ההבדל היחיד הוא **שם** הפרמטר של `FETCH NEXT` (EF: ‏`@p2`/`@p3`/`@p7`, בכלי: ‏`@p1`); הטקסט, התנאים, סוגי הפרמטרים וגודליהם זהים. שם של פרמטר לא משנה את ה־Plan ואת ה־logical reads, ולכן ההבדל לא משפיע על התוצאות במסמך. קוד האימות לא נשמר ב־Repo.
+**אימות ה־SQL המועתק (27.10.2026, ‏Backend ב־commit `43dc4ed`):** הרצה חד־פעמית של ה־`RequestRepository` האמיתי מול המסד המקומי, עם לכידת כל פקודה ש־EF Core שולח, והשוואה למחרוזות של `scripts/MeasureQueries.cs` (הצורה `final`) – 32 פקודות: Q1–Q7 (COUNT ודף), ה־summary (Q8, שלוש שאילתות) וההיסטוריה (Q9). **25 זהות** (18 תו בתו, 7 שונות ברווחים בלבד). **ב־7 שאילתות הדף עם סינון** (Q1.page, ‏Q1s.page, ‏Q2.page, ‏Q6.page, ‏Q7a–c.page) ההבדל היחיד הוא **שם** הפרמטר של `FETCH NEXT` (EF: ‏`@p2`/`@p3`/`@p7`, בכלי: ‏`@p1`); הטקסט, התנאים, סוגי הפרמטרים וגודליהם זהים. שם של פרמטר לא משנה את ה־Plan ואת ה־logical reads, ולכן ההבדל לא משפיע על התוצאות במסמך. קוד האימות לא נשמר ב־Repo.
 
 **כללי זהירות** (המופע משותף עם מסדים אחרים):
 - אין פקודות ברמת המופע: לא `DBCC FREEPROCCACHE`/`DROPCLEANBUFFERS`, ולא שינוי הגדרות. ניקוי Plans נעשה רק למסד הזה, עם `ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE`.
@@ -438,7 +438,7 @@ WHERE UPPER([r].[Title]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ES
 
 **הרצה חוזרת:**
 ```
-cd requests-management-be
+cd be
 dotnet run --project src/RequestsManagement.API -- seed --reset
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --label final
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --label before --shape original   (על אינדקסי M1: Migration קודם)

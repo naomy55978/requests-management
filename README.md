@@ -4,31 +4,36 @@
 
 > **סקירה מלאה במסמך אחד, עם תרשימים: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**
 
-## שלושה Repos
+## מבנה ה־Repository
 
-- **[requests-management-docs](https://github.com/naomy55978/requests-management-docs)** (כאן) – תכנון ותיעוד: ה־Issues, ה־Milestones, ה־[Project Board](https://github.com/users/naomy55978/projects/2) וכל המסמכים.
-- **[requests-management-be](https://github.com/naomy55978/requests-management-be)** – Backend: ‏REST API ב־‎.NET 10 מול SQL Server, בדיקות ו־CI.
-- **[requests-management-fe](https://github.com/naomy55978/requests-management-fe)** – Frontend: אפליקציית Angular 22, בדיקות ו־CI.
+הכול ב־Repository אחד ([D‑49](docs/DECISIONS.md#d-49)):
+
+- **[`be/`](be)** – Backend: ‏REST API ב־‎.NET 10 מול SQL Server, ובדיקות ([README](be/README.md)).
+- **[`fe/`](fe)** – Frontend: אפליקציית Angular 22, ובדיקות ([README](fe/README.md)).
+- **[`docs/`](docs)** – החלטות, API, ביצועים, Cache, תוכנית עבודה ושימוש ב־AI; **[`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)** – סקירה עם תרשימים.
+- **[`.github/workflows/`](.github/workflows)** – ‏CI נפרד ל־Backend (`be.yml`) ול־Frontend (`fe.yml`), כל אחד רץ רק כשהתיקייה שלו משתנה.
+- התכנון: ה־[Issues](https://github.com/naomy55978/requests-management/issues?q=is%3Aissue), ה־[Milestones](https://github.com/naomy55978/requests-management/milestones) וה־[Project Board](https://github.com/users/naomy55978/projects/2).
 
 ## דרישות מקדימות
 
 - **‎.NET SDK ‏10.0.401** ומעלה (נקבע ב־`global.json`).
 - **Node.js 24** (או `^22.22.3`). ‏Node 20 לא נתמך ע״י Angular 22.
-- **SQL Server LocalDB** ‏(`(localdb)\MSSQLLocalDB`, ברירת המחדל) או SQL Server 2022 ומעלה. מופע אחר, או SQL Server בקונטיינר (למשל ב־Mac/Linux) – ב־[README של ה־Backend](https://github.com/naomy55978/requests-management-be#מסד-הנתונים).
+- **SQL Server LocalDB** ‏(`(localdb)\MSSQLLocalDB`, ברירת המחדל) או SQL Server 2022 ומעלה. מופע אחר, או SQL Server בקונטיינר (למשל ב־Mac/Linux) – ב־[README של ה־Backend](be/README.md#מסד-הנתונים).
 
 ## הרצה
 
 ```
-git clone https://github.com/naomy55978/requests-management-be.git
-cd requests-management-be
+git clone https://github.com/naomy55978/requests-management.git
+cd requests-management/be
 dotnet run --project src/RequestsManagement.API --launch-profile http
 ```
 
 בהרצה הראשונה ה־API יוצר את המסד `RequestsManagement`, מריץ את ה־Migrations ויוצר **100,000 פניות דמו** – אותם נתונים בכל פעם. זה לוקח כחצי דקה (יותר בהפעלה הראשונה של LocalDB), וה־API מתחיל להאזין ב־http://localhost:5084 רק בסוף; Swagger UI ב־http://localhost:5084/swagger. ליצירה מחדש של הנתונים: `dotnet run --project src/RequestsManagement.API -- seed --reset`.
 
+בחלון נוסף, מתיקיית ה־Repository:
+
 ```
-git clone https://github.com/naomy55978/requests-management-fe.git
-cd requests-management-fe
+cd fe
 npm ci
 npm start
 ```
@@ -41,9 +46,9 @@ npm start
 
 ## בדיקות
 
-- **Backend:** ‏`dotnet test` – ‏**171 בדיקות**: ‏75 יחידה ו־96 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה. ברירת המחדל היא LocalDB, בלי הגדרה; שרת אחר – רק במשתנה `TESTS_SQL_CONNECTION` ([README של ה־Backend](https://github.com/naomy55978/requests-management-be#חיבור-לsql-server)).
+- **Backend:** ‏`dotnet test` – ‏**171 בדיקות**: ‏75 יחידה ו־96 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה. ברירת המחדל היא LocalDB, בלי הגדרה; שרת אחר – רק במשתנה `TESTS_SQL_CONNECTION` ([README של ה־Backend](be/README.md#חיבור-לsql-server)).
 - **Frontend:** ‏`npm test -- --watch=false` – ‏**300 בדיקות** (Vitest); וגם `npm run lint` ו־`npm run build`.
-- **CI:** ‏GitHub Actions בכל Push בשני ה־Repos של הקוד; ה־Backend מול SQL Server 2022 בקונטיינר.
+- **CI:** ‏GitHub Actions – ‏[`be.yml`](.github/workflows/be.yml) כש־`be/` משתנה (מול SQL Server 2022 בקונטיינר), ו־[`fe.yml`](.github/workflows/fe.yml) כש־`fe/` משתנה.
 - **נבדק מ־clone נקי (27.10.2026):** ‏Backend ‏171/171 מול LocalDB בלי הגדרה (BE `31707e6`), ‏Frontend ‏300/300 עם lint ו־build (FE `1d4dcba`); ה־API עלה על מסד LocalDB חדש עם Seed של 100,000 פניות, והבקשה הראשונה לסיכום ענתה תוך 209 ms.
 
 אלה המספרים העדכניים; מסמכים אחרים מפנים לכאן. **הוכחת ה־Concurrency** בפקודה אחת, מתיקיית ה־Backend:
@@ -58,7 +63,7 @@ dotnet test --filter "FullyQualifiedName~ConcurrencyTests"
 
 ## תיעוד הפתרון
 
-- **הוראות הרצה** – למעלה; כל האפשרויות (מופע אחר, כיבוי האתחול האוטומטי, הבדיקות) ב־[README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) וב־[README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme).
+- **הוראות הרצה** – למעלה; כל האפשרויות (מופע אחר, כיבוי האתחול האוטומטי, הבדיקות) ב־[README של ה־Backend](be/README.md) וב־[README של ה־Frontend](fe/README.md).
 - **טכנולוגיות וגרסאות** – ‏‎.NET 10 עם ASP.NET Core ו־EF Core 10, ‏SQL Server (LocalDB / 2022 ומעלה), ‏Angular 22.2 עם Angular Material 22, ‏RxJS 7.8 ו־TypeScript 6.0, ‏xUnit ו־Vitest; הגרסאות הנדרשות להרצה – [דרישות מקדימות](#דרישות-מקדימות).
 - **מבנה הפתרון** – ארבע שכבות בשרת (API, ‏BL, ‏DAL, ‏DTO) ו־`core`/`features`/`shared` בלקוח: [PROJECT_SUMMARY – מבנה התיקיות](PROJECT_SUMMARY.md#מבנה-התיקיות).
 - **בסיס הנתונים והאינדקסים** – ‏SQL Server בגלל `rowversion` המובנה, ושבעה אינדקסים שכל אחד נבחר במדידת logical reads ו־Execution Plan על 100,000 פניות: [PERFORMANCE.md](docs/PERFORMANCE.md).
@@ -70,7 +75,7 @@ dotnet test --filter "FullyQualifiedName~ConcurrencyTests"
 
 ## תכנון העבודה
 
-התוכנית ב־[WORK_PLAN.md](docs/WORK_PLAN.md): עשרה Milestones (M0–M9) עם סדר ביצוע ותלויות, הערכת מאמץ לכל משימה, ומטריצת דרישה ← משימות, כולל משימות שאינן קוד. כל משימה היא [Issue](https://github.com/naomy55978/requests-management-docs/issues?q=is%3Aissue) עם תיאור, תוצר מצופה, קריטריוני קבלה, מאמץ ותלויות, ומוצגת ב־[Project Board](https://github.com/users/naomy55978/projects/2) וב־[Milestones](https://github.com/naomy55978/requests-management-docs/milestones).
+התוכנית ב־[WORK_PLAN.md](docs/WORK_PLAN.md), והמשימות עצמן ב־**[Project Board](https://github.com/users/naomy55978/projects/2)**: עשרה Milestones (M0–M9) עם סדר ביצוע ותלויות, הערכת מאמץ לכל משימה, ומטריצת דרישה ← משימות, כולל משימות שאינן קוד. כל משימה היא [Issue](https://github.com/naomy55978/requests-management/issues?q=is%3Aissue) עם תיאור, תוצר מצופה, קריטריוני קבלה, מאמץ ותלויות, ומוצגת ב־[Project Board](https://github.com/users/naomy55978/projects/2) וב־[Milestones](https://github.com/naomy55978/requests-management/milestones).
 
 ## שימוש בכלי AI
 
