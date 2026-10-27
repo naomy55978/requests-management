@@ -264,12 +264,12 @@ requests-management-be/            Backend
   RequestsManagement.sln, global.json, dotnet-tools.json
   .github/workflows/               CI: build ובדיקות מול SQL Server בקונטיינר
   scripts/                         מדידת שאילתות (MeasureQueries.cs)
-    dev/                           כלי פיתוח אופציונליים: סקריפטי אימות והוכחת Concurrency
+    dev/                           אופציונלי: verify-read-api.js – ה־API מול SQL ישיר על 100,000 הפניות
   src/
     RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Startup, ‏Program.cs
     RequestsManagement.BL/         RequestService, ‏StatusTransitions, ‏SummaryCache, ‏AuthService
     RequestsManagement.DAL/        Entities, ‏Configurations, ‏Migrations, ‏Seeding, ‏RequestRepository
-    RequestsManagement.DTO/        מודלי בקשה ותשובה, Enums, ‏Diagnostics
+    RequestsManagement.DTO/        מודלי בקשה ותשובה, Enums
   tests/RequestsManagement.Tests/
     Unit/                          בדיקות יחידה
     Integration/                   בדיקות דרך ה־API מול SQL Server, ותשתית הבדיקות
@@ -278,12 +278,10 @@ requests-management-fe/            Frontend
   .github/workflows/               CI: lint, בדיקות ו־build
   angular.json, package.json, proxy.conf.json
   src/app/
-    core/                          API, התחברות, ביצועים, עברית, אייקונים, ניתוב
+    core/                          API, התחברות, עברית, אייקונים, ניתוב
     features/                      המסכים: login, ‏dashboard, ‏requests
-    shared/                        רכיבי תצוגה משותפים: תגים, הודעות מצב, פאנל ביצועים
+    shared/                        רכיבי תצוגה משותפים: תגי סטטוס ועדיפות, הודעות מצב
 ```
-
-המפה המלאה של כל תיקייה וקובץ, במשפט אחד לכל אחד – ב־[docs/STRUCTURE.md](docs/STRUCTURE.md).
 
 ## מפת המסמכים
 
@@ -297,6 +295,5 @@ requests-management-fe/            Frontend
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
 | תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/PERFORMANCE.md – נספח ב'](docs/PERFORMANCE.md#נספח-ב--הקבצים) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
-| כל תיקייה וכל קובץ בשלושת ה־Repos, במשפט אחד | [docs/STRUCTURE.md](docs/STRUCTURE.md) |
 | הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
 | הרצת ה־Frontend | [README של ה־Frontend](https://github.com/naomy55978/requests-management-fe#readme) |
