@@ -90,10 +90,8 @@ export class AuthService {
   }
 
   /**
-   * The ONE place that decides whether the session is still valid. A session whose time has passed is dropped here,
-   * so everything that shows the user (the toolbar's name, navigation and logout button) goes away with it, and not
-   * only the guard and the interceptor. Time passing is not a signal, so this runs when something asks (a navigation
-   * or an API call); it must not be called from a computed.
+   * The one place that decides whether the session is valid: an expired session is dropped here, so the toolbar,
+   * the guard and the interceptor agree. Runs when something asks; not from a computed (time is not a signal).
    */
   private validSession(): LoginResponse | null {
     const current = this.session();

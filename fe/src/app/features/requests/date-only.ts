@@ -1,7 +1,6 @@
 /**
- * The day the user picked, as `yyyy-MM-dd` from the picked day's own year, month and day (what the API expects).
- * `toISOString()` is not used on purpose: it converts to UTC and would shift a day picked at local midnight
- * back to the previous day in time zones ahead of UTC (Israel).
+ * The picked day as `yyyy-MM-dd` (what the API expects), from its own year, month and day: `toISOString()` would
+ * convert to UTC and move a day picked at local midnight back by one in Israel.
  */
 export function toDateOnly(date: Date | null): string | null {
   if (!date || Number.isNaN(date.getTime())) {

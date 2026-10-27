@@ -1,6 +1,6 @@
 import { RequestListQuery, RequestPriority, RequestStatus, UNASSIGNED } from '../../core/api/api.models';
 
-/** Search starts at this many characters; a single character matches too much to be useful. */
+/** Search starts at this many characters (the API answers 400 below it); one character matches too much to be useful. */
 export const SEARCH_MIN_LENGTH = 2;
 
 // The same limits as the API (RequestFilter), so a request that would be answered with 400 is never sent

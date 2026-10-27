@@ -102,9 +102,8 @@ export class RequestsListStore {
   readonly pendingIds = signal<ReadonlySet<number>>(new Set());
 
   /**
-   * The requests ticked for a Bulk change. Only rows of the page on screen can be selected: the version of a row is
-   * known only while it is on screen, and a selection the user cannot see would be easy to send by mistake (D-39).
-   * The selection is emptied whenever a new query starts (page, sort, filter, reload).
+   * The requests ticked for a Bulk change: rows of the page on screen only, whose versions are known (D-39).
+   * Emptied whenever a new query starts (page, sort, filter, reload).
    */
   readonly selectedIds = signal<ReadonlySet<number>>(new Set());
   /** True while a Bulk call is on its way. */
@@ -197,9 +196,8 @@ export class RequestsListStore {
   }
 
   /**
-   * The current values of the filter form. Call it on every change; the store decides what to send and when.
-   * `immediate` is for an explicit action (the "x" button of a text field): the typed text is sent now and not
-   * after the typing pause. The pause still runs, but then finds the query unchanged and sends nothing.
+   * The current values of the filter form, on every change; the store decides what to send and when.
+   * `immediate` (the "x" button of a text field) sends the text now instead of after the typing pause.
    */
   setFilters(filters: RequestFilters, options: { immediate?: boolean } = {}): void {
     // "Clear filters" has nothing to wait for: one request now, not one now and one after the typing pause.
@@ -231,14 +229,8 @@ export class RequestsListStore {
   }
 
   /**
-   * Moves one request to a new status (cold: nothing is sent until the caller subscribes). The answer is turned
-   * into an outcome and never into an error, and the row on screen is updated in place:
-   *  - 200: the row is replaced by the updated request (new version);
-   *  - 409 / 422: the row takes the current status and version from the answer, so the user can try again
-   *    right away. No extra GET: the only thing that can change in this system is the status (D-37). An answer
-   *    without that state (not expected from this API) loads the list again instead;
-   *  - 404: the request is gone, the list is loaded again.
-   * A request that is already on its way is not sent again.
+   * Moves one request to a new status (cold; never errors) and updates the row in place: 200 replaces it, 409/422
+   * take the current state from the answer (D-37), 404 reloads the list. A change on its way is not sent twice.
    */
   changeStatus(row: RequestDto, newStatus: RequestStatus): Observable<StatusChangeOutcome> {
     return defer(() => {
@@ -280,10 +272,8 @@ export class RequestsListStore {
   }
 
   /**
-   * Moves the selected rows to one status with a single Bulk call (cold: nothing is sent until the caller subscribes).
-   * The answer has a result for every item; the list is loaded again afterwards (which also empties the selection),
-   * so the rows show the new statuses and the fresh versions of the conflicts. If the call itself fails nothing was
-   * saved: the selection stays, so the user can try again. A call that is already on its way is not sent again.
+   * Moves the selected rows to one status with a single Bulk call (cold) and reloads the list after the answer.
+   * If the call itself fails nothing was saved and the selection stays; a call on its way is not sent twice.
    */
   bulkChangeStatus(newStatus: RequestStatus): Observable<BulkChangeOutcome> {
     return defer(() => {
