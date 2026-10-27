@@ -42,7 +42,8 @@ jobs:
       - name: Build
         run: dotnet build RequestsManagement.sln -c Release --no-restore
 
-      # A failing test fails the build. The tests create and drop their own temporary database on this server.
+      # A failing test fails the build. Without TESTS_SQL_CONNECTION the tests use LocalDB (not on Linux), so the
+      # variable names the container. The tests create and drop their own temporary database on this server.
       - name: Test
         env:
           TESTS_SQL_CONNECTION: "Server=localhost,1433;User Id=sa;Password=Ci-only-Passw0rd!;TrustServerCertificate=True"

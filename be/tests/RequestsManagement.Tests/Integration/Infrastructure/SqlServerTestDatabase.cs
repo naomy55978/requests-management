@@ -14,12 +14,12 @@ public sealed class SqlServerTestDatabase
 
     private const string NamePrefix = "RequestsManagement_Tests_";
 
-    // Tried in this order when the variable is not set: a default instance, then LocalDB (D-17)
-    private static readonly string[] LocalCandidates =
-    [
-        "Server=.;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=5",
-        "Server=(localdb)\\MSSQLLocalDB;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=120"
-    ];
+    /// <summary>
+    /// The server when <see cref="ConnectionVariable"/> is not set: LocalDB. Any other server (including a local
+    /// default instance) is used only when the variable names it, so a machine's own instance is never tried by chance.
+    /// </summary>
+    public const string DefaultServer =
+        "Server=(localdb)\\MSSQLLocalDB;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=120";
 
     private string _serverConnectionString = "";
 
@@ -110,30 +110,32 @@ public sealed class SqlServerTestDatabase
         await command.ExecuteNonQueryAsync();
     }
 
+    /// <summary>The server named by the variable when it is set, otherwise <see cref="DefaultServer"/> (no fallback chain).</summary>
+    internal static string ResolveServer(string? fromEnvironment) =>
+        string.IsNullOrWhiteSpace(fromEnvironment) ? DefaultServer : fromEnvironment;
+
+    /// <summary>Connects to the chosen server once, failing with a message that says which server was tried and how to choose another.</summary>
     private static async Task<string> ResolveServerAsync()
     {
         var fromEnvironment = Environment.GetEnvironmentVariable(ConnectionVariable);
-        string[] candidates = string.IsNullOrWhiteSpace(fromEnvironment) ? LocalCandidates : [fromEnvironment];
-
-        var failures = new List<string>();
-        foreach (var candidate in candidates)
+        var server = ResolveServer(fromEnvironment);
+        try
         {
-            try
-            {
-                await using var connection = new SqlConnection(candidate);
-                await connection.OpenAsync();
-                return candidate;
-            }
-            catch (Exception exception) when (exception is SqlException or InvalidOperationException or ArgumentException)
-            {
-                failures.Add($"  {new SqlConnectionStringBuilder(candidate) { Password = "", UserID = "" }.DataSource}: {exception.Message}");
-            }
+            await using var connection = new SqlConnection(server);
+            await connection.OpenAsync();
+            return server;
         }
-
-        throw new InvalidOperationException(
-            "No SQL Server is available for the integration tests. Set the environment variable " +
-            $"{ConnectionVariable} to a connection string of a SQL Server (without a database name), " +
-            "for example \"Server=.;Trusted_Connection=True;TrustServerCertificate=True\". Tried:\n" +
-            string.Join('\n', failures));
+        catch (Exception exception) when (exception is SqlException or InvalidOperationException or ArgumentException)
+        {
+            var tried = string.IsNullOrWhiteSpace(fromEnvironment)
+                ? "LocalDB, the default"
+                : $"{new SqlConnectionStringBuilder(server) { Password = "", UserID = "" }.DataSource}, from {ConnectionVariable}";
+            throw new InvalidOperationException(
+                $"The integration tests could not connect to SQL Server ({tried}): {exception.Message}\n" +
+                $"Install SQL Server LocalDB, or set {ConnectionVariable} to a connection string of a SQL Server " +
+                "(without a database name) where you may create databases, for example " +
+                "\"Server=.;Trusted_Connection=True;TrustServerCertificate=True\".",
+                exception);
+        }
     }
 }
