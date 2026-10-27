@@ -25,6 +25,7 @@ internal static class ValidationProblemResponse
     // message. Its messages are not localized; the integration tests fail if the text ever changes.
     private const string UnmappedMemberMessage = "could not be mapped to any .NET member";
 
+    /// <summary>Builds the 400 ValidationProblemDetails from the model state, with every error rewritten by <see cref="Describe"/>.</summary>
     public static IActionResult Create(ActionContext context)
     {
         var errors = new ModelStateDictionary();
@@ -42,6 +43,7 @@ internal static class ValidationProblemResponse
         return new BadRequestObjectResult(problem) { ContentTypes = { "application/problem+json" } };
     }
 
+    /// <summary>Turns one model-state error into a plain field name and a message a client can show, translating serializer errors.</summary>
     private static (string Field, string Message) Describe(string key, ModelError error)
     {
         var field = FieldName(key);

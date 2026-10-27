@@ -8,11 +8,13 @@ namespace RequestsManagement.BL;
 /// </summary>
 public interface IRequestService
 {
+    /// <summary>One page of requests that match the filter, plus the total count of matches.</summary>
     Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken);
 
     /// <returns>The request, or null if it does not exist.</returns>
     Task<RequestDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
+    /// <summary>Aggregations over all requests (counts by status and priority, top organizations), served from a short-lived cache.</summary>
     Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken);
 
     /// <returns>All status changes of the request, oldest first, or null if the request does not exist.</returns>

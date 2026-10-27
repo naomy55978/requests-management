@@ -21,6 +21,7 @@ public static class StatusTransitions
         [RequestStatus.Completed] = []
     };
 
+    /// <summary>Whether a request in <paramref name="from"/> may change to <paramref name="to"/>.</summary>
     public static bool IsAllowed(RequestStatus from, RequestStatus to) => AllowedNext(from).Contains(to);
 
     /// <summary>Statuses a request in <paramref name="from"/> may change to.</summary>

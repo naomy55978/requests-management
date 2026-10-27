@@ -51,6 +51,7 @@ internal static class SeedCommand
         }
     }
 
+    /// <summary>Reads the seed options (--count, --reset), so bad input is reported with the usage text before anything is written.</summary>
     private static bool TryParse(string[] args, out int count, out bool reset, out string error)
     {
         count = DefaultCount;

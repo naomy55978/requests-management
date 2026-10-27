@@ -9,6 +9,7 @@ namespace RequestsManagement.API.Auth;
 /// <summary>Issues signed access tokens. The token is the only source of the acting user (D-10).</summary>
 public sealed class JwtTokenService(JwtOptions options, TimeProvider timeProvider)
 {
+    /// <summary>Creates the signed access token for a verified user and returns it with its expiry time and the user's names.</summary>
     public LoginResponse CreateToken(AuthenticatedUser user)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;

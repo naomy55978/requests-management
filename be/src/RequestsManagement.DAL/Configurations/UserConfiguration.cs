@@ -6,6 +6,7 @@ namespace RequestsManagement.DAL.Configurations;
 
 internal class UserConfiguration : IEntityTypeConfiguration<User>
 {
+    /// <summary>Maps the Users table, with the unique user name index that the login looks users up by.</summary>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ToTable("Users");

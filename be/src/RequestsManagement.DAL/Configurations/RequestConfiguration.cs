@@ -6,6 +6,7 @@ namespace RequestsManagement.DAL.Configurations;
 
 internal class RequestConfiguration : IEntityTypeConfiguration<Request>
 {
+    /// <summary>Maps the Requests table: column types and lengths, check constraints, the rowversion concurrency token and the measured indexes.</summary>
     public void Configure(EntityTypeBuilder<Request> builder)
     {
         // Check constraints keep invalid enum values out of the table even if written outside the application

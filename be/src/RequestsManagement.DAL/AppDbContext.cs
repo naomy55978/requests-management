@@ -9,6 +9,7 @@ internal class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(
     public DbSet<RequestStatusHistory> RequestStatusHistory => Set<RequestStatusHistory>();
     public DbSet<User> Users => Set<User>();
 
+    /// <summary>Applies the entity configurations of this assembly and maps SQL Server's UPPER for use in LINQ.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Picks up every IEntityTypeConfiguration in this assembly (Configurations folder)

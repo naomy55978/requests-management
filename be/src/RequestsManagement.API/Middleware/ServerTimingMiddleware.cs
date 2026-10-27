@@ -18,6 +18,7 @@ internal sealed class ServerTimingMiddleware(RequestDelegate next)
 {
     public const string HeaderName = "Server-Timing";
 
+    /// <summary>Starts timing the request and writes the Server-Timing header just before the response starts.</summary>
     public Task InvokeAsync(HttpContext context, RequestTimings timings)
     {
         var start = Stopwatch.GetTimestamp();
@@ -30,6 +31,7 @@ internal sealed class ServerTimingMiddleware(RequestDelegate next)
         return next(context);
     }
 
+    /// <summary>Builds the Server-Timing header value from the total time and the request's database and cache timings.</summary>
     internal static string Format(TimeSpan total, RequestTimings timings)
     {
         var metrics = new List<string>

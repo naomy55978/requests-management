@@ -23,6 +23,7 @@ public class BulkStatusRequest : IValidatableObject
     [Required, MinLength(1), MaxLength(MaxItems)]
     public List<BulkStatusItem?>? Items { get; init; }
 
+    /// <summary>Checks every item (not null, positive id, valid version) and rejects repeated ids, reporting camelCase keys like the rest of the API.</summary>
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Items is null)

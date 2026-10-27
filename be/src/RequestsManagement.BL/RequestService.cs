@@ -12,6 +12,7 @@ internal sealed class RequestService(
     ILogger<RequestService> logger)
     : IRequestService
 {
+    /// <summary>Logs the size, timing and filter kinds of every page query, but not its free text, which can contain personal data.</summary>
     public async Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -30,6 +31,7 @@ internal sealed class RequestService(
         return result;
     }
 
+    /// <summary>Logs a lookup of a request that does not exist.</summary>
     public async Task<RequestDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var request = await repository.GetByIdAsync(id, cancellationToken);
@@ -41,6 +43,7 @@ internal sealed class RequestService(
         return request;
     }
 
+    /// <summary>Serves the summary through the cache and reports hit or miss for the Server-Timing header.</summary>
     public Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
     {
         // Reported in the Server-Timing header (D-25): a hit unless the cache has to load (LoadSummaryAsync)
@@ -48,6 +51,7 @@ internal sealed class RequestService(
         return summaryCache.GetOrCreateAsync(LoadSummaryAsync, cancellationToken);
     }
 
+    /// <summary>Loads the summary from the database on a cache miss and logs how long it took.</summary>
     private async Task<SummaryDto> LoadSummaryAsync(CancellationToken cancellationToken)
     {
         timings.SummaryCache = CacheOutcome.Miss;
@@ -63,6 +67,7 @@ internal sealed class RequestService(
     public Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken) =>
         repository.GetHistoryAsync(id, cancellationToken);
 
+    /// <summary>Invalidates the cached summary after a committed change and logs the outcome of every attempt.</summary>
     public async Task<StatusUpdateResult> UpdateStatusAsync(
         int id, UpdateStatusRequest request, string changedBy, CancellationToken cancellationToken)
     {
@@ -98,6 +103,7 @@ internal sealed class RequestService(
         return result;
     }
 
+    /// <summary>Runs the items one after the other, invalidates the cached summary once if any item was saved, and logs the outcome counts.</summary>
     public async Task<BulkStatusResponse> BulkUpdateStatusAsync(
         BulkStatusRequest request, string changedBy, CancellationToken cancellationToken)
     {

@@ -21,6 +21,7 @@ internal sealed class AuthService(IUserRepository users, ILogger<AuthService> lo
     // and response times do not reveal which user names exist
     private static readonly string DummyHash = Hasher.HashPassword(null!, Guid.NewGuid().ToString());
 
+    /// <summary>Verifies the password against the stored hash, taking as long for an unknown user as for a wrong password, and logs the attempt without the password.</summary>
     public async Task<AuthenticatedUser?> ValidateCredentialsAsync(
         string userName, string password, CancellationToken cancellationToken)
     {

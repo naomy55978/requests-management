@@ -6,6 +6,7 @@ namespace RequestsManagement.DAL.Configurations;
 
 internal class RequestStatusHistoryConfiguration : IEntityTypeConfiguration<RequestStatusHistory>
 {
+    /// <summary>Maps the RequestStatusHistory table: check constraints, the non-cascading foreign key and the index the history endpoint seeks on.</summary>
     public void Configure(EntityTypeBuilder<RequestStatusHistory> builder)
     {
         builder.ToTable("RequestStatusHistory", t =>

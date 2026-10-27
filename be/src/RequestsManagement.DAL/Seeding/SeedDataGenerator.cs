@@ -33,6 +33,7 @@ internal static class SeedDataGenerator
     private const double UnassignedNewShare = 0.5;
     private static readonly TimeSpan MaxHandlingTime = TimeSpan.FromDays(60);
 
+    /// <summary>Generates the demo users, requests and status histories for the given request count, always the same rows for the same count.</summary>
     public static SeedData Generate(int requestCount)
     {
         var random = new Random(RandomSeed);
@@ -105,6 +106,7 @@ internal static class SeedDataGenerator
         return new SeedData(users, requests, history);
     }
 
+    /// <summary>Creates one user per first name, with a user name and display name built from the fixed word lists.</summary>
     private static List<User> CreateUsers()
     {
         var users = new List<User>(SeedWordLists.FirstNames.Length);
@@ -122,6 +124,7 @@ internal static class SeedDataGenerator
         return users;
     }
 
+    /// <summary>Creates the distinct organization names, in Hebrew or English as the randomly drawn prefix decides.</summary>
     private static List<string> CreateOrganizations(Random random)
     {
         var names = new List<string>(OrganizationCount);
@@ -232,12 +235,14 @@ internal static class SeedDataGenerator
     {
         private readonly double[] _cumulative;
 
+        /// <summary>Stores the running totals of the weights, so that every pick is a binary search.</summary>
         public WeightedPicker(IEnumerable<double> weights)
         {
             var total = 0.0;
             _cumulative = weights.Select(w => total += w).ToArray();
         }
 
+        /// <summary>Draws one index from the caller's generator, so the fixed seed keeps the whole sequence deterministic.</summary>
         public int Pick(Random random)
         {
             var index = Array.BinarySearch(_cumulative, random.NextDouble() * _cumulative[^1]);

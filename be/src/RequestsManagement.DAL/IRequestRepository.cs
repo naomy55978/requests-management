@@ -4,7 +4,7 @@ using RequestsManagement.DTO.Enums;
 namespace RequestsManagement.DAL;
 
 /// <summary>
-/// Read access to requests. Works with DTOs only: entities never leave the DAL (D-04),
+/// Data access to requests: queries and the conditional status update. Works with DTOs only: entities never leave the DAL (D-04),
 /// and every query is projected to the needed columns inside the database.
 /// </summary>
 public interface IRequestRepository

@@ -24,6 +24,7 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
 
     private const int BatchSize = 10_000;
 
+    /// <summary>True when the database has no users and no requests, so seeding never mixes with existing data.</summary>
     public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken) =>
         !await db.Users.AnyAsync(cancellationToken) && !await db.Requests.AnyAsync(cancellationToken);
 
@@ -43,6 +44,7 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
         await db.Database.MigrateAsync(cancellationToken);
     }
 
+    /// <summary>Generates the demo data, writes it with bulk copy in one transaction and then rebuilds the indexes.</summary>
     public async Task SeedAsync(int requestCount, CancellationToken cancellationToken)
     {
         // On a cold SQL Server (e.g. the first LocalDB start) this took over two minutes - tell the user to wait
@@ -98,6 +100,7 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
         logger.LogInformation("Rebuilt the indexes of Requests and RequestStatusHistory in {Elapsed} ms", stopwatch.ElapsedMilliseconds);
     }
 
+    /// <summary>Writes one table's rows with SqlBulkCopy, keeping the generated Ids and checking the constraints.</summary>
     private async Task BulkCopyAsync(
         SqlConnection connection, SqlTransaction transaction, string table, DataTable rows, CancellationToken cancellationToken)
     {
@@ -125,6 +128,7 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
         logger.LogInformation("Bulk copied {Rows} rows into {Table} in {Elapsed} ms", rows.Rows.Count, table, stopwatch.ElapsedMilliseconds);
     }
 
+    /// <summary>The users as a DataTable whose columns match the Users table, for bulk copy.</summary>
     private static DataTable ToDataTable(IReadOnlyList<User> users)
     {
         var table = new DataTable();
@@ -161,6 +165,7 @@ internal sealed class DatabaseSeeder(AppDbContext db, ILogger<DatabaseSeeder> lo
         return table;
     }
 
+    /// <summary>The history rows as a DataTable whose columns match the RequestStatusHistory table, for bulk copy.</summary>
     private static DataTable ToDataTable(IReadOnlyList<RequestStatusHistory> history)
     {
         var table = new DataTable();

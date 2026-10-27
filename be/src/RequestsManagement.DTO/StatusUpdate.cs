@@ -25,6 +25,7 @@ public class UpdateStatusRequest : IValidatableObject
     /// <summary>The version as bytes; valid only after validation succeeded.</summary>
     public byte[] GetVersionBytes() => Convert.FromBase64String(Version);
 
+    /// <summary>Rejects a version that is not the base64 value the API returned, so a malformed version is a 400 and not a failed update.</summary>
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (!string.IsNullOrEmpty(Version) && !IsValidVersion(Version))

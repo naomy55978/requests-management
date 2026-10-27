@@ -12,6 +12,7 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
 {
     private const string SchemeName = "Bearer";
 
+    /// <summary>Registers the JWT bearer scheme in the document's components, so the operations can reference it.</summary>
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
         document.Components ??= new OpenApiComponents();
@@ -26,6 +27,7 @@ internal sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransfor
         return Task.CompletedTask;
     }
 
+    /// <summary>Marks every operation that is not anonymous as requiring the bearer token, so Swagger UI sends it.</summary>
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
         var isAnonymous = context.Description.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any();

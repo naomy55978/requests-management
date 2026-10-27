@@ -30,6 +30,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
     private static readonly Expression<Func<Request, RequestRow>> ToRow = r => new RequestRow(
         r.Id, r.Title, r.OrganizationName, r.Status, r.Priority, r.AssignedTo, r.CreatedAt, r.UpdatedAt, r.RowVersion);
 
+    /// <summary>Counts the matches and reads the page through a deferred join, so even the last page reads only the rows it shows.</summary>
     public async Task<PagedResult<RequestDto>> GetPageAsync(RequestFilter filter, CancellationToken cancellationToken)
     {
         var query = ApplyFilter(db.Requests.AsNoTracking(), filter);
@@ -60,6 +61,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         return new PagedResult<RequestDto>(rows.ConvertAll(r => r.ToDto()), filter.Page, filter.PageSize, totalCount);
     }
 
+    /// <summary>Reads only the columns the DTO needs, without change tracking.</summary>
     public async Task<RequestDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var row = await db.Requests.AsNoTracking()
@@ -70,6 +72,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         return row?.ToDto();
     }
 
+    /// <summary>Checks whether the request exists only when it has no history rows, so the usual case is a single query.</summary>
     public async Task<IReadOnlyList<StatusHistoryDto>?> GetHistoryAsync(int id, CancellationToken cancellationToken)
     {
         // Seek on IX_RequestStatusHistory_RequestId_ChangedAt; rows come back already in ChangedAt order.
@@ -90,6 +93,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         return history;
     }
 
+    /// <summary>Runs the three GROUP BY queries and lists every status and priority, also those with no requests, so the shape is stable.</summary>
     public async Task<SummaryDto> GetSummaryAsync(CancellationToken cancellationToken)
     {
         var requests = db.Requests.AsNoTracking();
@@ -128,6 +132,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             topOrganizations.ConvertAll(o => new OrganizationCountDto(o.OrganizationName, o.OpenRequests)));
     }
 
+    /// <summary>Checks and writes in one conditional UPDATE, and on 0 rows reads the request once to tell NotFound, Conflict and InvalidTransition apart.</summary>
     public async Task<StatusUpdateResult> UpdateStatusAsync(
         int id,
         byte[] expectedVersion,
@@ -236,6 +241,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
             Convert.ToBase64String(RowVersion));
     }
 
+    /// <summary>Narrows the query to the requests matching every filter the client sent, so all filtering runs in SQL.</summary>
     private static IQueryable<Request> ApplyFilter(IQueryable<Request> query, RequestFilter filter)
     {
         if (filter.Status is { Length: > 0 } statuses)
@@ -307,6 +313,7 @@ internal sealed class RequestRepository(AppDbContext db) : IRequestRepository
         };
     }
 
+    /// <summary>Orders by the key and then by Id in the same direction, so rows with equal values keep a stable order across pages.</summary>
     private static IOrderedQueryable<Request> OrderBy<TKey>(
         IQueryable<Request> query, Expression<Func<Request, TKey>> key, bool descending) =>
         descending

@@ -14,6 +14,7 @@ internal sealed class GlobalExceptionHandler(
     // Non-standard status (used by nginx) for "the client closed the connection before the response"
     private const int ClientClosedRequest = 499;
 
+    /// <summary>Answers an unhandled exception with a logged 500 ProblemDetails, or with 499 and no body when the client already disconnected.</summary>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
