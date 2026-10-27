@@ -41,7 +41,7 @@ npm start
 
 ## בדיקות
 
-- **Backend:** ‏`dotnet test` – ‏**155 בדיקות**: ‏72 יחידה ו־83 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה.
+- **Backend:** ‏`dotnet test` – ‏**163 בדיקות**: ‏72 יחידה ו־91 Integration, דרך HTTP מול SQL Server אמיתי במסד זמני שנוצר ונמחק בכל ריצה.
 - **Frontend:** ‏`npm test -- --watch=false` – ‏**300 בדיקות** (Vitest); וגם `npm run lint` ו־`npm run build`.
 - **CI:** ‏GitHub Actions בכל Push בשני ה־Repos של הקוד; ה־Backend מול SQL Server 2022 בקונטיינר.
 

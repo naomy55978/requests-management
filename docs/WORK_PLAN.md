@@ -255,7 +255,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `AuthenticationTests.Endpoint_WithInvalidToken_IsRejectedWith401` | 1 | §3, D‑10 | טוקן פגום נדחה |
 | `AuthenticationTests.Login_WithCorrectPassword_ReturnsAToken` | 1 | §3, D‑10 | התחברות מחזירה טוקן |
 | `AuthenticationTests.Login_WithWrongPasswordOrUnknownUser_GivesTheSameAnswer` | 1 | §3, D‑10 | אותה תשובה לסיסמה שגויה ולמשתמש לא קיים |
-| `ReadRequestsTests.Filters_AreAppliedByTheServer` | 10 | §1 | סינון משולב וחיפוש בצד השרת מול תוצאת LINQ מהנתונים הקבועים; כולל `unassigned`, טווח תאריכים כולל, ו־`% _ [` כתווים רגילים בחיפוש |
+| `ReadRequestsTests.Filters_AreAppliedByTheServer` | 18 | §1 | סינון משולב וחיפוש בצד השרת מול תוצאת LINQ מהנתונים הקבועים; כולל `assignedTo` כ־Prefix (השם המלא, תחילית, חלק אמצעי שלא נמצא, אין התאמה, `% _` כתווים רגילים, יחד עם סטטוס), ‏`unassigned` כמילת מפתח, טווח תאריכים כולל, ו־`% _ [` כתווים רגילים בחיפוש |
 | `ReadRequestsTests.Sorting_IsDoneByTheServer` | 10 | §1 | מיון ב־5 שדות × 2 כיוונים, עם `Id` כ־tie‑breaker |
 | `ReadRequestsTests.Search_IgnoresCase_FindsHebrew_AndKeepsSpecialCharactersLiteral` | 6 | §1 | חיפוש טקסטואלי בכותרת ובשם הארגון: לא רגיש לאותיות גדולות/קטנות, מוצא עברית, ו־`% _ [` נשארים תווים רגילים |
 | `ReadRequestsTests.Paging_ReturnsEveryRequestOnceAndKnowsTheTotal` | 1 | §1 | דפדוף יציב, ‏`totalCount`, דף אחרון חלקי ודף אחרי הסוף ← `200` ריק |

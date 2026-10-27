@@ -414,6 +414,8 @@ WHERE UPPER([r].[Title]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ES
 | Q9.history | history of request 12345 | 9 → 9 → **9** | – → – | – → – | 1 → 1 | 0 → 0 |
 | W1 | status change New -> InProgress (UPDATE + history INSERT, rolled back) | 24 → 23 → **23** | – → – | – → – | 1 → 1 | 0 → 0 |
 
+**Q7a בצורת prefix (27.10.2026, #54):** אחרי המעבר של `assignedTo` מהשוואה מדויקת ל־`LIKE 'x%'`, ה־Plan בפועל על 100,000 הפניות עבור `adi%` (3,043 פניות) הוא **Index Seek** על `IX_Requests_AssignedTo_CreatedAt` (טווח `AssignedTo > … AND < …`), בלי סריקה מלאה: ‏COUNT – ‏20 reads, דף 1 – ‏80 reads (תחילית יכולה לכסות כמה מטפלים, ולכן ה־Id־ים התואמים ממוינים לפי `CreatedAt` לפני ה־OFFSET). בדיקה חד־פעמית של הצורה החדשה; הטבלה למעלה נשארת מדידת השוואה מדויקת.
+
 ההשוואות המלאות (עם האינדקסים שכל שאילתה השתמשה בהם): [`final/compare-with-before.md`](performance/final/compare-with-before.md), [`after-indexes/compare-with-before.md`](performance/after-indexes/compare-with-before.md).
 
 ## נספח ב' – הקבצים

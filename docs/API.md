@@ -3,6 +3,12 @@
 תיעוד מלא ואינטראקטיבי של כל ה־Endpoints (פרמטרים, מודלים וקודי תשובה) נמצא ב־Swagger UI של ה־API: `/swagger` (במצב Development). קובץ זה מרכז התנהגויות שדורשות הסבר והנמקה.
 כל ה־Endpoints מלבד `POST /api/auth/login` דורשים `Authorization: Bearer <token>` (D‑10).
 
+## סינון טקסט ברשימה (`GET /api/requests`)
+
+- **`organization` ו־`assignedTo` – "מתחיל ב…" (Prefix):** ‏`assignedTo=dana` מוצא את `dana.cohen`, ו־`organization=Acme` מוצא גם `Acme Ltd`. השם המלא מתאים כמובן גם הוא, האותיות לא רגישות לגודל, ו־`% _ [` בקלט הם תווים רגילים. לא "מכיל": `assignedTo=friedman` לא מוצא את `yossi.friedman`. ההחלטה ב־[D‑12](DECISIONS.md#d-12).
+- **`assignedTo=unassigned`** (בכל אותיות) היא מילת מפתח ולא Prefix: בדיוק הפניות בלי מטפל (`AssignedTo IS NULL`).
+- **`search` – "מכיל":** בכותרת ובשם הארגון, על כל הטבלה (ראו [PERFORMANCE.md](PERFORMANCE.md) סעיף 7.1).
+
 ## Concurrency בעדכון סטטוס
 
 `PATCH /api/requests/{id}/status` עם `{"newStatus": "...", "version": "..."}`. ה־`version` הוא ה־`RowVersion` של הפנייה (base64) כפי שהלקוח קרא אותה.
