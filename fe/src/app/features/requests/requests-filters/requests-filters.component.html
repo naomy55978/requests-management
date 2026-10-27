@@ -1,0 +1,118 @@
+<mat-card class="filters" appearance="outlined">
+  <form class="filters-grid" [formGroup]="form" role="search" aria-label="סינון וחיפוש פניות">
+    <mat-form-field class="field-search">
+      <mat-label>חיפוש בכותרת ובשם הארגון</mat-label>
+      <mat-icon matPrefix svgIcon="search" />
+      <input
+        #searchInput
+        matInput
+        formControlName="search"
+        autocomplete="off"
+        [attr.maxlength]="searchMaxLength"
+      />
+      @if (hasText().search) {
+        <button matIconSuffix mat-icon-button type="button" aria-label="נקה" (click)="clearText('search', searchInput)">
+          <mat-icon svgIcon="close" />
+        </button>
+      }
+      @if (searchTooShort()) {
+        <mat-hint>יש להקליד לפחות {{ searchMinLength }} תווים</mat-hint>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>ארגון</mat-label>
+      <input
+        #organizationInput
+        matInput
+        formControlName="organization"
+        autocomplete="off"
+        [attr.maxlength]="organizationMaxLength"
+      />
+      @if (hasText().organization) {
+        <button
+          matIconSuffix
+          mat-icon-button
+          type="button"
+          aria-label="נקה"
+          (click)="clearText('organization', organizationInput)"
+        >
+          <mat-icon svgIcon="close" />
+        </button>
+      }
+      <mat-hint>מתחיל ב…</mat-hint>
+    </mat-form-field>
+
+    <div class="assignee">
+      <mat-form-field>
+        <mat-label>מטפל</mat-label>
+        <input
+          #assignedToInput
+          matInput
+          formControlName="assignedTo"
+          dir="ltr"
+          autocomplete="off"
+          [attr.maxlength]="assignedToMaxLength"
+        />
+        <!-- Not while "without a handler" is checked: the field is disabled and its text has no meaning -->
+        @if (hasText().assignedTo && !form.controls.assignedTo.disabled) {
+          <button
+            matIconSuffix
+            mat-icon-button
+            type="button"
+            aria-label="נקה"
+            (click)="clearText('assignedTo', assignedToInput)"
+          >
+            <mat-icon svgIcon="close" />
+          </button>
+        }
+      </mat-form-field>
+      <mat-checkbox formControlName="unassigned">ללא מטפל</mat-checkbox>
+    </div>
+
+    <mat-form-field>
+      <mat-label>סטטוס</mat-label>
+      <mat-select formControlName="status" multiple>
+        @for (option of statusOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>עדיפות</mat-label>
+      <mat-select formControlName="priority" multiple>
+        @for (option of priorityOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- The dates are picked from the calendar only (readonly): the native date adapter reads a typed
+         dd/MM/yyyy as MM/dd/yyyy (25/12/2026 is invalid, 05/12/2026 becomes May 12) -->
+    <mat-form-field class="field-dates">
+      <mat-label>תאריך יצירה (טווח)</mat-label>
+      <mat-date-range-input [rangePicker]="picker" [formGroup]="form.controls.range" (click)="picker.open()">
+        <input matStartDate formControlName="start" placeholder="מתאריך" readonly aria-label="מתאריך" />
+        <input matEndDate formControlName="end" placeholder="עד תאריך" readonly aria-label="עד תאריך" />
+      </mat-date-range-input>
+      @if (hasDates()) {
+        <button matIconSuffix mat-icon-button type="button" aria-label="נקה תאריכים" (click)="clearDates()">
+          <mat-icon svgIcon="close" />
+        </button>
+      }
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-date-range-picker #picker />
+      @if (form.controls.range.controls.start.hasError('matStartDateInvalid')) {
+        <mat-error>תאריך ההתחלה מאוחר מתאריך הסיום</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="filters-actions">
+      <button mat-stroked-button type="button" [disabled]="!canClear()" (click)="clear()">
+        <mat-icon svgIcon="close" />
+        נקה סינון
+      </button>
+    </div>
+  </form>
+</mat-card>

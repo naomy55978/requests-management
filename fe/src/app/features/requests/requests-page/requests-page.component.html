@@ -1,0 +1,76 @@
+<div class="page-header">
+  <h1 class="page-title">פניות</h1>
+</div>
+
+<app-requests-filters
+  (filtersChange)="store.setFilters($event)"
+  (filtersApplyNow)="store.setFilters($event, { immediate: true })"
+/>
+
+<mat-card class="results" appearance="outlined">
+  <!-- Always in the page, so the screen reader is already listening when the text appears -->
+  <p class="visually-hidden" role="status">{{ resultAnnouncement() }}</p>
+
+  <!-- Only while rows are ticked -->
+  @if (store.selectedIds().size > 0) {
+    <app-bulk-bar
+      [count]="store.selectedIds().size"
+      [targets]="store.bulkTargets()"
+      [busy]="store.bulkPending()"
+      (apply)="applyBulk($event)"
+      (clear)="store.clearSelection()"
+    />
+  }
+
+  <!-- Always takes its space, so the table does not jump when loading starts -->
+  <mat-progress-bar class="results-progress" mode="indeterminate" [class.active]="store.loading()" />
+
+  <!-- The header stays in every state, so the user keeps the sort controls and the layout does not jump -->
+  <app-requests-table
+    [items]="store.items()"
+    [sortBy]="store.query().sortBy"
+    [sortDir]="store.query().sortDir"
+    [busy]="store.loading()"
+    [pendingIds]="store.pendingIds()"
+    [selectedIds]="store.selectedIds()"
+    [selectionDisabled]="store.bulkPending()"
+    (selectionToggle)="store.toggleSelection($event)"
+    (selectPage)="store.selectPage($event)"
+    (sortChange)="store.sortBy($event.sortBy, $event.sortDir)"
+    (statusChange)="changeStatus($event)"
+    (historyRequest)="openHistory($event)"
+  />
+
+  @switch (store.viewState()) {
+    @case ('loading') {
+      <div class="loading" role="status" aria-label="טוען פניות">
+        <mat-spinner diameter="40" />
+      </div>
+    }
+    @case ('error') {
+      <app-state-message kind="error" [message]="store.error() ?? ''" actionLabel="נסה שוב" (action)="store.reload()" />
+    }
+    @case ('empty') {
+      @if (store.filtersActive()) {
+        <app-state-message
+          kind="empty"
+          message="לא נמצאו פניות שמתאימות לסינון ולחיפוש."
+          actionLabel="נקה סינון"
+          (action)="clearFilters()"
+        />
+      } @else {
+        <app-state-message kind="empty" message="אין פניות להצגה." />
+      }
+    }
+  }
+
+  <mat-paginator
+    [length]="store.totalCount()"
+    [pageIndex]="store.query().page - 1"
+    [pageSize]="store.query().pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    showFirstLastButtons
+    aria-label="דפדוף בין עמודי הפניות"
+    (page)="store.changePage($event.pageIndex + 1, $event.pageSize)"
+  />
+</mat-card>

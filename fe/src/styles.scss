@@ -1,0 +1,92 @@
+@use '@angular/material' as mat;
+
+// Material 3 theme: one azure palette, Heebo for Hebrew and Latin text. Everything else in the app takes its
+// colors from these --mat-sys-* variables, so the look can be changed here only.
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: (
+        plain-family: 'Heebo, system-ui, sans-serif',
+        brand-family: 'Heebo, system-ui, sans-serif',
+      ),
+      density: 0,
+    )
+  );
+}
+
+// Colors of the status and priority chips. Each pair is background / text and meets WCAG AA contrast.
+:root {
+  --app-page-bg: #f4f6fa;
+  --app-border: #dde2ea;
+
+  --app-status-new-bg: #dbeafe;
+  --app-status-new-fg: #1e40af;
+  --app-status-in-progress-bg: #ffedd5;
+  --app-status-in-progress-fg: #9a3412;
+  --app-status-waiting-bg: #f3e8ff;
+  --app-status-waiting-fg: #6b21a8;
+  --app-status-completed-bg: #dcfce7;
+  --app-status-completed-fg: #166534;
+
+  --app-priority-high-bg: #fee2e2;
+  --app-priority-high-fg: #991b1b;
+  --app-priority-medium-bg: #fef3c7;
+  --app-priority-medium-fg: #92400e;
+  --app-priority-low-bg: #e5e7eb;
+  --app-priority-low-fg: #374151;
+}
+
+// Free text that can be Hebrew or English (titles, organization names) sits in a <bdi class="bidi-fit"> inside a
+// container aligned to the start (right in RTL). The <bdi> takes the direction of its own text; inline-block with
+// nowrap and max-width lets a long name be cut with an ellipsis at the end of the text, and vertical-align keeps the
+// row height the same for Hebrew and English.
+bdi.bidi-fit {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+// Text for screen readers only (a table caption, a live region)
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+// The title row of a screen: the title on one side, quiet tools (time badge, refresh) on the other
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-page-bg);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}

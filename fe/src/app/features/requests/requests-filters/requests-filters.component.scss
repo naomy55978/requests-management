@@ -1,0 +1,41 @@
+.filters {
+  margin-bottom: 16px;
+  padding: 16px 16px 0;
+}
+
+// Fields wrap by themselves, so the form also fits a laptop window or a narrower one
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0 16px;
+  align-items: start;
+}
+
+.field-search,
+.field-dates {
+  grid-column: span 2;
+}
+
+.assignee {
+  display: flex;
+  flex-direction: column;
+}
+
+.filters-actions {
+  display: flex;
+  align-items: center;
+  // Same height as a form field, so the button lines up with the fields next to it
+  min-height: 56px;
+}
+
+// The hint under the search field must not push the rest of the row down
+mat-form-field {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .field-search,
+  .field-dates {
+    grid-column: span 1;
+  }
+}

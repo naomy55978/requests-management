@@ -1,0 +1,65 @@
+<section class="login">
+  <mat-card class="login-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>התחברות</mat-card-title>
+      <mat-card-subtitle>מערכת ניהול פניות</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <!-- User name and password are Latin text: dir="ltr" keeps characters like "!" at the end where they were typed -->
+        <mat-form-field>
+          <mat-label>שם משתמש</mat-label>
+          <input matInput formControlName="userName" dir="ltr" autocomplete="username" spellcheck="false" maxlength="50" />
+          @if (form.controls.userName.hasError('required')) {
+            <mat-error>יש להזין שם משתמש</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>סיסמה</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            dir="ltr"
+            autocomplete="current-password"
+            maxlength="100"
+            [type]="passwordVisible() ? 'text' : 'password'"
+          />
+          <button
+            matSuffix
+            mat-button
+            type="button"
+            class="password-toggle"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ passwordVisible() ? 'הסתר' : 'הצג' }}
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>יש להזין סיסמה</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage(); as message) {
+          <p class="login-error" role="alert">{{ message }}</p>
+        }
+
+        <!-- While submitting the button holds only a spinner: the label keeps a name for screen readers -->
+        <button
+          mat-flat-button
+          type="submit"
+          class="login-submit"
+          [disabled]="submitting()"
+          [attr.aria-label]="submitting() ? 'מתחבר…' : null"
+        >
+          @if (submitting()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            התחברות
+          }
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</section>

@@ -1,0 +1,27 @@
+.chip {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+
+  &[data-status='New'] {
+    background: var(--app-status-new-bg);
+    color: var(--app-status-new-fg);
+  }
+
+  &[data-status='InProgress'] {
+    background: var(--app-status-in-progress-bg);
+    color: var(--app-status-in-progress-fg);
+  }
+
+  &[data-status='Waiting'] {
+    background: var(--app-status-waiting-bg);
+    color: var(--app-status-waiting-fg);
+  }
+
+  &[data-status='Completed'] {
+    background: var(--app-status-completed-bg);
+    color: var(--app-status-completed-fg);
+  }
+}

@@ -1,0 +1,24 @@
+<div class="bulk-bar" role="region" aria-label="עדכון הפניות שנבחרו">
+  <span class="bulk-count">{{ countText() }}</span>
+
+  <mat-form-field class="bulk-target" subscriptSizing="dynamic">
+    <mat-label>העבר לסטטוס</mat-label>
+    <mat-select [value]="target()" [disabled]="busy() || targets().length === 0" (selectionChange)="choose($event.value)">
+      @for (status of targets(); track status) {
+        <mat-option [value]="status">{{ statusLabels[status] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (targets().length === 0) {
+    <span class="bulk-note">אין מעבר אפשרי לפניות שנבחרו (הושלמו).</span>
+  }
+
+  <button mat-flat-button type="button" class="bulk-apply" [disabled]="!target() || busy()" (click)="submit()">
+    @if (busy()) {
+      <mat-spinner diameter="18" aria-label="מעדכן" />
+    }
+    עדכן
+  </button>
+  <button mat-button type="button" [disabled]="busy()" (click)="clear.emit()">בטל בחירה</button>
+</div>

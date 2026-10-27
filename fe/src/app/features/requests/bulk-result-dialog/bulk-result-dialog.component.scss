@@ -1,0 +1,73 @@
+.totals {
+  margin: 0 0 8px;
+  font: var(--mat-sys-title-medium);
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.count {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-high);
+  font: var(--mat-sys-label-large);
+
+  &[data-outcome='Updated'] {
+    background: var(--app-status-completed-bg);
+    color: var(--app-status-completed-fg);
+  }
+}
+
+.table-scroll {
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.results {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-medium);
+
+  th,
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--mat-sys-surface-container-high);
+    font: var(--mat-sys-label-large);
+  }
+}
+
+.cell-id {
+  width: 72px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.cell-title {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark {
+  display: inline-block;
+  width: 1.2em;
+  font-weight: 700;
+}
+
+tr.failed .mark {
+  color: var(--mat-sys-error);
+}

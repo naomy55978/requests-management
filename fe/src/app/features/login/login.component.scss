@@ -1,0 +1,40 @@
+.login {
+  display: flex;
+  justify-content: center;
+  padding-top: 8vh;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 8px 16px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 16px;
+}
+
+.login-error {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.login-submit {
+  height: 44px;
+}
+
+// Chrome paints autofilled fields light blue. An inset shadow in the field's own color is the only thing
+// autofill does not override, so the field keeps looking like the others.
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--mat-sys-surface-container-highest, var(--mat-sys-surface)) inset;
+  -webkit-text-fill-color: var(--mat-sys-on-surface);
+  caret-color: var(--mat-sys-on-surface);
+}

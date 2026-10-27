@@ -1,0 +1,240 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { RequestDto } from '../../../core/api/api.models';
+import { provideAppIcons } from '../../../core/icons/app-icons';
+import { fakeRequest } from '../requests-list.store.test-helpers';
+import { RequestsTableComponent, SortChange, StatusChangeRequest } from './requests-table.component';
+
+describe('RequestsTableComponent', () => {
+  let fixture: ComponentFixture<RequestsTableComponent>;
+  let element: HTMLElement;
+
+  async function render(items: RequestDto[]): Promise<void> {
+    await TestBed.configureTestingModule({
+      imports: [RequestsTableComponent],
+      providers: [provideAppIcons()],
+    }).compileComponents();
+    fixture = TestBed.createComponent(RequestsTableComponent);
+    fixture.componentRef.setInput('items', items);
+    fixture.componentRef.setInput('sortBy', 'createdAt');
+    fixture.componentRef.setInput('sortDir', 'desc');
+    element = fixture.nativeElement as HTMLElement;
+    await fixture.whenStable();
+  }
+
+  it('shows one row per item, in the order given (the server sorts, not the table)', async () => {
+    await render([fakeRequest(3), fakeRequest(1), fakeRequest(2)]);
+
+    const ids = [...element.querySelectorAll('tr.mat-mdc-row .cell-id')].map((cell) => cell.textContent?.trim());
+    expect(ids).toEqual(['3', '1', '2']);
+  });
+
+  it('shows Hebrew status and priority labels', async () => {
+    await render([{ ...fakeRequest(1), status: 'InProgress', priority: 'High', assignedTo: 'dana.cohen' }]);
+
+    const row = element.querySelector('tr.mat-mdc-row')?.textContent ?? '';
+    expect(row).toContain('בטיפול');
+    expect(row).toContain('גבוהה');
+    expect(row).toContain('dana.cohen');
+  });
+
+  describe('free text in Hebrew or English', () => {
+    const english = { ...fakeRequest(1), title: 'Cannot login to portal', organizationName: 'Globex Corp', assignedTo: 'dana.cohen' };
+
+    it('is wrapped in <bdi>, and the cell is not given dir="auto" (which would align English to the left)', async () => {
+      await render([english]);
+
+      const cell = (column: string) => element.querySelector(`td.mat-column-${column}`);
+      expect(cell('title')?.querySelector('.cell-text > bdi.bidi-fit')?.textContent).toBe('Cannot login to portal');
+      expect(cell('organizationName')?.querySelector('.cell-text > bdi.bidi-fit')?.textContent).toBe('Globex Corp');
+      expect(cell('assignedTo')?.querySelector('bdi')?.textContent).toBe('dana.cohen');
+      expect(element.querySelector('tbody [dir="auto"]')).toBeNull();
+    });
+
+    it('keeps the full text in a title attribute, for when the cell cuts it', async () => {
+      await render([english]);
+
+      expect(element.querySelector('td.mat-column-title')?.getAttribute('title')).toBe('Cannot login to portal');
+      expect(element.querySelector('td.mat-column-organizationName')?.getAttribute('title')).toBe('Globex Corp');
+    });
+  });
+
+  it('says "not assigned" for a request without a handler', async () => {
+    await render([fakeRequest(1)]);
+
+    expect(element.querySelector('.unassigned')?.textContent).toContain('לא משויכת');
+  });
+
+  it('keeps the header when there are no rows', async () => {
+    await render([]);
+
+    expect(element.querySelectorAll('tr.mat-mdc-header-row')).toHaveLength(1);
+    expect(element.querySelectorAll('tr.mat-mdc-row')).toHaveLength(0);
+  });
+
+  it('reports a click on a sortable header as the API sort field and direction', async () => {
+    await render([fakeRequest(1)]);
+    const changes: SortChange[] = [];
+    fixture.componentInstance.sortChange.subscribe((change) => changes.push(change));
+
+    const titleHeader = [...element.querySelectorAll<HTMLElement>('th')].find((th) => th.textContent?.includes('כותרת'));
+    titleHeader?.click();
+    await fixture.whenStable();
+
+    expect(changes).toEqual([{ sortBy: 'title', sortDir: 'asc' }]);
+  });
+
+  it('dims the rows while busy, without removing them', async () => {
+    await render([fakeRequest(1)]);
+    fixture.componentRef.setInput('busy', true);
+    await fixture.whenStable();
+
+    expect(element.querySelector('.table-scroll')?.classList.contains('busy')).toBe(true);
+    expect(element.querySelectorAll('tr.mat-mdc-row')).toHaveLength(1);
+  });
+
+  describe('status action menu', () => {
+    const actionButton = (id: number) =>
+      element.querySelector<HTMLButtonElement>(`button[aria-label="פעולות לפנייה ${id}"]`) as HTMLButtonElement;
+
+    // The menu opens in an overlay on the page, not inside the table
+    async function openMenu(id: number): Promise<HTMLButtonElement[]> {
+      actionButton(id).click();
+      await fixture.whenStable();
+      return Array.from(document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-panel .mat-mdc-menu-item'));
+    }
+
+    const itemTexts = (items: HTMLButtonElement[]) => items.map((item) => item.textContent?.trim());
+
+    afterEach(() => document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = '')));
+
+    it('offers only the statuses allowed from the current one', async () => {
+      await render([
+        { ...fakeRequest(1), status: 'New' },
+        { ...fakeRequest(2), status: 'InProgress' },
+        { ...fakeRequest(3), status: 'Waiting' },
+      ]);
+
+      expect(itemTexts(await openMenu(1))).toEqual(['העבר ל«בטיפול»', 'העבר ל«ממתינה»', 'היסטוריה']);
+      document.body.click();
+      await fixture.whenStable();
+    });
+
+    it('offers "waiting" and "completed" for a request in progress', async () => {
+      await render([{ ...fakeRequest(2), status: 'InProgress' }]);
+
+      expect(itemTexts(await openMenu(2))).toEqual(['העבר ל«ממתינה»', 'העבר ל«הושלמה»', 'היסטוריה']);
+    });
+
+    it('offers no status for a completed request: one disabled line that says so (the history stays)', async () => {
+      await render([{ ...fakeRequest(4), status: 'Completed' }]);
+
+      const items = await openMenu(4);
+
+      expect(items).toHaveLength(2);
+      expect(items[0].disabled).toBe(true);
+      expect(items[0].textContent).toContain('הושלמה');
+      expect(items[1].textContent).toContain('היסטוריה');
+      expect(items[1].disabled).toBe(false);
+    });
+
+    it('reports the row when the user asks for its history', async () => {
+      const row = { ...fakeRequest(1), status: 'Completed' as const };
+      await render([row]);
+      const asked: number[] = [];
+      fixture.componentInstance.historyRequest.subscribe((r) => asked.push(r.id));
+
+      const items = await openMenu(1);
+      items[1].click();
+
+      expect(asked).toEqual([1]);
+    });
+
+    it('reports the row and the status the user picked, and sends nothing itself', async () => {
+      const row = { ...fakeRequest(1), status: 'New' as const };
+      await render([row]);
+      const picked: StatusChangeRequest[] = [];
+      fixture.componentInstance.statusChange.subscribe((change) => picked.push(change));
+
+      const items = await openMenu(1);
+      items[1].click();
+
+      expect(picked).toEqual([{ row, status: 'Waiting' }]);
+    });
+
+    it('disables the action of a row whose change is on its way, and shows a spinner there', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      fixture.componentRef.setInput('pendingIds', new Set([1]));
+      await fixture.whenStable();
+
+      expect(actionButton(1).disabled).toBe(true);
+      expect(actionButton(1).querySelector('mat-spinner')).not.toBeNull();
+      expect(actionButton(2).disabled).toBe(false);
+    });
+  });
+
+  describe('selection for a Bulk change', () => {
+    const rowBox = (id: number) =>
+      element.querySelector<HTMLInputElement>(`input[aria-label="בחירת פנייה ${id}"]`) as HTMLInputElement;
+    const headerBox = () =>
+      element.querySelector<HTMLInputElement>('input[aria-label="בחירת כל הפניות בעמוד"]') as HTMLInputElement;
+
+    it('ticks the rows it is told are selected, and tints them', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      fixture.componentRef.setInput('selectedIds', new Set([2]));
+      await fixture.whenStable();
+
+      expect(rowBox(1).checked).toBe(false);
+      expect(rowBox(2).checked).toBe(true);
+      expect(element.querySelectorAll('tr.selected')).toHaveLength(1);
+    });
+
+    it('reports the row when its box is clicked', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      const toggled: number[] = [];
+      fixture.componentInstance.selectionToggle.subscribe((id) => toggled.push(id));
+
+      rowBox(2).click();
+
+      expect(toggled).toEqual([2]);
+    });
+
+    it('header box: reports "select the page" and, once all are ticked, "unselect the page"', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      const page: boolean[] = [];
+      fixture.componentInstance.selectPage.subscribe((selected) => page.push(selected));
+
+      headerBox().click();
+      fixture.componentRef.setInput('selectedIds', new Set([1, 2]));
+      await fixture.whenStable();
+      expect(headerBox().checked).toBe(true);
+      headerBox().click();
+
+      expect(page).toEqual([true, false]);
+    });
+
+    it('header box is half-ticked while only some rows are selected', async () => {
+      await render([fakeRequest(1), fakeRequest(2)]);
+      fixture.componentRef.setInput('selectedIds', new Set([1]));
+      await fixture.whenStable();
+
+      expect(headerBox().indeterminate).toBe(true);
+      expect(headerBox().checked).toBe(false);
+    });
+
+    it('blocks the boxes while a Bulk call is on its way', async () => {
+      await render([fakeRequest(1)]);
+      fixture.componentRef.setInput('selectionDisabled', true);
+      await fixture.whenStable();
+
+      expect(rowBox(1).disabled).toBe(true);
+      expect(headerBox().disabled).toBe(true);
+    });
+
+    it('has nothing to select on an empty page', async () => {
+      await render([]);
+
+      expect(headerBox().disabled).toBe(true);
+    });
+  });
+});

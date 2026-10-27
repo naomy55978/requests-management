@@ -1,0 +1,57 @@
+// Narrow windows scroll the table sideways instead of squeezing the columns
+.table-scroll {
+  overflow-x: auto;
+  transition: opacity 150ms;
+
+  // While the next page loads the rows stay on screen, only a little dimmer
+  &.busy {
+    opacity: 0.55;
+  }
+}
+
+.requests-table {
+  min-width: 960px;
+  width: 100%;
+  background: transparent;
+}
+
+.cell-select {
+  width: 52px;
+  padding-inline: 4px 0;
+}
+
+// A ticked row is tinted, so the selection is visible at a glance
+tr.selected {
+  background: var(--mat-sys-secondary-container);
+}
+
+.cell-actions {
+  width: 56px;
+  padding-inline: 4px;
+  text-align: center;
+}
+
+.cell-id {
+  width: 72px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Free text can be Hebrew or English. The cell stays aligned to the start (right in RTL) for both; the <bdi> inside
+// it (.bidi-fit, styles.scss) gives the text its own direction, so a long English title is cut at its END with the
+// ellipsis. dir="auto" on the cell would have aligned English text to the left.
+.cell-text {
+  display: block;
+  max-width: 280px;
+}
+
+.cell-title {
+  font-weight: 500;
+}
+
+.cell-date {
+  white-space: nowrap;
+}
+
+.unassigned {
+  color: var(--mat-sys-on-surface-variant);
+}
