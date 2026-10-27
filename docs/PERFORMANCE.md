@@ -1,9 +1,9 @@
 # ביצועים – מדידה, אינדקסים ו־Bottleneck
 
-> M8 (ביצועים), Issues [#42](https://github.com/naomy55978/requests-management-docs/issues/42)–[#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#51](https://github.com/naomy55978/requests-management-docs/issues/51). החלטות: D‑24 (אינדקסים ושאילתות), D‑25 (`Server-Timing`) ב־[DECISIONS.md](DECISIONS.md).
+> M8 (ביצועים), Issues [#42](https://github.com/naomy55978/requests-management-docs/issues/42)–[#44](https://github.com/naomy55978/requests-management-docs/issues/44). החלטה: D‑24 (אינדקסים ושאילתות) ב־[DECISIONS.md](DECISIONS.md).
 > כל המספרים נמדדו על 100,000 פניות ו־179,178 שורות היסטוריה (ה־Seed הדטרמיניסטי, D‑13), בכלי שנמצא ב־Repo של ה־Backend וניתן להריץ שוב: `scripts/MeasureQueries.cs`.
 >
-> **גרסאות Seeder:** כל המדידות במסמך (סעיפים 1–9 ונספח א׳) נעשו על **Seeder v1** – כותרות וארגונים באנגלית. ב־D‑33 הנתונים הוחלפו ל־**v2** (כותרות בעברית, ארגונים בעברית ובאנגלית), ופרק 10 מציג את המדידה מחדש והשוואה. מספרי v1 לא שונו – הם נשארים נכונים לגרסה שעליה נמדדו.
+> **גרסאות Seeder:** כל המדידות במסמך (סעיפים 1–8 ונספח א׳) נעשו על **Seeder v1** – כותרות וארגונים באנגלית. ב־D‑33 הנתונים הוחלפו ל־**v2** (כותרות בעברית, ארגונים בעברית ובאנגלית), ופרק 9 מציג את המדידה מחדש והשוואה. מספרי v1 לא שונו – הם נשארים נכונים לגרסה שעליה נמדדו.
 
 ## 1. תקציר: שלוש פעולות מרכזיות
 
@@ -16,6 +16,8 @@
 | **מיון ללא סינון לפי updatedAt** (Q4) | **2,547** reads, ‏**Sort** של כל הטבלה, ‏**Memory Grant ‏79 MB**, ‏**DOP 10**, ‏49 ms | **62** reads, בלי Grant, ‏DOP 1, ‏0 ms | אינדקס `(UpdatedAt)` – השאילתות שנתקעו ב־M3 בהמתנה ל־Memory Grant |
 | **דף עמוק** (Q5: דף 1000 × 100) | **306,484** reads, ‏164 ms | **525** reads, ‏12 ms | Deferred Join (סעיף 6.1) |
 | **עדכון סטטוס** (W1, עלות כתיבה) | 24 reads, ‏1,544 bytes ב־log | 23 reads, ‏**1,396** bytes | למרות 3 אינדקסים נוספים – כתיבה **זולה** יותר (סעיף 5) |
+
+**דף 1 של Q1 (779 ← 839 reads):** שתי המדידות באותם תנאים (אותם נתונים, אותה מכונה, בהפרש של דקה), אבל לא אותה שאילתה: 839 הוא ה־Deferred Join (סעיף 6.1), שממיין את 20 שורות הדף אחרי ה־Join (Grant של 1 MB). תוספת קטנה ואמיתית בדף הראשון (0 ms בשתיהן), שאותו שינוי מוריד בדף 1000 מ־306,484 ל־525 reads.
 
 **סיכום האינדקסים:** 8 אינדקסים על `Requests` במקום 5, אבל **הנפח הכולל קטן** (30.7 ← 27.6 MB של אינדקסים לא־Clustered), ועדכון סטטוס **כותב פחות** ל־log.
 
@@ -92,7 +94,7 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 
 אותן שאילתות ואותם פרמטרים בכל השלבים. ‏`--shape original` מריץ את ה־SQL שלפני M8.
 
-**ממצא מתודולוגי – פיצול אחרי ה־Seed:** מדידת הבסיס הראשונה ([`performance/archive/before-fragmented`](performance/archive/before-fragmented)) הראתה ש־Q1.count קורא 1,118 דפים, ואחרי REBUILD של אותו אינדקס רק 697. הסיבה: ה־Seed טוען ב־`SqlBulkCopy` לטבלה שהאינדקסים הלא־Clustered שלה כבר קיימים, וההכנסה מפצלת דפים. האינדקסים נשארו **מלאים רק ב־35%–61%**:
+**ממצא מתודולוגי – פיצול אחרי ה־Seed:** מדידת הבסיס הראשונה הראתה ש־Q1.count קורא 1,118 דפים, ואחרי REBUILD של אותו אינדקס רק 697. הסיבה: ה־Seed טוען ב־`SqlBulkCopy` לטבלה שהאינדקסים הלא־Clustered שלה כבר קיימים, וההכנסה מפצלת דפים. האינדקסים נשארו **מלאים רק ב־35%–61%**:
 
 | אינדקס | KB אחרי ה־Seed | KB אחרי REBUILD | מילוי |
 |---|---|---|---|
@@ -101,7 +103,7 @@ ORDER BY [r0].[CreatedAt] DESC, [r0].[Id] DESC
 | ‏`IX_Requests_AssignedTo_Status` | 6,072 | 3,536 | 58% |
 | ‏`IX_Requests_Status_Priority_CreatedAt` | 31,736 | 19,416 | 61% |
 
-השוואה הוגנת מחייבת אינדקסים דחוסים בכל השלבים, ולכן **כל ההשוואות במסמך (`before` ← `final`) נמדדו על אינדקסים דחוסים**. ‏`before-fragmented` נשמר כתיעוד (בתיקייה `archive/`). בעקבות הממצא ה־Seeder מריץ עכשיו `ALTER INDEX ALL … REBUILD` על שתי הטבלאות שלנו בלבד אחרי הטעינה (כ־1.2 שנ'), ובודק שמריץ את ה־Seed מקבל אינדקסים מלאים ב־98–99%.
+השוואה הוגנת מחייבת אינדקסים דחוסים בכל השלבים, ולכן **כל ההשוואות במסמך (`before` ← `final`) נמדדו על אינדקסים דחוסים**. בעקבות הממצא ה־Seeder מריץ עכשיו `ALTER INDEX ALL … REBUILD` על שתי הטבלאות שלנו בלבד אחרי הטעינה (כ־1.2 שנ'), ובודק שמריץ את ה־Seed מקבל אינדקסים מלאים ב־98–99%.
 
 **סביבה ואמינות הזמנים:**
 - **שרת:** ‏SQL Server 2025 Developer (17.0.1145), ‏compatibility 170, ‏MAXDOP 10, ‏cost threshold 5 (ברירות מחדל של המופע, לא שונו).
@@ -179,7 +181,7 @@ Stream Aggregate – 1 rows
 - **אינדקס קיים:** כובה לריצה אחת (`--disable`), ונבדק אילו שאילתות נפגעות ומה נחסך בכתיבה (W1).
 - **אינדקס מועמד:** נוצר זמנית ונמדד, ואז נמחק.
 
-כל הניסויים ב־[`performance/archive/experiments`](performance/archive/experiments).
+תוצאות הניסויים מסוכמות לכל אינדקס בסעיפים 5.1–5.3; המצב הסופי מול הבסיס, עם האינדקסים שכל שאילתה השתמשה בהם – [`performance/final/compare-with-before.md`](performance/final/compare-with-before.md), וה־Plans ב־[`performance/final/plans`](performance/final/plans).
 
 **כלל ההחלטה (נקבע לפני המדידה):**
 - **הוספה:** רק אם האינדקס מבטל Sort/Memory Grant, או מוריד logical reads בסדר גודל לתרחיש מהסט, ותוספת עלות הכתיבה (W1) קטנה.
@@ -348,57 +350,11 @@ WHERE UPPER([r].[Title]) COLLATE Latin1_General_100_BIN2 LIKE UPPER(@pattern) ES
   - **5 הרצות רצופות** של כל הבדיקות (129) אחרי השינויים: כולן עברו (5–6 שנ' כל אחת), ו**אף הודעת paging** ביומן במהלכן. בזמן המדידות שלפניהן היו 23.
 - **המסקנה:** לא ניתן להוכיח שהכשל לא יחזור. הוא לא שוחזר גם ב־10 הרצות ב־M6. הסיכון הסביבתי נשאר מתועד (README של BE).
 
-## 9. ‏Server-Timing – מדידה בזמן ריצה
-
-מעבר למדידות החד־פעמיות במסמך הזה, כל תשובה של ה־API מדווחת על הזמנים שלה בכותרת התקנית (W3C) `Server-Timing` (D‑23, ‏D‑25):
-
-```
-GET /api/requests?search=bonus     Server-Timing: total;dur=70.3, db;dur=65.5;desc="2 queries"
-GET /api/requests?page=1000&…      Server-Timing: total;dur=26.3, db;dur=24.3;desc="2 queries"
-GET /api/requests/summary (miss)   Server-Timing: total;dur=151.6, db;dur=107.0;desc="3 queries", cache;desc="miss"
-GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc="0 queries", cache;desc="hit"
-```
-
-| מדד | מה הוא מודד |
-|---|---|
-| `total` | זמן השרת כולו, מה־Middleware הראשון ועד תחילת שליחת התשובה |
-| `db` | סכום זמני הפקודות למסד ומספרן |
-| `cache` | ב־summary בלבד |
-
-**איך זה בנוי:**
-
-| רכיב | שכבה | תפקיד |
-|---|---|---|
-| ‏`RequestTimings` | DTO | אובייקט Scoped – טיפוס דיאגנוסטיקה חוצה שכבות, לא DTO (D‑25) |
-| ‏`DbTimingInterceptor` | DAL | ‏`DbCommandInterceptor` של EF Core, אוסף את הזמנים ש־EF כבר מודד |
-| ‏`RequestService` | BL | מסמן `hit`, או `miss` כשה־Cache נאלץ לטעון |
-| ‏`ServerTimingMiddleware` | API | כותב את הכותרת |
-
-בלי ספריות חדשות.
-
-**ממצא במימוש:** הספירה הראשונה לקחה את הזמן מאירוע `DataReaderDisposing` בלבד, וקיבלה `db=4.2 ms` לחיפוש של 242 ms. בדיקה (הדפסה זמנית של שני האירועים) הראתה שהזמן באירוע הזה מתחיל רק **כשה־Reader נפתח**, כלומר הוא כולל רק את קריאת השורות. זמן הביצוע עצמו מדווח ב־`ReaderExecuted`. הזמן הנכון הוא הסכום של שניהם.
-
-**תקורה:** ‏300 קריאות לכל Endpoint, עם הכותרת ובלעדיה (חציון):
-
-| Endpoint | בלי | עם |
-|---|---|---|
-| פנייה בודדת | 1.51 ms | 1.60 ms |
-| רשימה מסוננת | 2.53 ms | 2.62 ms |
-| summary מה־Cache | 0.60 ms | 0.59 ms |
-
-כ־0.1 ms, בתוך רעש המדידה.
-
-**אבטחה:** הכותרת חושפת זמנים פנימיים, שיכולים לרמוז על מבנה הנתונים או לסייע ב־timing attacks. לכן היא **כבויה כברירת מחדל, גם ב־Development** (מ־27.10.2026), ומופעלת ע״י `ServerTiming:Enabled` – למשל משתנה הסביבה `ServerTiming__Enabled=true`.
-
-**שימוש:**
-- **DevTools:** הכותרת מוצגת ב־Network ← Timing.
-- **UI (‏M7):** תג זמן ליד כל טעינה ופאנל ביצועים מתקפל (D‑23) – אופציונליים, כבויים כברירת מחדל ומופעלים בדגל `showPerformance` (README של ה־Frontend). ה־Angular קורא את הכותרת דרך ה־Proxy של שרת הפיתוח (#32), כלומר מאותו Origin, ולכן לא נדרש `Access-Control-Expose-Headers`.
-
-## 10. גרסאות Seeder: v1 (אנגלית) מול v2 (עברית, D‑33)
+## 9. גרסאות Seeder: v1 (אנגלית) מול v2 (עברית, D‑33)
 
 **מה השתנה:** רק רשימות המילים (`SeedWordLists.cs`). כל רשימה שמרה על אותו **מספר** פריטים, ולכן סדר קריאות ה־`Random` זהה, והסטטוסים, העדיפויות, התאריכים, המטפלים, ההיסטוריה (179,178 שורות) ובחירת הארגון לכל פנייה זהים בשתי הגרסאות. שם ארגון הוא "קידומת + ענף + סיומת", והשפה נקבעת לפי הקידומת (קידומת עברית ← ענף וסיומת בעברית), כך שכ־48% מהפניות הן של ארגון בעברית ושם לא מערבב שפות.
 
-**מדידה:** אותו כלי, אותה מכונה, אותם תנאים, על נתונים אחרי `seed --reset` (תיקיות `archive/seed-v1-english/` ו־`seed-v2-hebrew/`). v1 נמדד מחדש לפני השינוי ותאם ל־`final/` (reads זהים או עד 1% הפרש). בחיפוש הוחלפה המילה `bonus` ב־`בונוס` (אותה תת־קבוצה של פניות: 3,291 במלואה).
+**מדידה:** אותו כלי, אותה מכונה, אותם תנאים, על נתונים אחרי `seed --reset`; התוצאות ב־[`performance/seed-v2-hebrew/`](performance/seed-v2-hebrew), וההשוואה המלאה v1 ← v2 ב־[`compare-with-seed-v1-english.md`](performance/seed-v2-hebrew/compare-with-seed-v1-english.md). v1 נמדד מחדש לפני השינוי ותאם ל־`final/` (reads זהים או עד 1% הפרש). בחיפוש הוחלפה המילה `bonus` ב־`בונוס` (אותה תת־קבוצה של פניות: 3,291 במלואה).
 
 | פעולה | Logical reads v1 → v2 | Elapsed ms v1 → v2 | Plan |
 |---|---|---|---|
@@ -411,7 +367,7 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 | Summary: ארגונים מובילים (Q8.orgs) | 943 → 899 (−4.7%) | 48 → 36.5 | זהה |
 | עדכון סטטוס (W1) | 23 → 23, log 1,396 bytes | 0 → 0 | זהה |
 
-כל 26 השאילתות: אותה צורת Plan, ללא Sort, ‏Memory Grant או מקביליות חדשים, ו־logical reads בטווח `+0%`…`−19.8%` (הטבלה המלאה: `docs/performance/seed-v2-hebrew/gate-g3.md`).
+כל 26 השאילתות: אותה צורת Plan, ללא Sort, ‏Memory Grant או מקביליות חדשים, ו־logical reads בטווח `+0%`…`−19.8%` (הטבלה המלאה: [`gate-g3.md`](performance/seed-v2-hebrew/gate-g3.md)).
 
 **הסבר להפרשים:** כל הירידות הן בשאילתות שקוראות את עמודת הטקסט (`Title` / `OrganizationName`): כותרת בעברית קצרה מהאנגלית (ממוצע 29 תווים, מקסימום 54), ולכן פחות דפים נקראים. נפח האינדקסים הלא־Clustered ירד מ־27,576 ל־24,824 KB, והטבלה (Clustered) מ־19,680 ל־16,936 KB. זה שינוי בנתונים ולא ביעילות השאילתה, ולכן מספרי v1 וה־v2 אינם להחלפה זה בזה.
 
@@ -421,8 +377,8 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 
 | שער | ראיה |
 |---|---|
-| G1 – בדיקות | ‏BE: ‏**139 בדיקות, ‏139 עברו, ‏0 נכשלו, ‏0 דולגו** (‏67 יחידה, ‏72 Integration), ‏6 שנ'. ‏FE (Vitest): ‏**336 בדיקות ב־30 קבצים, כולן עברו**. (תמונת מצב מאותו שלב; ב־27.10.2026, אחרי תיקוני שלב B: ‏BE ‏156 – ‏73 יחידה, ‏83 Integration; ‏FE ‏371 ב־34 קבצים.) |
-| G2 – סקריפטי אימות | ‏`verify-read-api` – ‏ALL CHECKS PASSED, ‏90 בדיקות; ‏`verify-status-update` – ‏52; ‏`verify-bulk-status` – ‏67; ‏`ConcurrencyProof.cs` – ‏**50 × 200, ‏950 × 409, ‏0 אחר**; ‏`verify-summary-cache` – ‏ALL CHECKS PASSED, ‏21 בדיקות בהרצה מלאה (עם פקיעה אמיתית של 60 שנ') ב־6 מתוך 7 הרצות; **בהרצה אחת נכשלה בדיקה אחת** (מרוץ: סבב אחד מ־20 החזיר summary ישן) – **הסיבה: שינויי סטטוס ידניים ב־UI במקביל לריצה** (D‑20). הסקריפט תוקן (עוצר כשיש כותב אחר, משווה גם ארגונים מובילים), ו־**10 הרצות מלאות רצופות עברו 22/22**; ‏600 סבבי מרוץ נוספים – 0 הבדלים. |
+| G1 – בדיקות | ‏BE: ‏**139 בדיקות, ‏139 עברו, ‏0 נכשלו, ‏0 דולגו** (‏67 יחידה, ‏72 Integration), ‏6 שנ'. ‏FE (Vitest): ‏**336 בדיקות ב־30 קבצים, כולן עברו**. (תמונת מצב היסטורית מ־24.10.2026; המספרים העדכניים – ב־[README](../README.md#בדיקות).) |
+| G2 – אימות מול 100K | ‏`verify-read-api` – ‏ALL CHECKS PASSED, ‏90 בדיקות (ה־API מול SQL ישיר על כל 100,000 הפניות, כולל מיון כותרות בעברית). |
 | G6 – אורכי עמודות | ‏`Title`: מקסימום **54** תווים, ממוצע **29.5** (העמודה `nvarchar(200)`); ‏`OrganizationName`: מקסימום **34** תווים (העמודה `nvarchar(150)`), ‏400 ארגונים שונים; ‏**100,000** מתוך 100,000 כותרות בעברית, ו־**47,907** פניות (47.9%) של ארגון עם שם בעברית. |
 
 ## נספח א' – כל המדידות
@@ -462,23 +418,21 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 
 ## נספח ב' – הקבצים
 
-מדריך לתיקייה: [`performance/README.md`](performance/README.md). המדידות שמהן נלקחים המספרים הסופיים בשורש התיקייה, וחומר הביניים ב־`archive/`.
+התוצאות הגולמיות של המסמך, כפי ש־`scripts/MeasureQueries.cs` כתב אותן, נמצאות ב־[`docs/performance/`](performance). המספרים הסופיים: [`final/`](performance/final) (Seeder v1), ואותו מצב על הנתונים שבהגשה – [`seed-v2-hebrew/`](performance/seed-v2-hebrew).
 
-| תיקייה (`docs/performance/`) | תוכן |
-|---|---|
-| ‏`final/` | המצב הסופי (Seeder v1) |
-| ‏`seed-v2-hebrew/` | המצב הסופי על Seeder v2 (עברית, הנתונים שבהגשה), כולל `compare-with-seed-v1-english.md` ו־`gate-g3.md` |
-| ‏`before/` | בסיס: אינדקסי M1 דחוסים, ה־SQL של M2 |
-| ‏`after-indexes/` | אינדקסי M8, ה־SQL של M2 (ההשפעה של האינדקסים לבד) |
-| ‏`alternatives/` | חלופות השאילתה שנבחנו (A1–A6) |
-| ‏`archive/before-fragmented/` | מדידת הבסיס הראשונה – אינדקסים מפוצלים אחרי ה־Seed (לתיעוד בלבד, סעיף 3) |
-| ‏`archive/experiments/` | ניסויי האינדקסים, כל אחד מול `before` (`final-OrgCreatedAt` – מול גרסת ביניים של `final` לפני שינוי אינדקס הארגון) |
-| ‏`archive/seed-v1-english/` | מדידה חוזרת של המצב הסופי לפני החלפת הנתונים (Seeder v1), בסיס להשוואה בפרק 10 |
+| תיקייה (`docs/performance/`) | תוכן | בסעיפים |
+|---|---|---|
+| [`before/`](performance/before) | בסיס: אינדקסי M1 דחוסים, ה־SQL של M2 | §1, §4, §5, נספח א' |
+| [`after-indexes/`](performance/after-indexes) | אינדקסי M8 עם ה־SQL של M2 – ההשפעה של האינדקסים לבד | §5.3, נספח א' |
+| [`final/`](performance/final) | המצב הסופי: האינדקסים וה־SQL של היום (Seeder v1); ההשוואה [`final/compare-with-before.md`](performance/final/compare-with-before.md) | §1, §4, §5.3, נספח א' |
+| [`alternatives/`](performance/alternatives) | חלופות השאילתה שנבחנו (A1–A6), כולל החיפוש ב־`UPPER` והשוואה בינארית | §6.2, §7.1 |
+| [`seed-v2-hebrew/`](performance/seed-v2-hebrew) | המצב הסופי על Seeder v2 (עברית), ‏[`compare-with-seed-v1-english.md`](performance/seed-v2-hebrew/compare-with-seed-v1-english.md) ו־[`gate-g3.md`](performance/seed-v2-hebrew/gate-g3.md) | §9 |
 
 בכל תיקייה:
-- `results.md`: טבלה, גודל אינדקסים ועצי Plans.
-- `results.json`: לשימוש `--compare`.
-- `plans/*.sqlplan`: נפתחים ב־SSMS (בניסויים לא נשמרו Plans).
+- `results.md` – טבלת כל השאילתות (logical reads, ‏Sort, ‏Memory Grant, ‏DOP, זמנים), גודל האינדקסים ועצי ה־Plans בטקסט.
+- `compare-with-*.md` – השוואה לריצה אחרת, עם האינדקסים שכל שאילתה השתמשה בהם.
+- `results.json` – הנתונים הגולמיים, לשימוש `--compare`.
+- `plans/*.sqlplan` – ה־Execution Plans בפועל; נפתחים ב־SSMS.
 
 **הרצה חוזרת:**
 ```
@@ -489,4 +443,4 @@ dotnet run scripts/MeasureQueries.cs -- --out <dir> --label before --shape origi
 dotnet run scripts/MeasureQueries.cs -- --out <dir> --compare before final
 ```
 
-(‏`--compare` מקבל שמות תיקיות יחסית ל־`--out`; לתיקיות שבארכיון – למשל `archive/seed-v1-english`.)
+(‏`--compare` מקבל שמות תיקיות יחסית ל־`--out`.)

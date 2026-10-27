@@ -258,9 +258,7 @@ requests-management-docs/          תכנון ותיעוד
   README.md                        נקודת הכניסה לבודקים
   PROJECT_SUMMARY.md               מסמך זה
   docs/                            החלטות, API, ביצועים, Cache, תוכנית עבודה, בדיקת הגשה
-    performance/                   תוצאות המדידות ו־Execution Plans, לכל שלב מדידה
-      README.md                    מדריך: איפה המספרים הסופיים ומה כל תיקייה
-      archive/                     מדידות ביניים: ניסויי אינדקסים, בסיס מפוצל, מדידה חוזרת לפני החלפת הנתונים
+    performance/                   תוצאות המדידות ו־Execution Plans: before, after-indexes, final, alternatives, seed-v2-hebrew
 
 requests-management-be/            Backend
   RequestsManagement.sln, global.json, dotnet-tools.json
@@ -297,7 +295,7 @@ requests-management-fe/            Frontend
 | אינדקסים, Execution Plans ו־Bottleneck | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
 | ה־Cache, ה־Invalidation וריבוי מופעים | [docs/CACHE.md](docs/CACHE.md) |
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
-| תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/performance/README.md](docs/performance/README.md) |
+| תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/PERFORMANCE.md – נספח ב'](docs/PERFORMANCE.md#נספח-ב--הקבצים) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
 | כל תיקייה וכל קובץ בשלושת ה־Repos, במשפט אחד | [docs/STRUCTURE.md](docs/STRUCTURE.md) |
 | הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
