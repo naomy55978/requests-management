@@ -4,6 +4,14 @@
 
 > התכנון, ההחלטות וה־Issues נמצאים ב־[requests-management-docs](https://github.com/naomy55978/requests-management-docs) – נקודת הכניסה לפרויקט. ה־Frontend נמצא ב־[requests-management-fe](https://github.com/naomy55978/requests-management-fe).
 
+## דרישות מקדימות
+
+| כלי | גרסה נדרשת | הערות |
+|---|---|---|
+| **‎.NET SDK** | **10.0.401** ומעלה | נקבע ב־`global.json` (‏`rollForward: latestFeature`). |
+| **SQL Server** | **LocalDB** ‏(`(localdb)\MSSQLLocalDB`) – ברירת המחדל; או SQL Server 2022 ומעלה | נבדק מול LocalDB של SQL Server 2025 (פיתוח) ומול SQL Server 2022 בקונטיינר (CI). מופע אחר – ראו [מסד הנתונים](#מסד-הנתונים). |
+| **Node.js** + **`sqlcmd`** | Node.js 18 ומעלה | **רק** לסקריפטי האימות ב־`scripts/` – לא נדרשים לבנייה, להרצה או לבדיקות. |
+
 ## מבנה
 
 ```
@@ -19,7 +27,7 @@ tests/
 
 ## בנייה
 
-דרישות מקדימות: ‏‎.NET SDK 10.0.401 ומעלה (הגרסה נקבעת ב־`global.json`).
+דרישות: ראו [דרישות מקדימות](#דרישות-מקדימות).
 
 ```
 dotnet build RequestsManagement.sln
