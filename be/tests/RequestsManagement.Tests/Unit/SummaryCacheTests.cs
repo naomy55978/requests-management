@@ -100,7 +100,6 @@ public class SummaryCacheTests
     public async Task Entry_ExpiresAfterSixtySecondsFromItsCreation_AndReadsDoNotExtendIt()
     {
         // Absolute expiration (D-11) checked with a clock the test controls: no real 60 second wait.
-        // (The real wait is checked once against a running API by scripts/dev/verify-summary-cache.js.)
         var clock = new ManualClock();
         var cache = CreateCache(new MemoryCacheOptions { Clock = clock });
         var database = new CountingLoad();
