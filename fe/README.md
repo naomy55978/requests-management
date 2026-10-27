@@ -4,10 +4,13 @@
 
 > התכנון, ההחלטות וה־Issues נמצאים ב־[requests-management-docs](https://github.com/naomy55978/requests-management-docs) – נקודת הכניסה לפרויקט. ה־Backend נמצא ב־[requests-management-be](https://github.com/naomy55978/requests-management-be).
 
-## דרישות
+## דרישות מקדימות
 
-- **Node.js** בגרסה `^22.22.3` או `^24.15.0` (כך ש־Angular 22 דורש). בפרויקט יש `.nvmrc` עם הערך `24`. Node 20 לא מספיק.
-- ה־**Backend** חייב לרוץ על `http://localhost:5084` (ראו את ה־README של [requests-management-be](https://github.com/naomy55978/requests-management-be)).
+| כלי | גרסה נדרשת | הערות |
+|---|---|---|
+| **Node.js** | **24** (מומלץ) – או כל גרסה בטווח `^22.22.3` / `^24.15.0` | הטווח הוא שדה `engines` ב־`package.json`, כפי ש־Angular 22 דורש; ב־`.nvmrc` וב־CI – ‏24. **Node 20 לא נתמך:** ה־CLI של Angular מסרב לרוץ עליו (נבדק 27.10.2026 על Node 20.11). על Node 24.22.1 ‏build, ‏lint ו־367 הבדיקות עוברים. |
+| **npm** | מגיע עם Node | |
+| **Backend** | רץ על `http://localhost:5084` | דרישותיו (‏.NET SDK 10.0.401+, ‏SQL Server) – ב־README של [requests-management-be](https://github.com/naomy55978/requests-management-be). |
 
 ## הרצה
 
