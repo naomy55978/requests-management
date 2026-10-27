@@ -9,9 +9,10 @@
 4. [השרת](#השרת)
 5. [הלקוח](#הלקוח)
 6. [החלטות מרכזיות](#החלטות-מרכזיות)
-7. [תהליך העבודה](#תהליך-העבודה)
-8. [מבנה התיקיות](#מבנה-התיקיות)
-9. [מפת המסמכים](#מפת-המסמכים)
+7. [מגבלות ידועות ובחירות מודעות](#מגבלות-ידועות-ובחירות-מודעות)
+8. [תהליך העבודה](#תהליך-העבודה)
+9. [מבנה התיקיות](#מבנה-התיקיות)
+10. [מפת המסמכים](#מפת-המסמכים)
 
 ## על הפרויקט
 
@@ -98,11 +99,12 @@ flowchart TB
 **הרכיבים העיקריים:**
 - `RequestsController`, ‏`AuthController` – ה־Endpoints; פונים רק לממשק של ה־BL.
 - `GlobalExceptionHandler` – כל שגיאה חוזרת כ־ProblemDetails עם `traceId`; ניתוק לקוח מסתיים ב־499 בלי שגיאה ביומן.
+- `ValidationProblemResponse` – תשובות 400 נקיות: שמות שדות פשוטים (`newStatus`, ‏`items[0].id`) והודעות קריאות, בלי שמות טיפוסים פנימיים של .NET ([D‑18](docs/DECISIONS.md#d-18)).
 - `ServerTimingMiddleware` – כותרת `Server-Timing` עם זמן השרת, זמן ה־DB ו־Cache HIT/MISS; כבויה כברירת מחדל ([D‑25](docs/DECISIONS.md#d-25)).
 - `RequestService` – לוגיקת העסק; מתודה אחת לשינוי סטטוס, משותפת לעדכון הבודד ול־Bulk.
 - `StatusTransitions` – מטריצת המעברים, במקום אחד.
 - `SummaryCache` – ה־Cache של הסיכום: ‏Singleton, ‏60 שניות ומונה "דור" ([D‑20](docs/DECISIONS.md#d-20)).
-- `RequestRepository` – שאילתות עם Projection ל־DTO, דפדוף ב־Deferred Join, ועדכון סטטוס מותנה עם `OUTPUT`.
+- `RequestRepository` – שאילתות עם Projection ל־DTO, דפדוף יעיל ב־Deferred Join (דילוג על עמודים באינדקס צר, ושליפת שורות העמוד בלבד), ועדכון סטטוס מותנה עם `OUTPUT`.
 - `DatabaseSeeder` – 100,000 פניות דטרמיניסטיות ב־SqlBulkCopy ([D‑13](docs/DECISIONS.md#d-13), [D‑33](docs/DECISIONS.md#d-33)).
 - `StartupWarmUp` – חימום הסיכום בעליית השרת, לפני שהוא מתחיל להאזין ([D‑48](docs/DECISIONS.md#d-48)).
 
@@ -154,7 +156,7 @@ flowchart TB
 - `AuthService` – ההתחברות והסשן (ב־`sessionStorage`), ובדיקת תוקף במקום אחד ([D‑26](docs/DECISIONS.md#d-26)).
 - `authGuard` – מגן על לוח הבקרה ועל מסך הפניות; משתמש לא מחובר מועבר להתחברות.
 - `authInterceptor` – מוסיף את הטוקן לקריאות ה־API, ו־401 מוביל להתחברות מחדש.
-- `timingInterceptor` – קורא את כותרת `Server-Timing` לפאנל הביצועים.
+- `timingInterceptor` – קורא את כותרת `Server-Timing` לפאנל הביצועים; כבוי כברירת מחדל (`SHOW_PERFORMANCE`).
 - `RequestsApiService` – כל הקריאות ל־API של הפניות.
 - `SummaryStore`, ‏`RequestsListStore` – מצב המסך; כל אחד מסופק ע״י המסך שלו ונזרק ביציאה ממנו.
 
@@ -168,7 +170,7 @@ flowchart TB
 - `ConfirmCompleteDialogComponent` – אישור לפני מעבר ל"הושלמה".
 - `RequestHistoryDialogComponent` – היסטוריית הסטטוס של פנייה.
 - `StateMessageComponent` – הודעות טעינה, ריק ושגיאה.
-- `PerformancePanelComponent`, ‏`TimingBadgeComponent` – פאנל ותגי הביצועים (אופציונליים, כבויים כברירת מחדל – הדגל `showPerformance`).
+- `PerformancePanelComponent`, ‏`TimingBadgeComponent` – פאנל ותגי הביצועים (אופציונליים, כבויים כברירת מחדל – `SHOW_PERFORMANCE`, מוגדר ע״י `showPerformance` ב־environment).
 
 **זרימת הנתונים במסך הפניות:**
 
@@ -193,13 +195,22 @@ flowchart LR
 - [D‑06](docs/DECISIONS.md#d-06) – **‏`UPDATE` מותנה, ו־409 לעדכון מתחרה:** האכיפה ב־DB, אטומית, ומונעת Lost Update.
 - [D‑08](docs/DECISIONS.md#d-08) – **Bulk עם Partial Success:** כל פנייה עצמאית, וכשל באחת לא מבטל את השאר.
 - [D‑10](docs/DECISIONS.md#d-10) – **JWT, ו־`ChangedBy` מתוך הטוקן:** השרת קובע מי שינה, והלקוח לא יכול לזייף.
-- [D‑20](docs/DECISIONS.md#d-20) – **Cache עם מונה "דור" ו־Invalidation אחרי ה־Commit:** קורא איטי לא משאיר נתון ישן אחרי שינוי.
-- [D‑24](docs/DECISIONS.md#d-24) – **דפדוף בשרת ואינדקסים שנבחרו במדידה:** כל אינדקס נבדק ב־logical reads, ב־Execution Plan ובעלות הכתיבה.
 - [D‑16](docs/DECISIONS.md#d-16) – **שלושה Repos:** מחזור חיים ו־CI נפרדים לכל Stack, ו־Repo תיעוד כנקודת כניסה.
+- [D‑20](docs/DECISIONS.md#d-20) – **Cache עם מונה "דור" ו־Invalidation אחרי ה־Commit:** קורא איטי לא משאיר נתון ישן אחרי שינוי.
 - [D‑21](docs/DECISIONS.md#d-21) – **בדיקות מול SQL Server אמיתי:** הערבויות המרכזיות (‏`rowversion`, טרנזקציה, אינדקסים) הן של ה־DB.
+- [D‑24](docs/DECISIONS.md#d-24) – **דפדוף בשרת ואינדקסים שנבחרו במדידה:** כל אינדקס נבדק ב־logical reads, ב־Execution Plan ובעלות הכתיבה.
 - [D‑27](docs/DECISIONS.md#d-27) – **זרם RxJS יחיד עם `switchMap`:** בקשות מיושנות מתבטלות, וכל הסינון נשאר בשרת.
 - [D‑43](docs/DECISIONS.md#d-43) – **לוח הבקרה כמסך הפתיחה:** סקירה קודם, והרשימה במרחק לחיצה.
 - [D‑48](docs/DECISIONS.md#d-48) – **חימום בעלייה:** הבקשה הראשונה לסיכום מהירה, כי השרת מאזין רק אחרי החימום.
+
+## מגבלות ידועות ובחירות מודעות
+
+ארבע מגבלות שנבחרו במודע בגלל היקף המבדק. הרשימה המלאה – בסוף [DECISIONS.md](docs/DECISIONS.md#מגבלות-ידועות-ושיפורים).
+
+- **חיפוש טקסט חופשי** – `LIKE '%x%'` אינו SARGable: אינדקס לא עוזר, והחיפוש סורק את כל הטבלה (כ־52 ms ב־100,000 פניות, וגדל ליניארית). בקנה מידה גדול: אינדקס n‑grams או Full‑Text ([D‑12](docs/DECISIONS.md#d-12), [D‑24](docs/DECISIONS.md#d-24), [PERFORMANCE.md](docs/PERFORMANCE.md) §7.1).
+- **Cache במופע שרת יחיד** – `IMemoryCache` חי בזיכרון של תהליך אחד; בכמה מופעים עלול להישאר summary ישן עד 60 שניות. הפתרונות (Redis, ‏HybridCache, ‏Pub/Sub) מתועדים ב־[CACHE.md](docs/CACHE.md) ולא מומשו ([D‑11](docs/DECISIONS.md#d-11), [D‑20](docs/DECISIONS.md#d-20)).
+- **Bulk רציף עם Partial Success** – הפריטים מעובדים אחד אחרי השני, כל אחד בטרנזקציה משלו ובאותה לוגיקה כמו PATCH בודד: אין Deadlock וכשל באחד לא מבטל את השאר. המחיר: הזמן גדל עם מספר הפריטים (כ־0.2 שניות ל־100) ([D‑08](docs/DECISIONS.md#d-08), [D‑19](docs/DECISIONS.md#d-19)).
+- **אימות ברמת דמו** – סיסמת דמו אחת, בלי הגבלת ניסיונות, וטוקן JWT תקף 480 דקות (8 שעות) ואינו ניתן לביטול בשרת. התנתקות מכל הלשוניות מטופלת בצד הלקוח (בשינוי נפרד בעבודה); ביטול טוקנים בשרת מחוץ להיקף. בייצור נדרשים סיסמאות אישיות, ‏Rate Limiting, ‏Refresh Tokens ו־Secret Store ([D‑10](docs/DECISIONS.md#d-10)).
 
 ## תהליך העבודה
 
@@ -226,17 +237,19 @@ flowchart TB
 
 עשרה Milestones בסדר שבו בוצעו; M8 (ביצועים) בוצע לפני M7 (Angular), כדי לסיים את השרת לפני הממשק ([D‑22](docs/DECISIONS.md#d-22)). התלויות, המשימות והערכת המאמץ – ב־[WORK_PLAN.md](docs/WORK_PLAN.md).
 
+**הערכה מול בפועל:** ‏54.5 שעות בהערכה מול 11 שעות בפועל (דיווח עצמי) – הפירוט ב־[WORK_PLAN.md](docs/WORK_PLAN.md#הערכה-מול-בפועל).
+
 **מחזור העבודה בכל משימה:** תוכנית ← אישור מפורש ← ביצוע ← אימות ← Commit עם הפניה ל־Issue, ‏Push ו־CI ירוק.
 
 **שימוש ב־AI:** ‏Claude Code – ‏Opus לתכנון, ארכיטקטורה וסקירה, ו־Sonnet לכתיבת קוד ובדיקות. כל קוד שנכתב אומת בשיטות שלמטה. הפירוט – ב־[README](README.md#שימוש-בכלי-ai).
 
 **שיטות האימות:**
-- **Oracle מול SQL** – סקריפטי האימות משווים כל סינון, חיפוש, מיון ודפדוף לשאילתת SQL ישירה על 100,000 הפניות.
+- **Oracle מול SQL** – סקריפטי אימות אופציונליים (`scripts/dev` ב־Backend) משווים כל סינון, חיפוש, מיון ודפדוף לשאילתת SQL ישירה על 100,000 הפניות. מקור האמת הם סוויטות הבדיקות האוטומטיות.
 - **Oracle ב־LINQ** – בבדיקות ה־Integration התוצאה הצפויה מחושבת מהנתונים ולא מועתקת מהקוד ([D‑21](docs/DECISIONS.md#d-21)).
 - **בדיקות מוטציה** – שוברים את הקוד בכוונה ומוודאים שהבדיקות נכשלות.
-- **הוכחת Concurrency** – ‏1,000 בקשות PATCH מקבילות: בדיוק 50 הצלחות ו־950 תשובות 409, ושורת היסטוריה אחת לכל פנייה (`ConcurrencyProof.cs`).
-- **דפדפן אמיתי** – מדידות בדפדפן לפני ואחרי תיקונים בממשק.
-- **בדיקה מקצה לקצה** – מ־clone נקי על LocalDB קר, כמו בודק ([SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md)): ‏145 בדיקות Backend, ‏367 בדיקות Frontend ומעבר של 21/21 בדפדפן.
+- **הוכחת Concurrency** – ‏1,000 בקשות PATCH מקבילות: בדיוק 50 הצלחות ו־950 תשובות 409, ושורת היסטוריה אחת לכל פנייה (`scripts/dev/ConcurrencyProof.cs`).
+- **דפדפן אמיתי** – ב־Chrome מול ה־API האמיתי, לפני ואחרי כל תיקון בממשק: מיקום הפאנל, יישור טקסט מעורב עברית/אנגלית ומיקוד מקלדת, וזמן הבקשה הראשונה לסיכום (78–105 ms אחרי החימום).
+- **בדיקה מקצה לקצה** – מ־clone נקי על LocalDB קר, כמו בודק ([SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md)): בבדיקה מ־26.10.2026: ‏145 בדיקות Backend, ‏367 בדיקות Frontend ומעבר של 21/21 בדפדפן. סך הבדיקות האוטומטיות היום: ‏156 + 371 = 527.
 
 ## מבנה התיקיות
 
@@ -272,6 +285,8 @@ requests-management-fe/            Frontend
     shared/                        רכיבי תצוגה משותפים: תגים, הודעות מצב, פאנל ביצועים
 ```
 
+המפה המלאה של כל תיקייה וקובץ, במשפט אחד לכל אחד – ב־[docs/STRUCTURE.md](docs/STRUCTURE.md).
+
 ## מפת המסמכים
 
 | נושא | מסמך |
@@ -282,6 +297,7 @@ requests-management-fe/            Frontend
 | אינדקסים, Execution Plans ו־Bottleneck | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) |
 | ה־Cache, ה־Invalidation וריבוי מופעים | [docs/CACHE.md](docs/CACHE.md) |
 | Milestones, משימות, הערכות ומיפוי בדיקות לדרישות | [docs/WORK_PLAN.md](docs/WORK_PLAN.md) |
+| תוצאות המדידות הגולמיות ומדריך לתיקיות | [docs/performance/README.md](docs/performance/README.md) |
 | הבדיקה מקצה לקצה מ־clone נקי | [docs/SUBMISSION_CHECK.md](docs/SUBMISSION_CHECK.md) |
 | כל תיקייה וכל קובץ בשלושת ה־Repos, במשפט אחד | [docs/STRUCTURE.md](docs/STRUCTURE.md) |
 | הרצת ה־Backend וסקריפטי האימות | [README של ה־Backend](https://github.com/naomy55978/requests-management-be#readme) |
