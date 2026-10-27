@@ -201,7 +201,7 @@ RequestsManagement.DTO   מודלים לבקשות ולתשובות, כללי ה
 מטריצה מלאה של דרישה ← משימות: [docs/WORK_PLAN.md](docs/WORK_PLAN.md).
 
 ## תכנון העבודה
-- [docs/WORK_PLAN.md](docs/WORK_PLAN.md) – תוכנית העבודה: עשרה Milestones (M0–M9), סדר ביצוע ותלויות, הערכת מאמץ לכל משימה (סה״כ 53 שעות), ומטריצת דרישה ← משימות. כוללת משימות שאינן קוד: תכנון, ‏DB, מדידה, תיעוד והגשה.
+- [docs/WORK_PLAN.md](docs/WORK_PLAN.md) – תוכנית העבודה: עשרה Milestones (M0–M9), סדר ביצוע ותלויות, הערכת מאמץ לכל משימה (הערכה: סה״כ 54.5 שעות), ומטריצת דרישה ← משימות. כוללת משימות שאינן קוד: תכנון, ‏DB, מדידה, תיעוד והגשה.
 - [Issues](https://github.com/naomy55978/requests-management-docs/issues?q=is%3Aissue) – משימה לכל יחידת עבודה, עם תיאור, תוצר מצופה, קריטריוני קבלה, מאמץ, תלויות וסעיף המבדק. כל Commit בקוד מפנה ל־Issue שלו.
 - [Project Board](https://github.com/users/naomy55978/projects/2) ו־[Milestones](https://github.com/naomy55978/requests-management-docs/milestones).
 - [PROJECT_TRACKING_RequestsManagement.md](PROJECT_TRACKING_RequestsManagement.md) – יומן הפרויקט: אפיון, כל ההחלטות, מה בוצע בכל שלב ואיך אומת, סיכונים וצעדים הבאים.
