@@ -168,7 +168,7 @@ flowchart TB
 - `ConfirmCompleteDialogComponent` – אישור לפני מעבר ל"הושלמה".
 - `RequestHistoryDialogComponent` – היסטוריית הסטטוס של פנייה.
 - `StateMessageComponent` – הודעות טעינה, ריק ושגיאה.
-- `PerformancePanelComponent`, ‏`TimingBadgeComponent` – פאנל ותגי הביצועים.
+- `PerformancePanelComponent`, ‏`TimingBadgeComponent` – פאנל ותגי הביצועים (אופציונליים, כבויים כברירת מחדל – הדגל `showPerformance`).
 
 **זרימת הנתונים במסך הפניות:**
 

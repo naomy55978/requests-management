@@ -386,11 +386,11 @@ GET /api/requests/summary (hit)    Server-Timing: total;dur=0.6, db;dur=0.0;desc
 
 כ־0.1 ms, בתוך רעש המדידה.
 
-**אבטחה:** הכותרת חושפת זמנים פנימיים, שיכולים לרמוז על מבנה הנתונים או לסייע ב־timing attacks. לכן היא **כבויה כברירת מחדל**, ומופעלת ע״י `ServerTiming:Enabled` רק ב־`appsettings.Development.json`.
+**אבטחה:** הכותרת חושפת זמנים פנימיים, שיכולים לרמוז על מבנה הנתונים או לסייע ב־timing attacks. לכן היא **כבויה כברירת מחדל, גם ב־Development** (מ־27.10.2026), ומופעלת ע״י `ServerTiming:Enabled` – למשל משתנה הסביבה `ServerTiming__Enabled=true`.
 
 **שימוש:**
 - **DevTools:** הכותרת מוצגת ב־Network ← Timing.
-- **UI (‏M7):** יציג תג זמן ליד כל טעינה ופאנל ביצועים מתקפל (D‑23). ה־Angular קורא את הכותרת דרך ה־Proxy של שרת הפיתוח (#32), כלומר מאותו Origin, ולכן לא נדרש `Access-Control-Expose-Headers`.
+- **UI (‏M7):** תג זמן ליד כל טעינה ופאנל ביצועים מתקפל (D‑23) – אופציונליים, כבויים כברירת מחדל ומופעלים בדגל `showPerformance` (README של ה־Frontend). ה־Angular קורא את הכותרת דרך ה־Proxy של שרת הפיתוח (#32), כלומר מאותו Origin, ולכן לא נדרש `Access-Control-Expose-Headers`.
 
 ## 10. גרסאות Seeder: v1 (אנגלית) מול v2 (עברית, D‑33)
 
