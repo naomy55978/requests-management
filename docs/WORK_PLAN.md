@@ -198,10 +198,19 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | §11 תיעוד הפתרון | `req-11-docs` | [#3](https://github.com/naomy55978/requests-management-docs/issues/3), [#5](https://github.com/naomy55978/requests-management-docs/issues/5), [#22](https://github.com/naomy55978/requests-management-docs/issues/22), [#25](https://github.com/naomy55978/requests-management-docs/issues/25), [#44](https://github.com/naomy55978/requests-management-docs/issues/44), [#45](https://github.com/naomy55978/requests-management-docs/issues/45), [#46](https://github.com/naomy55978/requests-management-docs/issues/46), [#47](https://github.com/naomy55978/requests-management-docs/issues/47), [#51](https://github.com/naomy55978/requests-management-docs/issues/51), [#53](https://github.com/naomy55978/requests-management-docs/issues/53) |
 | אופן ההגשה | `req-submission` | [#48](https://github.com/naomy55978/requests-management-docs/issues/48), [#49](https://github.com/naomy55978/requests-management-docs/issues/49) |
 
-## מיפוי בדיקות לדרישות (M6 (בדיקות))
+## מיפוי בדיקות לדרישות
 
-53 שיטות בדיקה ב־`requests-management-be/tests/RequestsManagement.Tests`, **123 מקרים** כולל שורות ה־`Theory` (28 יחידה, 25 Integration מתוכן 2 Concurrency). זו תמונת המצב בסוף M6 (בדיקות); ב־27.10.2026 הסוויטה כוללת **145 מקרים** (73 יחידה, 72 Integration), אחרי בדיקות שנוספו מאז. הסעיפים (§) הם סעיפי מסמך המבדק כפי שמופיעים במטריצה למעלה. ההרצה והחיבור ל־SQL Server מתוארים ב־README של BE.
-בדיקות היחידה רצות בזיכרון; בדיקות ה־Integration רצות מול ה־API האמיתי ומסד זמני ב־SQL Server שנוצר מה־Migrations (D‑09), ומשוות גם למה שנשמר ב־DB.
+כל הבדיקות ב־`requests-management-be/tests/RequestsManagement.Tests` (המספר הכולל העדכני – ב־[README](../README.md#בדיקות)). בדיקות היחידה רצות בזיכרון; בדיקות ה־Integration רצות דרך HTTP מול ה־API האמיתי ומסד זמני ב־SQL Server שנוצר מה־Migrations ונמחק בסוף (D‑09, ‏D‑21), ומשוות גם למה שנשמר ב־DB.
+
+**לפי דרישה:**
+- **סינון, חיפוש ומיון (§1):** ‏`ReadRequestsTests.Filters_…`, ‏`Search_…`, ‏`Sorting_…`, ‏`ExtremeDates_…`.
+- **דפדוף ו־PageSize (§1):** ‏`ReadRequestsTests.Paging_…`, ‏`RequestFilterValidationTests.PagingLimits`.
+- **Validation (§1, §2, §4):** ‏`RequestFilterValidationTests`, ‏`UpdateStatusRequestValidationTests`, ‏`BulkStatusRequestValidationTests`, ‏`ReadRequestsTests.InvalidQuery_…`, ‏`UpdateStatusTests.InvalidBody_…`, ‏`BulkStatusTests.InvalidCall_…`, ‏`ValidationErrorTests`.
+- **Conflict ו־Concurrency (§2):** ‏`UpdateStatusTests.StaleVersion_…`, ‏`ConcurrencyTests` (שתיהן), ‏`StatusTransitionsTests`, ‏`UpdateStatusTests.NotAllowedTransition_…`.
+- **Audit והיסטוריה (§3):** ‏`UpdateStatusTests.Update_…`, ‏`History_…`, ‏`ChangedByInTheBody_…`, ‏`UpdateAtomicityTests`, ‏`BulkStatusTests.MixedCall_…`.
+- **Bulk (§4):** ‏`BulkStatusTests`, ‏`BulkStatusRequestValidationTests`, ‏`ConcurrencyTests.BulkCallsRacingSinglePatchCalls_…`.
+- **Cache ו־Invalidation (§7):** ‏`SummaryCacheTests`, ‏`RequestServiceCacheTests`, ‏`SummaryTests`.
+- **Integration – API ובסיס נתונים (§8):** כל הבדיקות בתיקייה `Integration/`.
 
 ### יחידה
 
@@ -235,6 +244,8 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `RequestServiceCacheTests.Bulk_WhereEveryItemFails_LeavesTheCacheAlone` | 1 | §7, §4 | Bulk שכולו נכשל לא מנקה |
 | `RequestServiceCacheTests.Bulk_StoppedByADisconnectAfterASavedItem_StillClearsTheCache` | 1 | §7, §4 | ניתוק לקוח באמצע Bulk אחרי פריט שנשמר – ה־Cache מנוקה בכל זאת (`finally`, D‑20) |
 | `RequestServiceCacheTests.Bulk_StoppedByADisconnectBeforeAnythingWasSaved_LeavesTheCacheAlone` | 1 | §7, §4 | ניתוק לפני שנשמר משהו – אין ניקוי מיותר |
+| `SeedDataTests (5 בדיקות)` | 5 | מבנה פנייה (100K, יצירה חוזרת) | ה־Seed דטרמיניסטי (אותו מספר ← אותן שורות), וכל צירוף מילים נכנס לאורך העמודות |
+| `StartupWarmUpTests (6 בדיקות)` | 6 | §10 (טיפול בשגיאות, Logging) | החימום בעלייה (D‑48): רץ פעם אחת כשהוא מופעל ולא רץ כשהוא כבוי, ב־Scope משלו; כשל, Timeout או כיבוי נרשמים כ־Warning ולא עוצרים את ההפעלה |
 
 ### Integration
 
@@ -246,8 +257,10 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `AuthenticationTests.Login_WithWrongPasswordOrUnknownUser_GivesTheSameAnswer` | 1 | §3, D‑10 | אותה תשובה לסיסמה שגויה ולמשתמש לא קיים |
 | `ReadRequestsTests.Filters_AreAppliedByTheServer` | 10 | §1 | סינון משולב וחיפוש בצד השרת מול תוצאת LINQ מהנתונים הקבועים; כולל `unassigned`, טווח תאריכים כולל, ו־`% _ [` כתווים רגילים בחיפוש |
 | `ReadRequestsTests.Sorting_IsDoneByTheServer` | 10 | §1 | מיון ב־5 שדות × 2 כיוונים, עם `Id` כ־tie‑breaker |
+| `ReadRequestsTests.Search_IgnoresCase_FindsHebrew_AndKeepsSpecialCharactersLiteral` | 6 | §1 | חיפוש טקסטואלי בכותרת ובשם הארגון: לא רגיש לאותיות גדולות/קטנות, מוצא עברית, ו־`% _ [` נשארים תווים רגילים |
 | `ReadRequestsTests.Paging_ReturnsEveryRequestOnceAndKnowsTheTotal` | 1 | §1 | דפדוף יציב, ‏`totalCount`, דף אחרון חלקי ודף אחרי הסוף ← `200` ריק |
 | `ReadRequestsTests.InvalidQuery_IsAnswered400WithTheUsualErrorFormat` | 6 | §1 | פרמטר לא חוקי ← 400 ב־`ValidationProblemDetails` עם מפתחות camelCase ו־`traceId` (D‑18) |
+| `ReadRequestsTests.ExtremeDates_AreAnswered200_NotAServerError` | 3 | §1 | טווח תאריכים בקצוות (`0001-01-01`, ‏`9999-12-31`) נענה ב־200 עם התוצאה הנכונה, לא ב־500 |
 | `ReadRequestsTests.GetById_ReturnsTheRequestWithItsVersion_And404WhenMissing` | 1 | §1 | פנייה בודדת עם ה־`version` האמיתי מה־DB, ו־404 |
 | `UpdateStatusTests.Update_ChangesTheRequest_AndWritesOneAuditRowByTheUserOfTheToken` | 2 | §2, §3 | 200; ה־DB מעודכן; שורת היסטוריה אחת עם סטטוס קודם מה־DB ו־`ChangedBy` של בעל הטוקן (משני משתמשים); `UpdatedAt = ChangedAt` |
 | `UpdateStatusTests.ChangedByInTheBody_IsRejected_AndNothingIsChanged` | 1 | §3, D‑10 | הזהות לא נלקחת מהלקוח |
@@ -256,6 +269,8 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `UpdateStatusTests.UnknownRequest_Gives404` | 1 | §2 | פנייה שלא קיימת ← 404 |
 | `UpdateStatusTests.InvalidBody_Gives400_AndChangesNothing` | 5 | §2 | גוף לא תקין (חסר, לא מוכר, פגום, לא JSON) ← 400 ושום שינוי |
 | `UpdateStatusTests.History_ListsTheChangesOldestFirst_IsEmptyForAnUntouchedRequest_And404ForAMissingOne` | 1 | §3 | היסטוריה מהישן לחדש, ‏`[]` לפנייה שלא שונתה, ו־404 |
+| `UpdateAtomicityTests.WhenTheAuditRowCannotBeWritten_TheStatusUpdateIsRolledBack` | 1 | §2, §3 | כשהכנסת שורת ה־Audit נכשלת, העדכון מתבטל: `Status`, ‏`RowVersion` ו־`UpdatedAt` ללא שינוי ואין שורת היסטוריה. רצה במסד בדיקות משלה |
+| `ValidationErrorTests (2 בדיקות)` | 11 | §1, §2, §10 (Validation עקבי) | גוף שלא ניתן לקרוא (JSON פגום, ערך לא מוכר, סוג שגוי) ← 400 עם שם שדה פשוט והודעה קריאה, בלי שמות טיפוסים פנימיים; כמה בעיות יחד – כל המפתחות שמות שדות |
 | `BulkStatusTests.MixedCall_ReportsEveryOutcome_AndOnlyTheSuccessfulItemsChangeTheDatabase` | 1 | §4, §3 | Partial Success: Updated, NotFound, Conflict, InvalidTransition בקריאה אחת; סדר ושדות; ה־DB לכל פריט; Conflict לפני InvalidTransition; היסטוריה רק למצליחים, עם `ChangedBy` מהטוקן |
 | `BulkStatusTests.InvalidCall_Gives400_AndNotEvenTheValidItemsAreChanged` | 3 | §4 | רשימה ריקה, מעל 100 פריטים, מזהה כפול ← 400 ושום פריט לא משתנה |
 | `BulkStatusTests.AFullCallOfHundredRequests_UpdatesAllOfThemWithTheirAuditRows` | 1 | §4 | הגבול העליון מקצה לקצה: 100 פניות, כולן עם שורת היסטוריה |
@@ -271,7 +286,7 @@ M4 (Bulk) ו־M5 (Cache) תלויים שניהם רק ב־M3 וניתן לבצע
 | `ConcurrencyTests.ParallelUpdatesWithTheSameVersion_ExactlyOneSucceeds_NoLostUpdate` | 1 | §2, §3 | 10 פניות × 20 בקשות PATCH בו־זמנית עם אותה גרסה (שני משתמשים, שני יעדים): בדיוק `200` אחד ו־19 × `409` לכל פנייה; שורת היסטוריה אחת של המנצח; ה־DB מחזיק את הסטטוס והגרסה שלו; כל 409 מדווח את המצב הסופי |
 | `ConcurrencyTests.BulkCallsRacingSinglePatchCalls_ExactlyOneChangePerRequest_NoServerErrors` | 1 | §2, §4 | שני Bulk (אחד בסדר הפוך) ו־3 בקשות PATCH לכל פנייה, במקביל: מנצח אחד לכל פנייה, שורת היסטוריה אחת, ‏0 תשובות 5xx (אין Deadlock) |
 
-### מה לא מכוסה בבדיקות האוטומטיות (ונבדק בסקריפטים או במדידה)
-- פקיעה **אמיתית** של 60 שניות, ובדיקה מול 100,000 פניות: `scripts/dev/verify-summary-cache.js`, ‏`scripts/dev/verify-read-api.js`.
-- זמני תגובה, אינדקסים ו־Execution Plans: M8 (ביצועים).
-- Frontend: M7 (Angular).
+### מה לא מכוסה בבדיקות האוטומטיות
+- התנהגות מול כל 100,000 הפניות (בבדיקות: 40 פניות קבועות): ‏`scripts/dev/verify-read-api.js` (אופציונלי) ומדידות M8 ב־[PERFORMANCE.md](PERFORMANCE.md).
+- פקיעה **אמיתית** של 60 שניות: נבדקת בשעון מבוקר (`SummaryCacheTests`), בלי המתנה אמיתית.
+- Frontend: בדיקות Vitest ב־`requests-management-fe` (M7).
