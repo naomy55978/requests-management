@@ -191,13 +191,13 @@ flowchart LR
 - [D‑06](docs/DECISIONS.md#d-06) – **‏`UPDATE` מותנה, ו־409 לעדכון מתחרה:** האכיפה ב־DB, אטומית, ומונעת Lost Update.
 - [D‑08](docs/DECISIONS.md#d-08) – **Bulk עם Partial Success:** כל פנייה עצמאית, וכשל באחת לא מבטל את השאר.
 - [D‑10](docs/DECISIONS.md#d-10) – **JWT, ו־`ChangedBy` מתוך הטוקן:** השרת קובע מי שינה, והלקוח לא יכול לזייף.
-- [D‑49](docs/DECISIONS.md#d-49) – **Repository אחד:** קישור אחד לבודק, עם ההיסטוריה המלאה של ה־Backend וה־Frontend ו־CI נפרד לכל תיקייה.
+- [D‑18](docs/DECISIONS.md#d-18) – **מנגנון Validation אחד:** ‏DataAnnotations על ה־DTOs, וכל קלט לא תקין – ‏400 באותו פורמט ProblemDetails, עם שמות שדות והודעות קריאות.
 - [D‑20](docs/DECISIONS.md#d-20) – **Cache עם מונה "דור" ו־Invalidation אחרי ה־Commit:** קורא איטי לא משאיר נתון ישן אחרי שינוי.
 - [D‑21](docs/DECISIONS.md#d-21) – **בדיקות מול SQL Server אמיתי:** הערבויות המרכזיות (‏`rowversion`, טרנזקציה, אינדקסים) הן של ה־DB.
 - [D‑24](docs/DECISIONS.md#d-24) – **דפדוף בשרת ואינדקסים שנבחרו במדידה:** כל אינדקס נבדק ב־logical reads, ב־Execution Plan ובעלות הכתיבה.
 - [D‑27](docs/DECISIONS.md#d-27) – **זרם RxJS יחיד עם `switchMap`:** בקשות מיושנות מתבטלות, וכל הסינון נשאר בשרת.
 - [D‑43](docs/DECISIONS.md#d-43) – **לוח הבקרה כמסך הפתיחה:** סקירה קודם, והרשימה במרחק לחיצה.
-- [D‑18](docs/DECISIONS.md#d-18) – **מנגנון Validation אחד:** ‏DataAnnotations על ה־DTOs, וכל קלט לא תקין – ‏400 באותו פורמט ProblemDetails, עם שמות שדות והודעות קריאות.
+- [D‑49](docs/DECISIONS.md#d-49) – **Repository אחד:** קישור אחד לבודק, עם ההיסטוריה המלאה של ה־Backend וה־Frontend ו־CI נפרד לכל תיקייה.
 
 ## מגבלות ידועות ובחירות מודעות
 
@@ -206,7 +206,7 @@ flowchart LR
 - **חיפוש טקסט חופשי** – `LIKE '%x%'` אינו SARGable: אינדקס לא עוזר, והחיפוש סורק את כל הטבלה (כ־52 ms ב־100,000 פניות, וגדל ליניארית). בקנה מידה גדול: אינדקס n‑grams או Full‑Text ([D‑12](docs/DECISIONS.md#d-12), [D‑24](docs/DECISIONS.md#d-24), [PERFORMANCE.md](docs/PERFORMANCE.md) §7.1).
 - **Cache במופע שרת יחיד** – `IMemoryCache` חי בזיכרון של תהליך אחד; בכמה מופעים עלול להישאר summary ישן עד 60 שניות. הפתרונות (Redis, ‏HybridCache, ‏Pub/Sub) מתועדים ב־[CACHE.md](docs/CACHE.md) ולא מומשו ([D‑11](docs/DECISIONS.md#d-11), [D‑20](docs/DECISIONS.md#d-20)).
 - **Bulk רציף עם Partial Success** – הפריטים מעובדים אחד אחרי השני, כל אחד בטרנזקציה משלו ובאותה לוגיקה כמו PATCH בודד: אין Deadlock וכשל באחד לא מבטל את השאר. המחיר: הזמן גדל עם מספר הפריטים (כ־0.2 שניות ל־100) ([D‑08](docs/DECISIONS.md#d-08), [D‑19](docs/DECISIONS.md#d-19)).
-- **אימות ברמת דמו** – סיסמת דמו אחת, בלי הגבלת ניסיונות, וטוקן JWT תקף 480 דקות (8 שעות) ואינו ניתן לביטול בשרת. התנתקות מכל הלשוניות מטופלת בצד הלקוח (בשינוי נפרד בעבודה); ביטול טוקנים בשרת מחוץ להיקף. בייצור נדרשים סיסמאות אישיות, ‏Rate Limiting, ‏Refresh Tokens ו־Secret Store ([D‑10](docs/DECISIONS.md#d-10)).
+- **אימות ברמת דמו** – סיסמת דמו אחת, בלי הגבלת ניסיונות, וטוקן JWT תקף 480 דקות (8 שעות) ואינו ניתן לביטול בשרת. התנתקות מכל הלשוניות מטופלת בצד הלקוח (BroadcastChannel); ביטול טוקנים בשרת מחוץ להיקף. בייצור נדרשים סיסמאות אישיות, ‏Rate Limiting, ‏Refresh Tokens ו־Secret Store ([D‑10](docs/DECISIONS.md#d-10)).
 
 ## תהליך העבודה
 
@@ -261,7 +261,7 @@ be/                                Backend
   RequestsManagement.sln, global.json
   scripts/                         מדידת שאילתות (MeasureQueries.cs)
   src/
-    RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Startup, ‏Program.cs
+    RequestsManagement.API/        Controllers, Middleware, ‏Auth, ‏Validation, ‏Commands, ‏Program.cs
     RequestsManagement.BL/         RequestService, ‏StatusTransitions, ‏SummaryCache, ‏AuthService
     RequestsManagement.DAL/        Entities, ‏Configurations, ‏Migrations, ‏Seeding, ‏RequestRepository
     RequestsManagement.DTO/        מודלי בקשה ותשובה, Enums
